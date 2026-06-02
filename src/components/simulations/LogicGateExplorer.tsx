@@ -37,7 +37,7 @@ const GateSVG = ({ type, active }: { type: string, active: boolean }) => {
         className: 'transition-all duration-300'
     };
 
-    let paths: JSX.Element;
+    let paths = <rect x="5" y="5" width="50" height="50" {...props} />;
     switch(type) {
         case 'AND': paths = <path d="M5,5 h25 a25,25 0 0,1 0,50 h-25 Z" {...props} />; break;
         case 'OR': paths = <path d="M5,5 q25,0 50,25 q-25,25 -50,25 q15,-25 0,-50 Z" {...props} />; break;
@@ -46,7 +46,6 @@ const GateSVG = ({ type, active }: { type: string, active: boolean }) => {
         case 'NOR': paths = (<g><path d="M5,5 q20,0 42,25 q-22,25 -42,25 q15,-25 0,-50 Z" {...props} /><circle cx="51" cy="30" r="4" {...props} /></g>); break;
         case 'XNOR': paths = (<g><path d="M12,5 q20,0 40,25 q-20,25 -40,25 q15,-25 0,-50 Z" {...props} /><path d="M5,5 q15,25 0,50" stroke={strokeColor} strokeWidth="2" fill="none" /><circle cx="56" cy="30" r="4" {...props} /></g>); break;
         case 'NOT': paths = (<g><path d="M10,10 l30,20 l-30,20 Z" {...props} /><circle cx="45" cy="30" r="4" {...props} /></g>); break;
-        default: paths = <rect x="5" y="5" width="50" height="50" {...props} />;
     }
 
     return (

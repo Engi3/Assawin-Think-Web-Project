@@ -37,12 +37,12 @@ const GateSVG = ({ type, x, y, active }: { type: string, x: number, y: number, a
         fill: "hsl(var(--secondary-foreground) / 0.1)",
         className: 'transition-all duration-300'
     };
-    let paths: JSX.Element;
+    
+    let paths = <rect x="5" y="5" width="50" height="50" {...props} />;
     switch(type) {
         case 'AND': paths = <path d="M5,5 h25 a25,25 0 0,1 0,50 h-25 Z" {...props} />; break;
         case 'OR': paths = <path d="M5,5 q25,0 50,25 q-25,25 -50,25 q15,-25 0,-50 Z" {...props} />; break;
         case 'XOR': paths = (<g><path d="M12,5 q25,0 48,25 q-23,25 -48,25 q15,-25 0,-50 Z" {...props} /><path d="M5,5 q15,25 0,50" stroke={strokeColor} strokeWidth="2" fill="none" /></g>); break;
-        default: paths = <rect x="5" y="5" width="50" height="50" {...props} />;
     }
     return (
         <g transform={`translate(${x}, ${y})`}>

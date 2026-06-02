@@ -1,7 +1,7 @@
 import { getCourseBySlug, getLesson } from "@/lib/content-api";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Download, ExternalLink, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, ExternalLink, Play, CheckCircle } from "lucide-react";
 import SimulationManager from "@/components/simulations/SimulationManager";
 import MotionWrapper from "@/components/MotionWrapper";
 
@@ -47,13 +47,27 @@ export default async function LessonPage({ params }: LessonPageProps) {
         <div className="group relative mb-20">
           <div className="absolute -inset-4 bg-primary/10 rounded-[3rem] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
           <div className="aspect-video w-full bg-slate-950 rounded-[2.5rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] border border-white/5 relative z-10">
-            <iframe
-              src={lesson.videoUrl}
-              title={title}
-              className="w-full h-full opacity-90 group-hover:opacity-100 transition-opacity"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
+            {lesson.videoUrl ? (
+              <iframe
+                src={lesson.videoUrl}
+                title={title}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            ) : (
+              <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center text-center p-8">
+                <div className="p-5 bg-slate-800 rounded-full mb-6 border border-border">
+                    <Play className="w-10 h-10 text-primary" fill="currentColor" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground mb-2">
+                    {locale === 'en' ? 'Video Lesson In Production' : 'บทเรียนวิดีโอกำลังจัดทำ'}
+                </h3>
+                <p className="text-secondary max-w-sm">
+                    {locale === 'en' ? 'This content is being prepared and will be available soon. Check back later!' : 'เนื้อหานี้กำลังอยู่ระหว่างการเตรียมการและจะพร้อมให้ใช้งานเร็วๆ นี้'}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -143,25 +157,5 @@ export default async function LessonPage({ params }: LessonPageProps) {
         </div>
       </div>
     </MotionWrapper>
-  );
-}
-
-function CheckCircle({ size, className }: { size?: number, className?: string }) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width={size || 24} 
-      height={size || 24} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="3" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-      <polyline points="22 4 12 14.01 9 11.01" />
-    </svg>
   );
 }
