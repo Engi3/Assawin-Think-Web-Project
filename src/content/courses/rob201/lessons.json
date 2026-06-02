@@ -1,0 +1,17 @@
+[
+  {
+    "id": "robot-kinematics",
+    "title_en": "Chapter 1: Robot Kinematics",
+    "title_th": "บทที่ 1: จลนศาสตร์ของหุ่นยนต์",
+    "videoUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    "content_en": "Calculating the position and orientation of robotic arms using advanced mathematics...",
+    "content_th": "การคำนวณตำแหน่งและทิศทางของแขนกลหุ่นยนต์โดยใช้คณิตศาสตร์...",
+    "resources": [
+      {
+        "name_en": "Formula Cheat Sheet",
+        "name_th": "ชีทสรุปสูตร",
+        "url": "/assets/courses/rob201/formula.pdf"
+      }
+    ]
+  }
+]

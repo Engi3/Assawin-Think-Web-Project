@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #020617;
+  --primary: #f97316; /* Orange 500 */
+  --secondary: #64748b;
+  --border: #e2e8f0;
+  --accent: #fb923c; /* Orange 400 */
+  --card-bg: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme='dark'] {
+  --background: #020617;
+  --foreground: #f8fafc;
+  --primary: #fb923c; /* Orange 400 */
+  --secondary: #94a3b8;
+  --border: rgba(249, 115, 22, 0.1);
+  --accent: #f97316; /* Orange 500 */
+  --card-bg: rgba(15, 23, 42, 0.6);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+}
+
+/* Advanced Engineering Utilities */
+.glass-panel {
+  @apply backdrop-blur-xl border border-white/10 shadow-2xl;
+  background: var(--card-bg);
+}
+
+.eng-card {
+  @apply relative overflow-hidden rounded-3xl border border-border bg-background/40 backdrop-blur-sm transition-all duration-500 hover:shadow-[0_0_40px_rgba(249,115,22,0.1)];
+}
+
+.eng-card::before {
+  content: '';
+  @apply absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 transition-opacity duration-500;
+}
+
+.eng-card:hover::before {
+  @apply opacity-100;
+}
+
+.glow-text {
+  @apply drop-shadow-[0_0_8px_rgba(249,115,22,0.4)];
+}
+
+.eng-input {
+  @apply bg-background/60 border border-border p-4 rounded-2xl font-mono text-lg focus:border-primary/50 focus:ring-4 focus:ring-primary/10 outline-none transition-all shadow-inner;
+}
+
+.eng-button-primary {
+  @apply bg-primary text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40;
+}
+
+.eng-grid-bg {
+  background-image: radial-gradient(var(--primary) 0.5px, transparent 0.5px);
+  background-size: 24px 24px;
+  @apply opacity-5;
+}
+

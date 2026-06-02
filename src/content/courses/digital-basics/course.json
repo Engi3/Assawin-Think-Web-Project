@@ -1,0 +1,11 @@
+{
+  "id": "digital-basics",
+  "code": "20127-2007",
+  "title_en": "Digital Basics",
+  "title_th": "ดิจิทัลและไมโครคอนโทรลเลอร์",
+  "description_en": "Foundational digital logic, number systems, and basic circuit design based on Outcome-Based Education (OBE).",
+  "description_th": "พื้นฐานลอจิกดิจิทัล ระบบเลขฐาน และการออกแบบวงจรเบื้องต้น ตามกรอบ OBE และ Active Learning",
+  "image": "/assets/courses/digital-basics/Gemini_Generated_Image_raxxk1raxxk1raxx.png",
+  "syllabus_en": "This course covers number systems, binary arithmetic, boolean algebra, logic gates, and combinational circuits. It focuses on hands-on experience through simulations.",
+  "syllabus_th": "รายวิชานี้ครอบคลุมเรื่องระบบเลขฐาน, คณิตศาสตร์เลขฐานสอง, พีชคณิตบูลลีน, ลอจิกเกต และวงจรลอจิกเชิงผสม โดยเน้นการสร้างความรู้ผ่านการลงมือทำด้วย Simulation"
+}

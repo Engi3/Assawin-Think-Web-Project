@@ -1,0 +1,11 @@
+{
+  "id": "robotics-design",
+  "code": "ROB201",
+  "title_en": "Robotics Design",
+  "title_th": "การออกแบบและสร้างหุ่นยนต์",
+  "description_en": "Focused on mechanical structure design and transmission systems for robotics.",
+  "description_th": "เน้นการออกแบบโครงสร้างหุ่นยนต์และระบบส่งกำลัง",
+  "image": "/assets/courses/rob201/cover.jpg",
+  "syllabus_en": "Learn CAD modeling, kinematics calculation, and physical assembly of robotic systems.",
+  "syllabus_th": "วิชานี้จะสอนการใช้โปรแกรม CAD ในการออกแบบหุ่นยนต์ การคำนวณ Kinematics และการประกอบหุ่นยนต์จริง"
+}

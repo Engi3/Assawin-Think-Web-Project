@@ -1,0 +1,20 @@
+[
+  {
+    "id": "research-1",
+    "title_en": "Advanced 6-Axis Robotic Arm Control System for SME Industries",
+    "title_th": "ระบบควบคุมแขนกลหุ่นยนต์ 6 แกนขั้นสูงสำหรับอุตสาหกรรม SME",
+    "description_en": "Development of a cost-effective robotic control system using AI-based motion planning.",
+    "description_th": "การพัฒนาระบบควบคุมหุ่นยนต์ที่มีต้นทุนต่ำโดยใช้การวางแผนการเคลื่อนที่ด้วย AI",
+    "publication": "Journal of Mechatronics, 2025",
+    "link": "#"
+  },
+  {
+    "id": "research-2",
+    "title_en": "IoT-Integrated Automation for Smart Factory Prototypes",
+    "title_th": "ระบบอัตโนมัติที่รวม IoT สำหรับต้นแบบโรงงานอัจฉริยะ",
+    "description_en": "A framework for monitoring industrial processes through cloud-based analytics.",
+    "description_th": "กรอบการทำงานสำหรับการตรวจสอบกระบวนการทางอุตสาหกรรมผ่านการวิเคราะห์บนคลาวด์",
+    "publication": "International Robotics Conference, 2024",
+    "link": "#"
+  }
+]

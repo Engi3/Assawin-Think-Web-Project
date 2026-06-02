@@ -1,0 +1,32 @@
+[
+  {
+    "id": "intro-to-mct",
+    "title_en": "Chapter 1: Intro to Mechatronics",
+    "title_th": "บทที่ 1: บทนำสู่เมคคาทรอนิกส์",
+    "videoUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    "content_en": "Mechatronics is the synergy of multiple engineering fields to create intelligent systems...",
+    "content_th": "เมคคาทรอนิกส์คือการบูรณาการศาสตร์หลายแขนงเข้าด้วยกัน เพื่อสร้างระบบที่ชาญฉลาด...",
+    "resources": [
+      {
+        "name_en": "Lecture Slides",
+        "name_th": "สไลด์ประกอบการสอน",
+        "url": "/assets/courses/mct101/lecture-1.pdf"
+      }
+    ]
+  },
+  {
+    "id": "sensors-basics",
+    "title_en": "Chapter 2: Sensors and Measurement",
+    "title_th": "บทที่ 2: เซนเซอร์และการวัด",
+    "videoUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    "content_en": "Understanding sensors is critical for building feedback loops in mechatronic systems...",
+    "content_th": "ความเข้าใจเรื่องเซนเซอร์เป็นสิ่งสำคัญอย่างยิ่งในการสร้างระบบป้อนกลับในงานเมคคาทรอนิกส์...",
+    "resources": [
+      {
+        "name_en": "Lab Manual",
+        "name_th": "คู่มือปฏิบัติการ",
+        "url": "/assets/courses/mct101/lab-2.pdf"
+      }
+    ]
+  }
+]

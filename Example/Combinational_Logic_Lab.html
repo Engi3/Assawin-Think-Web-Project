@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combinational Logic Lab</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #0f172a; /* slate-900 */
+            color: #e2e8f0; /* slate-200 */
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        .glow-cyan { filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.8)); }
+        .glow-red { filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.8)); }
+        .grid-bg {
+            background-size: 20px 20px;
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- Logic Functions ---
+        const logic = {
+            AND: (a, b) => a && b,
+            OR: (a, b) => a || b,
+            NOT: (a) => !a,
+            NAND: (a, b) => !(a && b),
+            NOR: (a, b) => !(a || b),
+            XOR: (a, b) => a !== b,
+            XNOR: (a, b) => a === b
+        };
+
+        // --- SVG Components ---
+        // Color definitions
+        const C_OFF = '#475569'; // slate-600
+        const C_ON = '#06b6d4';  // cyan-500
+
+        const Wire = ({ d, state }) => (
+            <path 
+                d={d} 
+                stroke={state ? C_ON : C_OFF} 
+                strokeWidth="3" 
+                fill="none" 
+                className={state ? 'glow-cyan transition-colors duration-200' : 'transition-colors duration-200'}
+            />
+        );
+
+        const Node = ({ cx, cy, state }) => (
+            <circle 
+                cx={cx} cy={cy} r="4" 
+                fill={state ? C_ON : C_OFF} 
+                className={state ? 'glow-cyan transition-colors duration-200' : 'transition-colors duration-200'}
+            />
+        );
+
+        const GateSVG = ({ type, x, y, active }) => {
+            const strokeColor = active ? C_ON : '#94a3b8';
+            const props = {
+                stroke: strokeColor,
+                strokeWidth: "2",
+                fill: "#1e293b",
+                className: active ? 'glow-cyan transition-colors duration-200' : 'transition-colors duration-200'
+            };
+
+            let paths = null;
+            switch(type) {
+                case 'AND':
+                    paths = <path d="M5,5 h25 a25,25 0 0,1 0,50 h-25 Z" {...props} />;
+                    break;
+                case 'OR':
+                    paths = <path d="M5,5 q25,0 50,25 q-25,25 -50,25 q15,-25 0,-50 Z" {...props} />;
+                    break;
+                case 'XOR':
+                    paths = (
+                        <g>
+                            <path d="M12,5 q25,0 48,25 q-23,25 -48,25 q15,-25 0,-50 Z" {...props} />
+                            <path d="M5,5 q15,25 0,50" stroke={strokeColor} strokeWidth="2" fill="none" />
+                        </g>
+                    );
+                    break;
+                case 'NAND':
+                    paths = (
+                        <g>
+                            <path d="M5,5 h20 a25,25 0 0,1 0,50 h-20 Z" {...props} />
+                            <circle cx="55" cy="30" r="4" {...props} />
+                        </g>
+                    );
+                    break;
+                case 'NOR':
+                    paths = (
+                        <g>
+                            <path d="M5,5 q20,0 42,25 q-22,25 -42,25 q15,-25 0,-50 Z" {...props} />
+                            <circle cx="51" cy="30" r="4" {...props} />
+                        </g>
+                    );
+                    break;
+                case 'XNOR':
+                    paths = (
+                        <g>
+                            <path d="M12,5 q20,0 40,25 q-20,25 -40,25 q15,-25 0,-50 Z" {...props} />
+                            <path d="M5,5 q15,25 0,50" stroke={strokeColor} strokeWidth="2" fill="none" />
+                            <circle cx="56" cy="30" r="4" {...props} />
+                        </g>
+                    );
+                    break;
+                case 'NOT':
+                    paths = (
+                        <g>
+                            <path d="M10,10 l30,20 l-30,20 Z" {...props} />
+                            <circle cx="45" cy="30" r="4" {...props} />
+                        </g>
+                    );
+                    break;
+                default:
+                    paths = <rect x="5" y="5" width="50" height="50" {...props} />;
+            }
+
+            return (
+                <g transform={`translate(${x}, ${y})`}>
+                    {paths}
+                    <text x="30" y="34" fill={strokeColor} fontSize="10" textAnchor="middle" fontWeight="bold" className="pointer-events-none select-none">{type}</text>
+                </g>
+            );
+        };
+
+        // --- UI Components ---
+        const Switch = ({ label, value, onChange }) => (
+            <div className="flex flex-col items-center gap-2">
+                <span className="text-sm font-semibold text-slate-400">{label}</span>
+                <button 
+                    onClick={() => onChange(!value)}
+                    className={`w-12 h-12 rounded-full border-2 flex items-center justify-center text-xl font-bold transition-all duration-300 ${
+                        value 
+                        ? 'border-cyan-400 bg-cyan-900/30 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.4)]' 
+                        : 'border-slate-600 bg-slate-800 text-slate-500 hover:border-slate-500'
+                    }`}
+                >
+                    {value ? '1' : '0'}
+                </button>
+            </div>
+        );
+
+        const Bulb = ({ label, value }) => (
+            <div className="flex flex-col items-center gap-2">
+                <span className="text-sm font-semibold text-slate-400">{label}</span>
+                <div 
+                    className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                        value 
+                        ? 'border-red-400 bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.8)]' 
+                        : 'border-slate-700 bg-slate-800 shadow-[inset_0_0_10px_rgba(0,0,0,0.5)]'
+                    }`}
+                >
+                    <div className={`w-6 h-6 rounded-full ${value ? 'bg-white/80' : 'bg-slate-600'} blur-[2px]`}></div>
+                </div>
+            </div>
+        );
+
+        // --- Tabs Content ---
+
+        // 1. Basic Gates Tab
+        const BasicGates = () => {
+            const [gate, setGate] = useState('AND');
+            const [a, setA] = useState(false);
+            const [b, setB] = useState(false);
+
+            const isNot = gate === 'NOT';
+            const out = isNot ? logic.NOT(a) : logic[gate](a, b);
+
+            const gates = ['AND', 'OR', 'NOT', 'NAND', 'NOR', 'XOR', 'XNOR'];
+
+            return (
+                <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Simulator */}
+                    <div className="flex-1 bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                        <div className="flex justify-between items-center mb-8">
+                            <h3 className="text-xl font-semibold text-cyan-400">วงจรจำลอง (Simulator)</h3>
+                            <select 
+                                value={gate} 
+                                onChange={(e) => setGate(e.target.value)}
+                                className="bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-cyan-400"
+                            >
+                                {gates.map(g => <option key={g} value={g}>{g} Gate</option>)}
+                            </select>
+                        </div>
+                        
+                        <div className="relative w-full aspect-[2/1] bg-slate-900/50 rounded-xl grid-bg border border-slate-700/50 flex items-center justify-center overflow-hidden">
+                            <svg viewBox="0 0 400 200" className="w-full h-full max-h-[300px]">
+                                {/* Wires */}
+                                <Wire d={`M 60 ${isNot ? 100 : 70} L 170 ${isNot ? 100 : 70}`} state={a} />
+                                {!isNot && <Wire d="M 60 130 L 170 130" state={b} />}
+                                <Wire d="M 230 100 L 340 100" state={out} />
+                                
+                                {/* Gate */}
+                                <GateSVG type={gate} x={170} y={70} active={out} />
+                            </svg>
+
+                            {/* Overlaid HTML Controls */}
+                            <div className="absolute inset-0 flex items-center justify-between px-[10%]">
+                                <div className="flex flex-col gap-8">
+                                    <Switch label="Input A" value={a} onChange={setA} />
+                                    {!isNot && <Switch label="Input B" value={b} onChange={setB} />}
+                                </div>
+                                <Bulb label="Output" value={out} />
+                            </div>
+                        </div>
+                        <p className="mt-4 text-slate-400 text-sm text-center">ทดลองสลับสวิตช์อินพุตเพื่อดูการเปลี่ยนแปลงของเอาต์พุตและตารางค่าความจริง</p>
+                    </div>
+
+                    {/* Truth Table */}
+                    <div className="w-full lg:w-1/3 bg-slate-800/50 p-6 rounded-2xl border border-slate-700 flex flex-col">
+                        <h3 className="text-xl font-semibold text-cyan-400 mb-6">ตารางค่าความจริง (Truth Table)</h3>
+                        <div className="overflow-hidden rounded-xl border border-slate-700">
+                            <table className="w-full text-center text-sm">
+                                <thead className="bg-slate-700/50 text-slate-300">
+                                    <tr>
+                                        <th className="p-3 border-b border-slate-600">A</th>
+                                        {!isNot && <th className="p-3 border-b border-slate-600">B</th>}
+                                        <th className="p-3 border-b border-slate-600 text-cyan-400">Output</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {isNot ? (
+                                        [false, true].map((valA, idx) => {
+                                            const isActive = a === valA;
+                                            return (
+                                                <tr key={idx} className={`${isActive ? 'bg-cyan-900/40 text-cyan-300' : 'bg-slate-800'} border-b border-slate-700/50 transition-colors`}>
+                                                    <td className="p-3">{valA ? '1' : '0'}</td>
+                                                    <td className="p-3 font-bold">{logic.NOT(valA) ? '1' : '0'}</td>
+                                                </tr>
+                                            )
+                                        })
+                                    ) : (
+                                        [[false, false], [false, true], [true, false], [true, true]].map(([valA, valB], idx) => {
+                                            const isActive = a === valA && b === valB;
+                                            return (
+                                                <tr key={idx} className={`${isActive ? 'bg-cyan-900/40 text-cyan-300' : 'bg-slate-800'} border-b border-slate-700/50 transition-colors`}>
+                                                    <td className="p-3">{valA ? '1' : '0'}</td>
+                                                    <td className="p-3">{valB ? '1' : '0'}</td>
+                                                    <td className="p-3 font-bold">{logic[gate](valA, valB) ? '1' : '0'}</td>
+                                                </tr>
+                                            )
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 2. Adders Tab (Half Adder & Full Adder)
+        const Adders = () => {
+            const [mode, setMode] = useState('half'); // 'half' or 'full'
+
+            return (
+                <div className="space-y-6">
+                    <div className="flex gap-4 border-b border-slate-700 pb-2">
+                        <button 
+                            className={`px-4 py-2 font-medium rounded-t-lg transition-colors ${mode === 'half' ? 'bg-cyan-900/50 text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-slate-200'}`}
+                            onClick={() => setMode('half')}
+                        >
+                            วงจรบวกเลขครึ่งบิต (Half Adder)
+                        </button>
+                        <button 
+                            className={`px-4 py-2 font-medium rounded-t-lg transition-colors ${mode === 'full' ? 'bg-cyan-900/50 text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-slate-200'}`}
+                            onClick={() => setMode('full')}
+                        >
+                            วงจรบวกเลขเต็มบิต (Full Adder)
+                        </button>
+                    </div>
+
+                    {mode === 'half' ? <HalfAdder /> : <FullAdder />}
+                </div>
+            );
+        };
+
+        const HalfAdder = () => {
+            const [a, setA] = useState(false);
+            const [b, setB] = useState(false);
+
+            const sum = a !== b; // XOR
+            const carry = a && b; // AND
+
+            return (
+                <div className="flex flex-col lg:flex-row gap-8">
+                    <div className="flex-1 bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                        <h3 className="text-xl font-semibold text-cyan-400 mb-4">ผังวงจร (Schematic)</h3>
+                        <div className="relative w-full aspect-[16/9] max-h-[400px] bg-slate-900/50 rounded-xl grid-bg border border-slate-700/50 overflow-hidden">
+                            <svg viewBox="0 0 500 250" className="w-full h-full">
+                                {/* Wires for A */}
+                                <Wire d="M 80 70 L 220 70" state={a} />
+                                <Wire d="M 120 70 L 120 160 L 220 160" state={a} />
+                                <Node cx="120" cy="70" state={a} />
+                                
+                                {/* Wires for B */}
+                                <Wire d="M 80 110 L 160 110 L 160 90 L 220 90" state={b} />
+                                <Wire d="M 160 110 L 160 180 L 220 180" state={b} />
+                                <Node cx="160" cy="110" state={b} />
+
+                                {/* Gates */}
+                                <GateSVG type="XOR" x={220} y={50} active={sum} />
+                                <GateSVG type="AND" x={220} y={140} active={carry} />
+
+                                {/* Output Wires */}
+                                <Wire d="M 280 80 L 420 80" state={sum} />
+                                <Wire d="M 280 170 L 420 170" state={carry} />
+                            </svg>
+                            
+                            {/* Controls */}
+                            <div className="absolute top-[40px] left-[5%] flex flex-col gap-[35px]">
+                                <Switch label="A" value={a} onChange={setA} />
+                                <Switch label="B" value={b} onChange={setB} />
+                            </div>
+                            <div className="absolute top-[30px] right-[5%] flex flex-col gap-[45px]">
+                                <Bulb label="Sum (S)" value={sum} />
+                                <Bulb label="Carry (C)" value={carry} />
+                            </div>
+                        </div>
+                        <p className="mt-4 text-slate-400 text-sm">Half Adder ใช้บวกเลขฐานสอง 1 บิต จำนวน 2 ตัว เกิดผลรวม (Sum) และตัวทด (Carry)</p>
+                    </div>
+
+                    {/* Truth Table */}
+                    <div className="w-full lg:w-1/3 bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                        <h3 className="text-xl font-semibold text-cyan-400 mb-6">ตารางค่าความจริง</h3>
+                        <div className="overflow-hidden rounded-xl border border-slate-700">
+                            <table className="w-full text-center text-sm">
+                                <thead className="bg-slate-700/50 text-slate-300">
+                                    <tr>
+                                        <th className="p-3 border-b border-slate-600">A</th>
+                                        <th className="p-3 border-b border-slate-600">B</th>
+                                        <th className="p-3 border-b border-slate-600 text-red-400">Sum</th>
+                                        <th className="p-3 border-b border-slate-600 text-yellow-400">Carry</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {[[false, false], [false, true], [true, false], [true, true]].map(([valA, valB], idx) => {
+                                        const isActive = a === valA && b === valB;
+                                        const rSum = valA !== valB;
+                                        const rCarry = valA && valB;
+                                        return (
+                                            <tr key={idx} className={`${isActive ? 'bg-cyan-900/40 text-cyan-300' : 'bg-slate-800'} border-b border-slate-700/50 transition-colors`}>
+                                                <td className="p-3">{valA ? '1' : '0'}</td>
+                                                <td className="p-3">{valB ? '1' : '0'}</td>
+                                                <td className="p-3 font-bold text-red-300">{rSum ? '1' : '0'}</td>
+                                                <td className="p-3 font-bold text-yellow-300">{rCarry ? '1' : '0'}</td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const FullAdder = () => {
+            const [a, setA] = useState(false);
+            const [b, setB] = useState(false);
+            const [cin, setCin] = useState(false);
+
+            // Logic
+            const xor1 = a !== b;
+            const and1 = a && b;
+            const sum = xor1 !== cin;
+            const and2 = xor1 && cin;
+            const cout = and1 || and2;
+
+            return (
+                <div className="flex flex-col xl:flex-row gap-8">
+                    <div className="flex-1 bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                        <h3 className="text-xl font-semibold text-cyan-400 mb-4">ผังวงจร (Schematic)</h3>
+                        <div className="relative w-full aspect-[16/9] max-h-[500px] bg-slate-900/50 rounded-xl grid-bg border border-slate-700/50 overflow-hidden">
+                            <svg viewBox="0 0 600 300" className="w-full h-full">
+                                {/* Base Inputs -> Gate 1 */}
+                                <Wire d="M 80 50 L 160 50" state={a} />
+                                <Wire d="M 110 50 L 110 120 L 160 120" state={a} />
+                                <Node cx="110" cy="50" state={a} />
+
+                                <Wire d="M 80 90 L 135 90 L 135 70 L 160 70" state={b} />
+                                <Wire d="M 135 90 L 135 140 L 160 140" state={b} />
+                                <Node cx="135" cy="90" state={b} />
+
+                                <GateSVG type="XOR" x={160} y={30} active={xor1} />
+                                <GateSVG type="AND" x={160} y={100} active={and1} />
+
+                                {/* Gate 1 -> Gate 2 */}
+                                <Wire d="M 220 60 L 320 60" state={xor1} />
+                                <Wire d="M 260 60 L 260 150 L 320 150" state={xor1} />
+                                <Node cx="260" cy="60" state={xor1} />
+
+                                {/* Cin -> Gate 2 */}
+                                <Wire d="M 80 230 L 290 230 L 290 80 L 320 80" state={cin} />
+                                <Wire d="M 290 230 L 290 170 L 320 170" state={cin} />
+                                <Node cx="290" cy="170" state={cin} />
+
+                                <GateSVG type="XOR" x={320} y={40} active={sum} />
+                                <GateSVG type="AND" x={320} y={130} active={and2} />
+
+                                {/* To OR Gate */}
+                                <Wire d="M 220 130 L 400 130 L 400 190 L 440 190" state={and1} />
+                                <Wire d="M 380 160 L 415 160 L 415 210 L 440 210" state={and2} />
+                                
+                                <GateSVG type="OR" x={440} y={170} active={cout} />
+
+                                {/* Final Outputs */}
+                                <Wire d="M 380 70 L 520 70" state={sum} />
+                                <Wire d="M 500 200 L 520 200" state={cout} />
+                            </svg>
+                            
+                            {/* Controls */}
+                            <div className="absolute top-[20px] left-[2%] flex flex-col gap-[5px]">
+                                <Switch label="A" value={a} onChange={setA} />
+                                <Switch label="B" value={b} onChange={setB} />
+                                <div className="mt-[60px]">
+                                    <Switch label="Cin" value={cin} onChange={setCin} />
+                                </div>
+                            </div>
+                            <div className="absolute top-[20px] right-[2%] flex flex-col gap-[75px]">
+                                <Bulb label="Sum" value={sum} />
+                                <Bulb label="Cout" value={cout} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Truth Table */}
+                    <div className="w-full xl:w-1/3 bg-slate-800/50 p-6 rounded-2xl border border-slate-700 overflow-x-auto">
+                        <h3 className="text-xl font-semibold text-cyan-400 mb-6">ตารางค่าความจริง</h3>
+                        <div className="overflow-hidden rounded-xl border border-slate-700 min-w-[300px]">
+                            <table className="w-full text-center text-sm">
+                                <thead className="bg-slate-700/50 text-slate-300">
+                                    <tr>
+                                        <th className="p-2 border-b border-slate-600">A</th>
+                                        <th className="p-2 border-b border-slate-600">B</th>
+                                        <th className="p-2 border-b border-slate-600">Cin</th>
+                                        <th className="p-2 border-b border-slate-600 text-red-400">Sum</th>
+                                        <th className="p-2 border-b border-slate-600 text-yellow-400">Cout</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {[
+                                        [false,false,false], [false,false,true], 
+                                        [false,true,false], [false,true,true],
+                                        [true,false,false], [true,false,true],
+                                        [true,true,false], [true,true,true]
+                                    ].map(([vA, vB, vCin], idx) => {
+                                        const isActive = a === vA && b === vB && cin === vCin;
+                                        const vSum = (vA !== vB) !== vCin;
+                                        const vCout = (vA && vB) || ((vA !== vB) && vCin);
+                                        return (
+                                            <tr key={idx} className={`${isActive ? 'bg-cyan-900/40 text-cyan-300' : 'bg-slate-800'} border-b border-slate-700/50 transition-colors`}>
+                                                <td className="p-2">{vA ? '1' : '0'}</td>
+                                                <td className="p-2">{vB ? '1' : '0'}</td>
+                                                <td className="p-2">{vCin ? '1' : '0'}</td>
+                                                <td className="p-2 font-bold text-red-300">{vSum ? '1' : '0'}</td>
+                                                <td className="p-2 font-bold text-yellow-300">{vCout ? '1' : '0'}</td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Main App Component ---
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('basic');
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    {/* Header */}
+                    <header className="bg-slate-900 border-b border-slate-800 p-6 text-center shadow-lg relative z-10">
+                        <h1 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 flex items-center justify-center gap-3">
+                            <svg className="w-8 h-8 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                            </svg>
+                            Combinational Logic Lab
+                        </h1>
+                        <p className="text-slate-400 mt-2">ห้องปฏิบัติการเรียนรู้วงจรลอจิกเชิงจัดหมู่แบบอินเทอร์แอคทีฟ</p>
+                    </header>
+
+                    {/* Main Content */}
+                    <main className="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
+                        
+                        {/* Navigation */}
+                        <nav className="flex flex-wrap gap-4 mb-8 justify-center">
+                            {[
+                                { id: 'basic', label: 'พื้นฐานลอจิกเกต', icon: 'M13 10V3L4 14h7v7l9-11h-7z' }, // Lightning
+                                { id: 'adders', label: 'วงจรบวกเลข (Adders)', icon: 'M12 6v6m0 0v6m0-6h6m-6 0H6' } // Plus
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-300 ${
+                                        activeTab === tab.id 
+                                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.2)]' 
+                                        : 'bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700 hover:text-slate-200'
+                                    }`}
+                                >
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} />
+                                    </svg>
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </nav>
+
+                        {/* Active Area */}
+                        <div className="animate-fade-in">
+                            {activeTab === 'basic' && <BasicGates />}
+                            {activeTab === 'adders' && <Adders />}
+                        </div>
+                    </main>
+                    
+                    <footer className="py-6 text-center text-slate-500 text-sm border-t border-slate-800">
+                        สร้างขึ้นเพื่อการศึกษา - Digital Logic Design
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+    <style>
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</body>
+</html>

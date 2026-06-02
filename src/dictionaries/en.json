@@ -1,0 +1,33 @@
+{
+  "navigation": {
+    "home": "Home",
+    "courses": "Courses",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "home": {
+    "hero_title": "Assawin Namsert",
+    "hero_subtitle": "Mechatronics & Robotics Specialist",
+    "hero_description": "Building the future through automation and industrial robotics. Over 10 years of experience in teaching and engineering.",
+    "cta_courses": "Explore Courses",
+    "cta_contact": "Get in Touch",
+    "about_title": "About Me",
+    "philosophy_title": "Teaching Philosophy",
+    "education_title": "Education",
+    "expertise_title": "Expertise",
+    "research_title": "Research & Publications",
+    "view_all": "View All"
+  },
+  "courses": {
+    "title": "My Courses",
+    "description": "E-Learning resources for students interested in robotics, mechatronics, and automation.",
+    "lessons_count": "Lessons",
+    "enter_course": "Enter Course",
+    "no_courses": "No courses available at the moment."
+  },
+  "footer": {
+    "description": "Specializing in Mechatronics and Robotics. Committed to innovative education and modern engineering.",
+    "useful_links": "Useful Links",
+    "contact": "Contact"
+  }
+}
