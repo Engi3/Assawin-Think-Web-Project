@@ -3,6 +3,38 @@ import path from 'path';
 
 const CONTENT_PATH = path.join(process.cwd(), 'src/content');
 
+export interface Resource {
+  name_en: string;
+  name_th: string;
+  url: string;
+}
+
+export interface Lesson {
+  id: string;
+  title_en: string;
+  title_th: string;
+  videoUrl?: string;
+  iframeUrl?: string;
+  content_en: string;
+  content_th: string;
+  simulationId?: string;
+  resources: Resource[];
+}
+
+export interface Course {
+  id: string;
+  code: string;
+  title_en: string;
+  title_th: string;
+  description_en: string;
+  description_th: string;
+  image: string;
+  syllabus_en: string;
+  syllabus_th: string;
+  slug: string;
+  lessons: Lesson[];
+}
+
 export async function getProfile() {
   const filePath = path.join(CONTENT_PATH, 'profile/profile.json');
   const fileContent = fs.readFileSync(filePath, 'utf8');
@@ -15,7 +47,7 @@ export async function getPortfolio() {
   return JSON.parse(fileContent);
 }
 
-export async function getCourses() {
+export async function getCourses(): Promise<Course[]> {
   const coursesPath = path.join(CONTENT_PATH, 'courses');
   const courseFolders = fs.readdirSync(coursesPath);
   
@@ -36,7 +68,7 @@ export async function getCourses() {
   return courses;
 }
 
-export async function getCourseBySlug(slug: string) {
+export async function getCourseBySlug(slug: string): Promise<Course | null> {
   const coursePath = path.join(CONTENT_PATH, 'courses', slug, 'course.json');
   const lessonsPath = path.join(CONTENT_PATH, 'courses', slug, 'lessons.json');
   
@@ -52,10 +84,10 @@ export async function getCourseBySlug(slug: string) {
   };
 }
 
-export async function getLesson(courseSlug: string, lessonId: string) {
+export async function getLesson(courseSlug: string, lessonId: string): Promise<Lesson | null> {
   const course = await getCourseBySlug(courseSlug);
   if (!course) return null;
   
-  const lesson = course.lessons.find((l: any) => l.id === lessonId);
+  const lesson = course.lessons.find((l: Lesson) => l.id === lessonId);
   return lesson || null;
 }

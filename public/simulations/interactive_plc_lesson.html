@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บทเรียน PLC - พื้นฐาน Ladder Diagram</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        /* Ladder Components CSS */
+        .ladder-rung {
+            display: flex;
+            align-items: center;
+            height: 60px;
+            position: relative;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            color: #4b5563; /* text-gray-600 */
+        }
+        
+        .ladder-line {
+            height: 3px;
+            background-color: #9ca3af; /* gray-400 */
+            transition: all 0.1s;
+        }
+
+        .ladder-line.active {
+            background-color: #10b981; /* green-500 */
+            box-shadow: 0 0 5px #10b981;
+        }
+
+        .contact-box {
+            width: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 10;
+            background: white;
+            transition: all 0.1s;
+        }
+
+        .contact-symbol {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            letter-spacing: -1px;
+            transition: all 0.1s;
+        }
+        
+        .contact-box.active .contact-symbol, .contact-box.active .contact-label {
+            color: #10b981;
+        }
+
+        .coil-box {
+            width: 70px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            z-index: 10;
+        }
+
+        .coil-symbol {
+            width: 36px;
+            height: 36px;
+            border: 2px solid #9ca3af;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s;
+        }
+
+        .coil-box.active .coil-symbol {
+            border-color: #10b981;
+            color: #10b981;
+            box-shadow: inset 0 0 8px rgba(16, 185, 129, 0.5), 0 0 8px rgba(16, 185, 129, 0.5);
+        }
+
+        .coil-box.active .contact-label {
+            color: #10b981;
+        }
+
+        .func-box {
+            border: 2px solid #9ca3af;
+            padding: 4px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            font-size: 0.85rem;
+            min-width: 80px;
+            transition: all 0.1s;
+        }
+
+        .func-box.active {
+            border-color: #10b981;
+            color: #10b981;
+            box-shadow: inset 0 0 5px rgba(16, 185, 129, 0.3), 0 0 5px rgba(16, 185, 129, 0.3);
+        }
+
+        .ladder-rail {
+            width: 4px;
+            background-color: #10b981; /* Left rail always powered */
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            box-shadow: 0 0 5px #10b981;
+        }
+        
+        .ladder-rail-right {
+            width: 4px;
+            background-color: #9ca3af; /* Right rail ground */
+            height: 100%;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+
+        .ladder-vertical {
+            width: 3px;
+            background-color: #9ca3af;
+            position: absolute;
+            transition: all 0.1s;
+        }
+        .ladder-vertical.active {
+            background-color: #10b981;
+            box-shadow: 0 0 5px #10b981;
+        }
+
+        /* UI Buttons */
+        .plc-btn {
+            user-select: none;
+            touch-action: manipulation;
+        }
+        
+        .plc-btn:active, .plc-btn.pressed {
+            transform: translateY(2px);
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.3);
+            background-color: #d1d5db;
+        }
+
+        .led-indicator {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #374151; /* gray-700 */
+            border: 2px solid #1f2937;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+            transition: all 0.1s;
+        }
+        .led-indicator.on {
+            background-color: #ef4444; /* red-500 */
+            box-shadow: 0 0 10px #ef4444, inset 0 0 5px white;
+            border-color: #b91c1c;
+        }
+
+        /* Tabs */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-btn.active {
+            border-bottom: 2px solid #3b82f6;
+            color: #2563eb;
+            background-color: #eff6ff;
+        }
+
+    </style>
+</head>
+<body class="text-gray-800 pb-12">
+
+    <!-- Header -->
+    <header class="bg-blue-700 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+            <h1 class="text-xl md:text-2xl font-bold"><i class="fas fa-microchip mr-2"></i> บทเรียน PLC: บทที่ 1 พื้นฐาน Ladder Diagram</h1>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 mt-6">
+        
+        <!-- Intro Section -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h2 class="text-lg font-bold text-blue-800 mb-2 border-b pb-2">สัญลักษณ์พื้นฐานใน Ladder Diagram</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 font-mono text-sm md:text-base">
+                <div class="flex items-center p-3 bg-gray-50 rounded border">
+                    <span class="text-xl mr-3 font-bold">| |</span>
+                    <div>
+                        <div class="font-bold font-sans">Normally Open (NO)</div>
+                        <div class="text-xs text-gray-500 font-sans">ปกติเปิด - ไฟจะผ่านได้เมื่อกดปุ่ม (ทำงาน)</div>
+                    </div>
+                </div>
+                <div class="flex items-center p-3 bg-gray-50 rounded border">
+                    <span class="text-xl mr-3 font-bold">|/|</span>
+                    <div>
+                        <div class="font-bold font-sans">Normally Closed (NC)</div>
+                        <div class="text-xs text-gray-500 font-sans">ปกติปิด - ไฟจะผ่านตลอดเวลา และจะตัดเมื่อกดปุ่ม</div>
+                    </div>
+                </div>
+                <div class="flex items-center p-3 bg-gray-50 rounded border">
+                    <span class="text-xl mr-3 font-bold">( )</span>
+                    <div>
+                        <div class="font-bold font-sans">Coil (Output)</div>
+                        <div class="text-xs text-gray-500 font-sans">คอยล์ - ตัวสั่งงานอุปกรณ์ภายนอก (เช่น มอเตอร์, หลอดไฟ)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-white rounded-t-xl shadow-sm border-b overflow-x-auto whitespace-nowrap">
+            <nav class="flex">
+                <button onclick="switchTab('ex1')" id="tab-ex1" class="tab-btn active px-4 py-3 text-gray-600 font-semibold hover:bg-gray-50 focus:outline-none transition-colors">ข้อ 1: พื้นฐาน NO/NC</button>
+                <button onclick="switchTab('ex2')" id="tab-ex2" class="tab-btn px-4 py-3 text-gray-600 font-semibold hover:bg-gray-50 focus:outline-none transition-colors">ข้อ 2: Self-Holding</button>
+                <button onclick="switchTab('ex3')" id="tab-ex3" class="tab-btn px-4 py-3 text-gray-600 font-semibold hover:bg-gray-50 focus:outline-none transition-colors">ข้อ 3: Interlock</button>
+                <button onclick="switchTab('ex4')" id="tab-ex4" class="tab-btn px-4 py-3 text-gray-600 font-semibold hover:bg-gray-50 focus:outline-none transition-colors">ข้อ 4: Timer (หน่วงเวลา)</button>
+                <button onclick="switchTab('ex5')" id="tab-ex5" class="tab-btn px-4 py-3 text-gray-600 font-semibold hover:bg-gray-50 focus:outline-none transition-colors">ข้อ 5: Counter (นับจำนวน)</button>
+                <button onclick="switchTab('ex6')" id="tab-ex6" class="tab-btn px-4 py-3 text-gray-600 font-semibold hover:bg-gray-50 focus:outline-none transition-colors">ข้อ 6: คำสั่ง SET/RST</button>
+                <button onclick="switchTab('ex7')" id="tab-ex7" class="tab-btn px-4 py-3 text-gray-600 font-semibold hover:bg-gray-50 focus:outline-none transition-colors">ข้อ 7: ปุ่มเดียวสลับสถานะ (ALT)</button>
+                <button onclick="switchTab('ex8')" id="tab-ex8" class="tab-btn px-4 py-3 text-gray-600 font-semibold hover:bg-gray-50 focus:outline-none transition-colors">ข้อ 8: ไฟกะพริบ (Flicker)</button>
+                <button onclick="switchTab('ex9')" id="tab-ex9" class="tab-btn px-4 py-3 text-gray-600 font-semibold hover:bg-gray-50 focus:outline-none transition-colors">ข้อ 9: ทำงานเรียงลำดับ</button>
+                <button onclick="switchTab('ex10')" id="tab-ex10" class="tab-btn px-4 py-3 text-gray-600 font-semibold hover:bg-gray-50 focus:outline-none transition-colors">ข้อ 10: ระบบ Limit Switch</button>
+            </nav>
+        </div>
+
+        <!-- Content Area -->
+        <div class="bg-white rounded-b-xl shadow-md p-4 md:p-6 mb-8">
+            
+            <!-- ================= EXERCISE 1 ================= -->
+            <div id="ex1" class="tab-content active">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">ข้อที่ 1: วงจรควบคุมพื้นฐาน (Direct Control)</h3>
+                        <p class="text-gray-600 mb-4 text-sm md:text-base">
+                            <strong>โจทย์:</strong> เมื่อกดสวิตช์ <code>X0</code> หลอดไฟ <code>Y0</code> จะติด และเมื่อปล่อย <code>X0</code> หลอดไฟจะดับ แต่ถ้ากดสวิตช์ <code>X1</code> ค้างไว้ หลอดไฟ <code>Y0</code> จะไม่ติดแม้จะกด <code>X0</code> ก็ตาม
+                        </p>
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded text-sm">
+                            <ul class="list-disc ml-5">
+                                <li><code>X0</code> (NO): ทำหน้าที่เป็นสวิตช์เปิด (Start)</li>
+                                <li><code>X1</code> (NC): ทำหน้าที่เป็นสวิตช์ตัดวงจร (Stop/Block)</li>
+                                <li><code>Y0</code> (Coil): แทนหลอดไฟ</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Hardware Panel -->
+                    <div class="w-full md:w-64 bg-gray-100 rounded-lg p-4 border shadow-inner">
+                        <h4 class="font-bold text-center mb-3 text-gray-700">แผงควบคุม (Control Panel)</h4>
+                        <div class="flex justify-around mb-4">
+                            <div class="flex flex-col items-center gap-2">
+                                <button id="btn-1-x0" class="plc-btn w-12 h-12 bg-green-500 rounded-full border-4 border-gray-300 shadow-md text-white font-bold cursor-pointer active:bg-green-600"></button>
+                                <span class="text-xs font-bold">X0 (Start)</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-2">
+                                <button id="btn-1-x1" class="plc-btn w-12 h-12 bg-red-500 rounded-full border-4 border-gray-300 shadow-md text-white font-bold cursor-pointer active:bg-red-600"></button>
+                                <span class="text-xs font-bold">X1 (Stop)</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-center border-t border-gray-300 pt-3">
+                            <div class="flex flex-col items-center gap-2">
+                                <div id="led-1-y0" class="led-indicator"></div>
+                                <span class="text-xs font-bold">Y0 (Lamp)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ladder Simulator -->
+                <div class="mt-6 border-2 border-gray-300 bg-white rounded-lg p-4 md:p-8 overflow-x-auto">
+                    <h4 class="text-sm font-bold text-gray-500 mb-2 font-mono">LADDER PROGRAM:</h4>
+                    <div class="relative w-[600px] h-32 bg-[#fafafa] border p-4 shadow-inner">
+                        <!-- Power Rails -->
+                        <div class="ladder-rail"></div>
+                        <div class="ladder-rail-right"></div>
+
+                        <!-- Rung 0 -->
+                        <div class="ladder-rung absolute top-8 left-4 right-4">
+                            <!-- Line before X0 -->
+                            <div class="ladder-line active" style="width: 40px;"></div>
+                            
+                            <!-- Contact X0 (NO) -->
+                            <div id="c-1-x0" class="contact-box">
+                                <div class="contact-label text-xs mb-1">X0</div>
+                                <div class="contact-symbol">| |</div>
+                            </div>
+
+                            <!-- Line between X0 and X1 -->
+                            <div id="l-1-mid" class="ladder-line flex-1"></div>
+
+                            <!-- Contact X1 (NC) -->
+                            <div id="c-1-x1" class="contact-box">
+                                <div class="contact-label text-xs mb-1">X1</div>
+                                <div class="contact-symbol">|/|</div>
+                            </div>
+
+                            <!-- Line between X1 and Y0 -->
+                            <div id="l-1-end" class="ladder-line flex-1"></div>
+
+                            <!-- Coil Y0 -->
+                            <div id="co-1-y0" class="coil-box">
+                                <div class="contact-label text-xs mb-1">Y0</div>
+                                <div class="coil-symbol">( )</div>
+                            </div>
+
+                            <!-- Line to right rail -->
+                            <div id="l-1-right" class="ladder-line" style="width: 20px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= EXERCISE 2 ================= -->
+            <div id="ex2" class="tab-content">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">ข้อที่ 2: วงจรล็อกตัวเอง (Self-Holding / Latching Circuit)</h3>
+                        <p class="text-gray-600 mb-4 text-sm md:text-base">
+                            <strong>โจทย์:</strong> กดสวิตช์ <code>X0</code> แล้วปล่อย มอเตอร์ <code>Y0</code> จะทำงานค้างไว้ (ล็อกสถานะตัวเอง) หากต้องการให้มอเตอร์หยุดทำงาน ต้องกดสวิตช์ <code>X1</code>
+                        </p>
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded text-sm">
+                            <p>นี่คือวงจรที่สำคัญที่สุดในงานอุตสาหกรรม! โดยการนำ Contact NO ของ <code>Y0</code> มาต่อขนานกับ <code>X0</code> เมื่อ <code>Y0</code> ทำงาน ไฟจะไหลผ่านหน้าสัมผัสของตัวมันเองแทน <code>X0</code> ทำให้ทำงานค้างได้</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Hardware Panel -->
+                    <div class="w-full md:w-64 bg-gray-100 rounded-lg p-4 border shadow-inner">
+                        <h4 class="font-bold text-center mb-3 text-gray-700">แผงควบคุม</h4>
+                        <div class="flex justify-around mb-4">
+                            <div class="flex flex-col items-center gap-2">
+                                <button id="btn-2-x0" class="plc-btn w-12 h-12 bg-green-500 rounded-full border-4 border-gray-300 shadow-md text-white font-bold cursor-pointer active:bg-green-600"></button>
+                                <span class="text-xs font-bold">X0 (Start)</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-2">
+                                <button id="btn-2-x1" class="plc-btn w-12 h-12 bg-red-500 rounded-full border-4 border-gray-300 shadow-md text-white font-bold cursor-pointer active:bg-red-600"></button>
+                                <span class="text-xs font-bold">X1 (Stop)</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-center border-t border-gray-300 pt-3">
+                            <div class="flex flex-col items-center gap-2">
+                                <div id="led-2-y0" class="led-indicator"></div>
+                                <span class="text-xs font-bold">Y0 (Motor)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ladder Simulator -->
+                <div class="mt-6 border-2 border-gray-300 bg-white rounded-lg p-4 md:p-8 overflow-x-auto">
+                    <div class="relative w-[600px] h-48 bg-[#fafafa] border p-4 shadow-inner">
+                        <div class="ladder-rail"></div>
+                        <div class="ladder-rail-right"></div>
+
+                        <!-- Main Rung -->
+                        <div class="ladder-rung absolute top-4 left-4 right-4">
+                            <div class="ladder-line active" style="width: 40px;"></div>
+                            
+                            <!-- Contact X0 (NO) -->
+                            <div id="c-2-x0" class="contact-box">
+                                <div class="contact-label text-xs mb-1">X0</div>
+                                <div class="contact-symbol">| |</div>
+                            </div>
+
+                            <div id="l-2-node1" class="ladder-line" style="width: 30px;"></div>
+
+                            <!-- Contact X1 (NC) -->
+                            <div id="c-2-x1" class="contact-box">
+                                <div class="contact-label text-xs mb-1">X1</div>
+                                <div class="contact-symbol">|/|</div>
+                            </div>
+
+                            <div id="l-2-end" class="ladder-line flex-1"></div>
+
+                            <!-- Coil Y0 -->
+                            <div id="co-2-y0" class="coil-box">
+                                <div class="contact-label text-xs mb-1">Y0</div>
+                                <div class="coil-symbol">( )</div>
+                            </div>
+                            <div id="l-2-right" class="ladder-line" style="width: 20px;"></div>
+                        </div>
+
+                        <!-- Vertical Lines for Branch -->
+                        <div class="ladder-vertical active" style="left: 36px; top: 40px; height: 60px;"></div>
+                        <div id="v-2-node" class="ladder-vertical" style="left: 114px; top: 40px; height: 60px;"></div>
+
+                        <!-- Branch Rung -->
+                        <div class="ladder-rung absolute top-20 left-[36px]" style="width: 78px;">
+                            <div class="ladder-line active" style="width: 14px;"></div>
+                            
+                            <!-- Contact Y0 (NO) -->
+                            <div id="c-2-y0" class="contact-box" style="margin-top: -10px;">
+                                <div class="contact-label text-xs mb-1">Y0</div>
+                                <div class="contact-symbol">| |</div>
+                            </div>
+
+                            <div id="l-2-branch-end" class="ladder-line flex-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= EXERCISE 3 ================= -->
+            <div id="ex3" class="tab-content">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">ข้อที่ 3: วงจร Interlock (ป้องกันการทำงานซ้อนทับ)</h3>
+                        <p class="text-gray-600 mb-4 text-sm md:text-base">
+                            <strong>โจทย์:</strong> ระบบมอเตอร์หมุนซ้าย-ขวา <br>
+                            - กด <code>X0</code> ให้มอเตอร์หมุนซ้าย (<code>Y0</code> ทำงาน)<br>
+                            - กด <code>X1</code> ให้มอเตอร์หมุนขวา (<code>Y1</code> ทำงาน)<br>
+                            <strong>เงื่อนไขความปลอดภัย:</strong> ห้าม Y0 และ Y1 ทำงานพร้อมกันเด็ดขาด (ป้องกันการช็อต) ดังนั้นถ้า Y0 ทำงานอยู่ กด X1 จะไม่มีผล จนกว่าจะกด Stop (X2) ก่อน
+                        </p>
+                    </div>
+                    
+                    <!-- Hardware Panel -->
+                    <div class="w-full md:w-80 bg-gray-100 rounded-lg p-4 border shadow-inner">
+                        <div class="flex justify-around mb-4">
+                            <div class="flex flex-col items-center gap-1">
+                                <button id="btn-3-x0" class="plc-btn w-10 h-10 bg-green-500 rounded-full border-2 border-gray-300"></button>
+                                <span class="text-[10px] font-bold">X0(Left)</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <button id="btn-3-x1" class="plc-btn w-10 h-10 bg-green-500 rounded-full border-2 border-gray-300"></button>
+                                <span class="text-[10px] font-bold">X1(Right)</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <button id="btn-3-x2" class="plc-btn w-10 h-10 bg-red-500 rounded-full border-2 border-gray-300"></button>
+                                <span class="text-[10px] font-bold">X2(Stop)</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-around border-t border-gray-300 pt-3">
+                            <div class="flex flex-col items-center gap-2">
+                                <div id="led-3-y0" class="led-indicator"></div>
+                                <span class="text-xs font-bold text-blue-600">Y0 (หมุนซ้าย)</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-2">
+                                <div id="led-3-y1" class="led-indicator"></div>
+                                <span class="text-xs font-bold text-purple-600">Y1 (หมุนขวา)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ladder Simulator -->
+                <div class="mt-6 border-2 border-gray-300 bg-white rounded-lg p-4 overflow-x-auto">
+                    <div class="relative w-[650px] h-64 bg-[#fafafa] border p-4 shadow-inner">
+                        <div class="ladder-rail"></div>
+                        <div class="ladder-rail-right"></div>
+
+                        <!-- Y0 Rung -->
+                        <div class="ladder-rung absolute top-2 left-4 right-4">
+                            <div class="ladder-line active" style="width: 20px;"></div>
+                            <div id="c-3-x0" class="contact-box"><div class="contact-label text-[10px] mb-1">X0</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-3-r1-n1" class="ladder-line" style="width: 20px;"></div>
+                            <div id="c-3-x2a" class="contact-box"><div class="contact-label text-[10px] mb-1">X2</div><div class="contact-symbol">|/|</div></div>
+                            <div id="l-3-r1-n2" class="ladder-line" style="width: 20px;"></div>
+                            
+                            <!-- Interlock Y1 NC -->
+                            <div id="c-3-y1-nc" class="contact-box bg-purple-50"><div class="contact-label text-[10px] mb-1">Y1</div><div class="contact-symbol">|/|</div></div>
+                            
+                            <div id="l-3-r1-end" class="ladder-line flex-1"></div>
+                            <div id="co-3-y0" class="coil-box"><div class="contact-label text-[10px] mb-1">Y0</div><div class="coil-symbol">( )</div></div>
+                            <div id="l-3-r1-rt" class="ladder-line" style="width: 20px;"></div>
+                        </div>
+                        <!-- Y0 Branch -->
+                        <div class="ladder-vertical active" style="left: 18px; top: 32px; height: 45px;"></div>
+                        <div id="v-3-y0-node" class="ladder-vertical" style="left: 88px; top: 32px; height: 45px;"></div>
+                        <div class="ladder-rung absolute top-[60px] left-[18px]" style="width: 70px;">
+                            <div class="ladder-line active" style="width: 10px;"></div>
+                            <div id="c-3-y0-no" class="contact-box" style="transform: scale(0.9); margin-top: -15px;"><div class="contact-label text-[10px] mb-1">Y0</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-3-y0-branch-end" class="ladder-line flex-1"></div>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="absolute top-[120px] left-8 text-gray-400 font-mono text-xs">-----------------------------------------------------</div>
+
+                        <!-- Y1 Rung -->
+                        <div class="ladder-rung absolute top-[140px] left-4 right-4">
+                            <div class="ladder-line active" style="width: 20px;"></div>
+                            <div id="c-3-x1" class="contact-box"><div class="contact-label text-[10px] mb-1">X1</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-3-r2-n1" class="ladder-line" style="width: 20px;"></div>
+                            <div id="c-3-x2b" class="contact-box"><div class="contact-label text-[10px] mb-1">X2</div><div class="contact-symbol">|/|</div></div>
+                            <div id="l-3-r2-n2" class="ladder-line" style="width: 20px;"></div>
+                            
+                            <!-- Interlock Y0 NC -->
+                            <div id="c-3-y0-nc" class="contact-box bg-blue-50"><div class="contact-label text-[10px] mb-1">Y0</div><div class="contact-symbol">|/|</div></div>
+                            
+                            <div id="l-3-r2-end" class="ladder-line flex-1"></div>
+                            <div id="co-3-y1" class="coil-box"><div class="contact-label text-[10px] mb-1">Y1</div><div class="coil-symbol">( )</div></div>
+                            <div id="l-3-r2-rt" class="ladder-line" style="width: 20px;"></div>
+                        </div>
+                        <!-- Y1 Branch -->
+                        <div class="ladder-vertical active" style="left: 18px; top: 170px; height: 45px;"></div>
+                        <div id="v-3-y1-node" class="ladder-vertical" style="left: 88px; top: 170px; height: 45px;"></div>
+                        <div class="ladder-rung absolute top-[200px] left-[18px]" style="width: 70px;">
+                            <div class="ladder-line active" style="width: 10px;"></div>
+                            <div id="c-3-y1-no" class="contact-box" style="transform: scale(0.9); margin-top: -15px;"><div class="contact-label text-[10px] mb-1">Y1</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-3-y1-branch-end" class="ladder-line flex-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= EXERCISE 4 ================= -->
+            <div id="ex4" class="tab-content">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">ข้อที่ 4: การใช้งาน Timer (หน่วงเวลา)</h3>
+                        <p class="text-gray-600 mb-4 text-sm md:text-base">
+                            <strong>โจทย์:</strong> เมื่อกดสวิตช์ <code>X0</code> <span class="text-red-500 underline font-bold">ค้างไว้ 3 วินาที</span> หลอดไฟ <code>Y0</code> ถึงจะทำงาน หากปล่อย <code>X0</code> ก่อน 3 วินาที Timer จะถูกรีเซ็ต
+                        </p>
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded text-sm">
+                            <p><strong>T0 K30:</strong> T ย่อมาจาก Timer, ส่วน K คือค่าคงที่ (Constant). ใน PLC FX Series Timer 100ms หากตั้งค่า K30 = 30 * 100ms = 3000ms (3 วินาที)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-64 bg-gray-100 rounded-lg p-4 border shadow-inner">
+                        <div class="flex justify-center mb-4">
+                            <div class="flex flex-col items-center gap-2">
+                                <button id="btn-4-x0" class="plc-btn w-12 h-12 bg-green-500 rounded-full border-4 border-gray-300 shadow-md text-white font-bold"></button>
+                                <span class="text-xs font-bold">X0 (Hold to Start)</span>
+                            </div>
+                        </div>
+                        <div class="bg-black text-green-400 font-mono text-center p-2 rounded mb-3 text-sm">
+                            Timer (T0): <span id="t0-display">0</span> / 30
+                        </div>
+                        <div class="flex justify-center border-t border-gray-300 pt-3">
+                            <div class="flex flex-col items-center gap-2">
+                                <div id="led-4-y0" class="led-indicator"></div>
+                                <span class="text-xs font-bold">Y0 (Output)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 border-2 border-gray-300 bg-white rounded-lg p-4 overflow-x-auto">
+                    <div class="relative w-[600px] h-48 bg-[#fafafa] border p-4 shadow-inner">
+                        <div class="ladder-rail"></div>
+                        <div class="ladder-rail-right"></div>
+
+                        <!-- Timer Rung -->
+                        <div class="ladder-rung absolute top-4 left-4 right-4">
+                            <div class="ladder-line active" style="width: 40px;"></div>
+                            <div id="c-4-x0" class="contact-box"><div class="contact-label text-xs mb-1">X0</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-4-r1-end" class="ladder-line flex-1"></div>
+                            
+                            <!-- Timer Function Block -->
+                            <div id="co-4-t0" class="func-box mr-4">
+                                <div class="font-bold">T0</div>
+                                <div>K30</div>
+                            </div>
+                        </div>
+
+                        <!-- Output Rung -->
+                        <div class="ladder-rung absolute top-24 left-4 right-4">
+                            <div class="ladder-line active" style="width: 40px;"></div>
+                            
+                            <!-- Contact T0 (NO) -->
+                            <div id="c-4-t0" class="contact-box text-blue-600">
+                                <div class="contact-label text-xs mb-1 font-bold">T0</div>
+                                <div class="contact-symbol">| |</div>
+                            </div>
+
+                            <div id="l-4-r2-end" class="ladder-line flex-1"></div>
+
+                            <!-- Coil Y0 -->
+                            <div id="co-4-y0" class="coil-box">
+                                <div class="contact-label text-xs mb-1">Y0</div>
+                                <div class="coil-symbol">( )</div>
+                            </div>
+                            <div id="l-4-r2-rt" class="ladder-line" style="width: 20px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= EXERCISE 5 ================= -->
+            <div id="ex5" class="tab-content">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">ข้อที่ 5: การใช้งาน Counter (ตัวนับจำนวน)</h3>
+                        <p class="text-gray-600 mb-4 text-sm md:text-base">
+                            <strong>โจทย์:</strong> เมื่อกดสวิตช์ <code>X0</code> ครบ 5 ครั้ง (นับสินค้า) หลอดไฟ <code>Y0</code> จะสว่างขึ้น หากต้องการเริ่มนับใหม่ให้กดปุ่ม <code>X1</code> เพื่อรีเซ็ต
+                        </p>
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded text-sm">
+                            <p><strong>C0 K5:</strong> C ย่อมาจาก Counter จะนับขึ้น 1 ค่าทุกครั้งที่สัญญาณ X0 เปลี่ยนจากดับเป็นติด (Rising Edge) เมื่อนับถึง 5 หน้าสัมผัส C0 จะทำงาน</p>
+                            <p><strong>[ RST C0 ]:</strong> คำสั่ง Reset ใช้ล้างค่าใน Counter กลับเป็น 0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-64 bg-gray-100 rounded-lg p-4 border shadow-inner">
+                        <div class="flex justify-around mb-4">
+                            <div class="flex flex-col items-center gap-2">
+                                <button id="btn-5-x0" class="plc-btn w-12 h-12 bg-yellow-500 rounded-full border-4 border-gray-300 shadow-md text-white font-bold active:bg-yellow-600"></button>
+                                <span class="text-[10px] font-bold">X0 (Count Pulse)</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-2">
+                                <button id="btn-5-x1" class="plc-btn w-12 h-12 bg-red-500 rounded-full border-4 border-gray-300 shadow-md text-white font-bold active:bg-red-600"></button>
+                                <span class="text-[10px] font-bold">X1 (Reset)</span>
+                            </div>
+                        </div>
+                        <div class="bg-black text-yellow-400 font-mono text-center p-2 rounded mb-3 text-sm">
+                            Counter (C0): <span id="c0-display">0</span> / 5
+                        </div>
+                        <div class="flex justify-center border-t border-gray-300 pt-3">
+                            <div class="flex flex-col items-center gap-2">
+                                <div id="led-5-y0" class="led-indicator"></div>
+                                <span class="text-xs font-bold">Y0 (Full Box)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 border-2 border-gray-300 bg-white rounded-lg p-4 overflow-x-auto">
+                    <div class="relative w-[600px] h-64 bg-[#fafafa] border p-4 shadow-inner">
+                        <div class="ladder-rail"></div>
+                        <div class="ladder-rail-right"></div>
+
+                        <!-- Counter Rung -->
+                        <div class="ladder-rung absolute top-2 left-4 right-4">
+                            <div class="ladder-line active" style="width: 40px;"></div>
+                            <div id="c-5-x0" class="contact-box"><div class="contact-label text-xs mb-1">X0</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-5-r1-end" class="ladder-line flex-1"></div>
+                            <div id="co-5-c0" class="func-box mr-4"><div class="font-bold">C0</div><div>K5</div></div>
+                        </div>
+
+                        <!-- Output Rung -->
+                        <div class="ladder-rung absolute top-20 left-4 right-4">
+                            <div class="ladder-line active" style="width: 40px;"></div>
+                            <div id="c-5-c0" class="contact-box text-yellow-600"><div class="contact-label text-xs mb-1 font-bold">C0</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-5-r2-end" class="ladder-line flex-1"></div>
+                            <div id="co-5-y0" class="coil-box"><div class="contact-label text-xs mb-1">Y0</div><div class="coil-symbol">( )</div></div>
+                            <div id="l-5-r2-rt" class="ladder-line" style="width: 20px;"></div>
+                        </div>
+
+                        <!-- Reset Rung -->
+                        <div class="ladder-rung absolute top-[150px] left-4 right-4">
+                            <div class="ladder-line active" style="width: 40px;"></div>
+                            <div id="c-5-x1" class="contact-box"><div class="contact-label text-xs mb-1">X1</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-5-r3-end" class="ladder-line flex-1"></div>
+                            <div id="co-5-rst" class="func-box mr-4"><div class="font-bold">[ RST C0 ]</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= EXERCISE 6 ================= -->
+            <div id="ex6" class="tab-content">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">ข้อที่ 6: คำสั่งล็อกและปลดล็อกสถานะ (SET / RST)</h3>
+                        <p class="text-gray-600 mb-4 text-sm md:text-base">
+                            <strong>โจทย์:</strong> ทำงานคล้ายคลึงกับ Self-Holding แต่เขียนโปรแกรมได้สั้นกว่า เมื่อกด <code>X0</code> คำสั่ง <strong>SET</strong> จะบังคับให้ <code>Y0</code> ทำงานค้างไว้ และเมื่อกด <code>X1</code> คำสั่ง <strong>RST (Reset)</strong> จะสั่งให้ <code>Y0</code> หยุดทำงาน
+                        </p>
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded text-sm">
+                            <p><strong>[ SET Y0 ]:</strong> บังคับให้ Output เป็นสถานะ ON ค้างไว้ แม้สัญญาณ Input จะหายไปแล้ว</p>
+                            <p><strong>[ RST Y0 ]:</strong> บังคับให้ Output กลับไปเป็นสถานะ OFF</p>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-64 bg-gray-100 rounded-lg p-4 border shadow-inner">
+                        <div class="flex justify-around mb-4">
+                            <div class="flex flex-col items-center gap-2">
+                                <button id="btn-6-x0" class="plc-btn w-12 h-12 bg-green-500 rounded-full border-4 border-gray-300 shadow-md text-white font-bold active:bg-green-600"></button>
+                                <span class="text-xs font-bold">X0 (SET)</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-2">
+                                <button id="btn-6-x1" class="plc-btn w-12 h-12 bg-red-500 rounded-full border-4 border-gray-300 shadow-md text-white font-bold active:bg-red-600"></button>
+                                <span class="text-xs font-bold">X1 (RST)</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-center border-t border-gray-300 pt-3">
+                            <div class="flex flex-col items-center gap-2">
+                                <div id="led-6-y0" class="led-indicator"></div>
+                                <span class="text-xs font-bold">Y0 (Output)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 border-2 border-gray-300 bg-white rounded-lg p-4 overflow-x-auto">
+                    <div class="relative w-[600px] h-40 bg-[#fafafa] border p-4 shadow-inner">
+                        <div class="ladder-rail"></div>
+                        <div class="ladder-rail-right"></div>
+
+                        <!-- SET Rung -->
+                        <div class="ladder-rung absolute top-2 left-4 right-4">
+                            <div class="ladder-line active" style="width: 40px;"></div>
+                            <div id="c-6-x0" class="contact-box"><div class="contact-label text-xs mb-1">X0</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-6-r1-end" class="ladder-line flex-1"></div>
+                            <div id="co-6-set" class="func-box mr-4"><div class="font-bold">[ SET Y0 ]</div></div>
+                        </div>
+
+                        <!-- RST Rung -->
+                        <div class="ladder-rung absolute top-20 left-4 right-4">
+                            <div class="ladder-line active" style="width: 40px;"></div>
+                            <div id="c-6-x1" class="contact-box"><div class="contact-label text-xs mb-1">X1</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-6-r2-end" class="ladder-line flex-1"></div>
+                            <div id="co-6-rst" class="func-box mr-4"><div class="font-bold">[ RST Y0 ]</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= EXERCISE 7 ================= -->
+            <div id="ex7" class="tab-content">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">ข้อที่ 7: สวิตช์ปุ่มเดียวสลับสถานะ (Alternate - ALT)</h3>
+                        <p class="text-gray-600 mb-4 text-sm md:text-base">
+                            <strong>โจทย์:</strong> ใช้ปุ่ม <code>X0</code> เพียงปุ่มเดียว กดครั้งแรกหลอดไฟ <code>Y0</code> ติด กดปุ่ม <code>X0</code> เดิมอีกครั้ง หลอดไฟ <code>Y0</code> ดับ สลับกันไปมา
+                        </p>
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded text-sm">
+                            <p><strong>X0 (|↑|):</strong> สัญลักษณ์ลูกศรขึ้น คือการจับ <strong>Rising Edge (Pulse)</strong> จะปล่อยสัญญาณชั่วขณะ 1 สแกนไซเคิลเมื่อถูกกด</p>
+                            <p><strong>[ ALT Y0 ]:</strong> คำสั่ง Alternate (เฉพาะในตระกูล FX) สลับสถานะของ Output ทุกครั้งที่ได้รับสัญญาณ Pulse</p>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-64 bg-gray-100 rounded-lg p-4 border shadow-inner">
+                        <div class="flex justify-around mb-4">
+                            <div class="flex flex-col items-center gap-2">
+                                <button id="btn-7-x0" class="plc-btn w-12 h-12 bg-blue-500 rounded-full border-4 border-gray-300 shadow-md text-white font-bold active:bg-blue-600"></button>
+                                <span class="text-xs font-bold text-center">X0 <br>(Push ON/OFF)</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-center border-t border-gray-300 pt-3">
+                            <div class="flex flex-col items-center gap-2">
+                                <div id="led-7-y0" class="led-indicator"></div>
+                                <span class="text-xs font-bold">Y0 (Lamp)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 border-2 border-gray-300 bg-white rounded-lg p-4 overflow-x-auto">
+                    <div class="relative w-[600px] h-32 bg-[#fafafa] border p-4 shadow-inner">
+                        <div class="ladder-rail"></div>
+                        <div class="ladder-rail-right"></div>
+
+                        <div class="ladder-rung absolute top-8 left-4 right-4">
+                            <div class="ladder-line active" style="width: 40px;"></div>
+                            <div id="c-7-x0" class="contact-box"><div class="contact-label text-xs mb-1">X0</div><div class="contact-symbol">|↑|</div></div>
+                            <div id="l-7-r1-end" class="ladder-line flex-1"></div>
+                            <div id="co-7-alt" class="func-box mr-4"><div class="font-bold">[ ALT Y0 ]</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= EXERCISE 8 ================= -->
+            <div id="ex8" class="tab-content">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">ข้อที่ 8: วงจรไฟกะพริบ (Flicker Circuit)</h3>
+                        <p class="text-gray-600 mb-4 text-sm md:text-base">
+                            <strong>โจทย์:</strong> เมื่อเปิดสวิตช์ <code>X0</code> ค้างไว้ หลอดไฟ <code>Y0</code> จะกะพริบ ติด 1 วินาที และ ดับ 1 วินาที สลับกันไปเรื่อยๆ จนกว่าจะปิด <code>X0</code>
+                        </p>
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded text-sm">
+                            <p>ใช้ Timer 2 ตัวทำงานร่วมกัน <code>T0</code> นับเวลาดับ (1s) เมื่อครบจะกระตุ้น <code>T1</code> ให้นับเวลาติด (1s) และตัดวงจรตัวเองเพื่อรีเซ็ตวัฏจักรใหม่</p>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-64 bg-gray-100 rounded-lg p-4 border shadow-inner">
+                        <div class="flex justify-around mb-4">
+                            <div class="flex flex-col items-center gap-2">
+                                <button id="btn-8-x0" class="plc-btn w-12 h-12 bg-green-500 rounded-full border-4 border-gray-300 shadow-md text-white font-bold"></button>
+                                <span class="text-xs font-bold text-center">X0 (Switch)</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between px-4 text-xs font-mono bg-black text-white p-2 rounded mb-2">
+                            <span>T0: <span id="t0-val">0</span></span>
+                            <span>T1: <span id="t1-val">0</span></span>
+                        </div>
+                        <div class="flex justify-center border-t border-gray-300 pt-3">
+                            <div class="flex flex-col items-center gap-2">
+                                <div id="led-8-y0" class="led-indicator"></div>
+                                <span class="text-xs font-bold">Y0 (Blink)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 border-2 border-gray-300 bg-white rounded-lg p-4 overflow-x-auto">
+                    <div class="relative w-[600px] h-64 bg-[#fafafa] border p-4 shadow-inner">
+                        <div class="ladder-rail"></div>
+                        <div class="ladder-rail-right"></div>
+
+                        <!-- Rung 1: T0 -->
+                        <div class="ladder-rung absolute top-2 left-4 right-4">
+                            <div class="ladder-line active" style="width: 20px;"></div>
+                            <div id="c-8-x0" class="contact-box"><div class="contact-label text-[10px] mb-1">X0</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-8-r1-n1" class="ladder-line" style="width: 30px;"></div>
+                            <div id="c-8-t1-nc" class="contact-box bg-red-50"><div class="contact-label text-[10px] mb-1 text-red-600">T1</div><div class="contact-symbol text-red-600">|/|</div></div>
+                            <div id="l-8-r1-end" class="ladder-line flex-1"></div>
+                            <div id="co-8-t0" class="func-box mr-4"><div class="font-bold">T0</div><div>K10</div></div>
+                        </div>
+
+                        <!-- Rung 2: T1 -->
+                        <div class="ladder-rung absolute top-[80px] left-4 right-4">
+                            <div class="ladder-line active" style="width: 20px;"></div>
+                            <div id="c-8-t0" class="contact-box"><div class="contact-label text-[10px] mb-1">T0</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-8-r2-end" class="ladder-line flex-1"></div>
+                            <div id="co-8-t1" class="func-box mr-4"><div class="font-bold">T1</div><div>K10</div></div>
+                        </div>
+
+                        <!-- Rung 3: Y0 -->
+                        <div class="ladder-rung absolute top-[150px] left-4 right-4">
+                            <div class="ladder-line active" style="width: 20px;"></div>
+                            <div id="c-8-t0-out" class="contact-box"><div class="contact-label text-[10px] mb-1">T0</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-8-r3-end" class="ladder-line flex-1"></div>
+                            <div id="co-8-y0" class="coil-box"><div class="contact-label text-[10px] mb-1">Y0</div><div class="coil-symbol">( )</div></div>
+                            <div id="l-8-r3-rt" class="ladder-line" style="width: 20px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= EXERCISE 9 ================= -->
+            <div id="ex9" class="tab-content">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">ข้อที่ 9: การเริ่มทำงานเรียงลำดับ (Sequential Start)</h3>
+                        <p class="text-gray-600 mb-4 text-sm md:text-base">
+                            <strong>โจทย์:</strong> เมื่อกด <code>X0</code> มอเตอร์ <code>Y0</code> จะทำงานทันที หลังจากนั้น 3 วินาที มอเตอร์ <code>Y1</code> จะทำงานตามมาอัตโนมัติ หากกด <code>X1</code> ระบบทั้งหมดจะหยุดทำงาน
+                        </p>
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded text-sm">
+                            <p>เป็นการผสมผสานระหว่างวงจร <strong>Self-Holding</strong> และ <strong>Timer</strong> เข้าด้วยกัน ซึ่งพบเจอได้บ่อยในการสตาร์ทมอเตอร์ขนาดใหญ่หรือสายพานลำเลียง</p>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-64 bg-gray-100 rounded-lg p-4 border shadow-inner">
+                        <div class="flex justify-around mb-4">
+                            <div class="flex flex-col items-center gap-2">
+                                <button id="btn-9-x0" class="plc-btn w-12 h-12 bg-green-500 rounded-full border-4 border-gray-300 shadow-md text-white font-bold active:bg-green-600"></button>
+                                <span class="text-xs font-bold">X0 (Start)</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-2">
+                                <button id="btn-9-x1" class="plc-btn w-12 h-12 bg-red-500 rounded-full border-4 border-gray-300 shadow-md text-white font-bold active:bg-red-600"></button>
+                                <span class="text-xs font-bold">X1 (Stop)</span>
+                            </div>
+                        </div>
+                        <div class="bg-black text-green-400 font-mono text-center p-2 rounded mb-3 text-sm">
+                            Delay (T0): <span id="e9-t0-display">0</span> / 30
+                        </div>
+                        <div class="flex justify-around border-t border-gray-300 pt-3">
+                            <div class="flex flex-col items-center gap-2">
+                                <div id="led-9-y0" class="led-indicator"></div>
+                                <span class="text-xs font-bold">Y0 (Motor 1)</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-2">
+                                <div id="led-9-y1" class="led-indicator"></div>
+                                <span class="text-xs font-bold">Y1 (Motor 2)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 border-2 border-gray-300 bg-white rounded-lg p-4 overflow-x-auto">
+                    <div class="relative w-[600px] h-[300px] bg-[#fafafa] border p-4 shadow-inner">
+                        <div class="ladder-rail"></div>
+                        <div class="ladder-rail-right"></div>
+
+                        <!-- Rung 1: Self Holding Y0 -->
+                        <div class="ladder-rung absolute top-2 left-4 right-4">
+                            <div class="ladder-line active" style="width: 20px;"></div>
+                            <div id="c-9-x0" class="contact-box"><div class="contact-label text-xs mb-1">X0</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-9-n1" class="ladder-line" style="width: 30px;"></div>
+                            <div id="c-9-x1" class="contact-box"><div class="contact-label text-xs mb-1">X1</div><div class="contact-symbol">|/|</div></div>
+                            <div id="l-9-r1-end" class="ladder-line flex-1"></div>
+                            <div id="co-9-y0" class="coil-box"><div class="contact-label text-xs mb-1">Y0</div><div class="coil-symbol">( )</div></div>
+                            <div id="l-9-r1-rt" class="ladder-line" style="width: 20px;"></div>
+                        </div>
+                        <div class="ladder-vertical active" style="left: 18px; top: 32px; height: 50px;"></div>
+                        <div id="v-9-node" class="ladder-vertical" style="left: 112px; top: 32px; height: 50px;"></div>
+                        <div class="ladder-rung absolute top-[60px] left-[18px]" style="width: 80px;">
+                            <div class="ladder-line active" style="width: 14px;"></div>
+                            <div id="c-9-y0-no" class="contact-box" style="margin-top: -10px; transform: scale(0.9);"><div class="contact-label text-xs mb-1">Y0</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-9-branch-end" class="ladder-line flex-1"></div>
+                        </div>
+
+                        <!-- Rung 2: Timer T0 -->
+                        <div class="ladder-rung absolute top-[130px] left-4 right-4">
+                            <div class="ladder-line active" style="width: 20px;"></div>
+                            <div id="c-9-y0-timer" class="contact-box"><div class="contact-label text-xs mb-1">Y0</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-9-r2-end" class="ladder-line flex-1"></div>
+                            <div id="co-9-t0" class="func-box mr-4"><div class="font-bold">T0</div><div>K30</div></div>
+                        </div>
+
+                        <!-- Rung 3: Y1 Output -->
+                        <div class="ladder-rung absolute top-[210px] left-4 right-4">
+                            <div class="ladder-line active" style="width: 20px;"></div>
+                            <div id="c-9-t0" class="contact-box"><div class="contact-label text-xs mb-1">T0</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-9-r3-end" class="ladder-line flex-1"></div>
+                            <div id="co-9-y1" class="coil-box"><div class="contact-label text-xs mb-1">Y1</div><div class="coil-symbol">( )</div></div>
+                            <div id="l-9-r3-rt" class="ladder-line" style="width: 20px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= EXERCISE 10 ================= -->
+            <div id="ex10" class="tab-content">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">ข้อที่ 10: การหยุดการทำงานอัตโนมัติ (Limit Switch)</h3>
+                        <p class="text-gray-600 mb-4 text-sm md:text-base">
+                            <strong>โจทย์:</strong> ระบบเลื่อนของ 
+                            กด <code>X0</code> ของจะเลื่อนไปทางซ้าย (Y0) เมื่อชนเซ็นเซอร์ <code>X2</code> จะหยุดเลื่อน 
+                            และเมื่อกด <code>X1</code> จะเลื่อนไปทางขวา (Y1) เมื่อชน <code>X3</code> จะหยุด 
+                            (ระบบมี Interlock ภายในตัวป้องกันการกดพร้อมกัน)
+                        </p>
+                    </div>
+                    
+                    <div class="w-full md:w-80 bg-gray-100 rounded-lg p-4 border shadow-inner">
+                        <div class="flex justify-around mb-2">
+                            <div class="flex flex-col items-center gap-1">
+                                <button id="btn-10-x0" class="plc-btn w-10 h-10 bg-green-500 rounded-full border-2 border-gray-300"></button>
+                                <span class="text-[10px] font-bold">X0 (Move L)</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <button id="btn-10-x1" class="plc-btn w-10 h-10 bg-green-500 rounded-full border-2 border-gray-300"></button>
+                                <span class="text-[10px] font-bold">X1 (Move R)</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-around mb-4 border-t border-gray-300 pt-2">
+                            <div class="flex flex-col items-center gap-1">
+                                <button id="btn-10-x2" class="plc-btn w-8 h-8 bg-yellow-500 rounded border-2 border-gray-300"></button>
+                                <span class="text-[10px] font-bold text-gray-600">X2 (Limit L)</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <button id="btn-10-x3" class="plc-btn w-8 h-8 bg-yellow-500 rounded border-2 border-gray-300"></button>
+                                <span class="text-[10px] font-bold text-gray-600">X3 (Limit R)</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-around border-t border-gray-300 pt-3">
+                            <div class="flex flex-col items-center gap-2">
+                                <div id="led-10-y0" class="led-indicator"></div>
+                                <span class="text-xs font-bold text-blue-600">Y0 (Left)</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-2">
+                                <div id="led-10-y1" class="led-indicator"></div>
+                                <span class="text-xs font-bold text-purple-600">Y1 (Right)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 border-2 border-gray-300 bg-white rounded-lg p-4 overflow-x-auto">
+                    <div class="relative w-[650px] h-[300px] bg-[#fafafa] border p-4 shadow-inner">
+                        <div class="ladder-rail"></div>
+                        <div class="ladder-rail-right"></div>
+
+                        <!-- Rung 1: Left Movement Y0 -->
+                        <div class="ladder-rung absolute top-2 left-4 right-4">
+                            <div class="ladder-line active" style="width: 20px;"></div>
+                            <div id="c-10-x0" class="contact-box"><div class="contact-label text-[10px] mb-1">X0</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-10-n1" class="ladder-line" style="width: 20px;"></div>
+                            <div id="c-10-x2" class="contact-box bg-yellow-50"><div class="contact-label text-[10px] mb-1">X2</div><div class="contact-symbol">|/|</div></div>
+                            <div id="l-10-n2" class="ladder-line" style="width: 20px;"></div>
+                            <div id="c-10-y1-nc" class="contact-box"><div class="contact-label text-[10px] mb-1">Y1</div><div class="contact-symbol">|/|</div></div>
+                            <div id="l-10-r1-end" class="ladder-line flex-1"></div>
+                            <div id="co-10-y0" class="coil-box"><div class="contact-label text-[10px] mb-1">Y0</div><div class="coil-symbol">( )</div></div>
+                            <div id="l-10-r1-rt" class="ladder-line" style="width: 20px;"></div>
+                        </div>
+                        <div class="ladder-vertical active" style="left: 18px; top: 32px; height: 45px;"></div>
+                        <div id="v-10-n1" class="ladder-vertical" style="left: 88px; top: 32px; height: 45px;"></div>
+                        <div class="ladder-rung absolute top-[60px] left-[18px]" style="width: 70px;">
+                            <div class="ladder-line active" style="width: 10px;"></div>
+                            <div id="c-10-y0-no" class="contact-box" style="transform: scale(0.9); margin-top: -15px;"><div class="contact-label text-[10px] mb-1">Y0</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-10-b1-end" class="ladder-line flex-1"></div>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="absolute top-[120px] left-8 text-gray-400 font-mono text-xs">-----------------------------------------------------</div>
+
+                        <!-- Rung 2: Right Movement Y1 -->
+                        <div class="ladder-rung absolute top-[140px] left-4 right-4">
+                            <div class="ladder-line active" style="width: 20px;"></div>
+                            <div id="c-10-x1" class="contact-box"><div class="contact-label text-[10px] mb-1">X1</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-10-n3" class="ladder-line" style="width: 20px;"></div>
+                            <div id="c-10-x3" class="contact-box bg-yellow-50"><div class="contact-label text-[10px] mb-1">X3</div><div class="contact-symbol">|/|</div></div>
+                            <div id="l-10-n4" class="ladder-line" style="width: 20px;"></div>
+                            <div id="c-10-y0-nc" class="contact-box"><div class="contact-label text-[10px] mb-1">Y0</div><div class="contact-symbol">|/|</div></div>
+                            <div id="l-10-r2-end" class="ladder-line flex-1"></div>
+                            <div id="co-10-y1" class="coil-box"><div class="contact-label text-[10px] mb-1">Y1</div><div class="coil-symbol">( )</div></div>
+                            <div id="l-10-r2-rt" class="ladder-line" style="width: 20px;"></div>
+                        </div>
+                        <div class="ladder-vertical active" style="left: 18px; top: 170px; height: 45px;"></div>
+                        <div id="v-10-n2" class="ladder-vertical" style="left: 88px; top: 170px; height: 45px;"></div>
+                        <div class="ladder-rung absolute top-[200px] left-[18px]" style="width: 70px;">
+                            <div class="ladder-line active" style="width: 10px;"></div>
+                            <div id="c-10-y1-no" class="contact-box" style="transform: scale(0.9); margin-top: -15px;"><div class="contact-label text-[10px] mb-1">Y1</div><div class="contact-symbol">| |</div></div>
+                            <div id="l-10-b2-end" class="ladder-line flex-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // --- Helper Functions ---
+        function setClass(id, className, state) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (state) el.classList.add(className);
+            else el.classList.remove(className);
+        }
+        
+        function setLED(id, state) {
+            setClass(id, 'on', state);
+        }
+
+        // --- Tab Logic ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+
+        // --- Button Event Binding ---
+        function bindButton(btnId, callback) {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            
+            const triggerDown = (e) => { e.preventDefault(); btn.classList.add('pressed'); callback(true); };
+            const triggerUp = (e) => { e.preventDefault(); btn.classList.remove('pressed'); callback(false); };
+            
+            btn.addEventListener('mousedown', triggerDown);
+            btn.addEventListener('touchstart', triggerDown);
+            btn.addEventListener('mouseup', triggerUp);
+            btn.addEventListener('mouseleave', triggerUp);
+            btn.addEventListener('touchend', triggerUp);
+        }
+
+        // ================= EX 1: Basic NO/NC =================
+        let e1_x0 = false;
+        let e1_x1 = false;
+        let e1_y0 = false;
+
+        function updateEx1() {
+            e1_y0 = e1_x0 && !e1_x1;
+
+            setClass('c-1-x0', 'active', e1_x0);
+            setClass('l-1-mid', 'active', e1_x0);
+            setClass('c-1-x1', 'active', !e1_x1); // Active when NC is closed
+            
+            const endPower = e1_x0 && !e1_x1;
+            setClass('l-1-end', 'active', endPower);
+            setClass('co-1-y0', 'active', endPower);
+            setClass('l-1-right', 'active', endPower);
+            setLED('led-1-y0', endPower);
+        }
+
+        bindButton('btn-1-x0', state => { e1_x0 = state; updateEx1(); });
+        bindButton('btn-1-x1', state => { e1_x1 = state; updateEx1(); });
+        
+        // Initial setup for NC
+        updateEx1();
+
+        // ================= EX 2: Self-Holding =================
+        let e2_x0 = false;
+        let e2_x1 = false;
+        let e2_y0 = false;
+
+        function updateEx2() {
+            // Logic: Y0 = (X0 OR Y0) AND NOT X1
+            if ((e2_x0 || e2_y0) && !e2_x1) {
+                e2_y0 = true;
+            } else {
+                e2_y0 = false;
+            }
+
+            setClass('c-2-x0', 'active', e2_x0);
+            setClass('c-2-y0', 'active', e2_y0);
+            
+            const nodePower = e2_x0 || e2_y0;
+            setClass('l-2-node1', 'active', nodePower);
+            setClass('l-2-branch-end', 'active', e2_y0);
+            setClass('v-2-node', 'active', nodePower);
+
+            setClass('c-2-x1', 'active', !e2_x1);
+
+            const endPower = nodePower && !e2_x1;
+            setClass('l-2-end', 'active', endPower);
+            setClass('co-2-y0', 'active', endPower);
+            setClass('l-2-right', 'active', endPower);
+            setLED('led-2-y0', endPower);
+        }
+
+        bindButton('btn-2-x0', state => { e2_x0 = state; updateEx2(); });
+        bindButton('btn-2-x1', state => { e2_x1 = state; updateEx2(); });
+        updateEx2();
+
+
+        // ================= EX 3: Interlock =================
+        let e3_x0 = false; // Left
+        let e3_x1 = false; // Right
+        let e3_x2 = false; // Stop
+        let e3_y0 = false;
+        let e3_y1 = false;
+
+        function updateEx3() {
+            // Y0 Logic
+            if ((e3_x0 || e3_y0) && !e3_x2 && !e3_y1) e3_y0 = true;
+            else e3_y0 = false;
+
+            // Y1 Logic
+            if ((e3_x1 || e3_y1) && !e3_x2 && !e3_y0) e3_y1 = true;
+            else e3_y1 = false;
+
+            // Update UI Y0 Rung
+            setClass('c-3-x0', 'active', e3_x0);
+            setClass('c-3-y0-no', 'active', e3_y0);
+            let y0_node = e3_x0 || e3_y0;
+            setClass('l-3-y0-branch-end', 'active', e3_y0);
+            setClass('v-3-y0-node', 'active', y0_node);
+            setClass('l-3-r1-n1', 'active', y0_node);
+            setClass('c-3-x2a', 'active', !e3_x2);
+            let y0_n2 = y0_node && !e3_x2;
+            setClass('l-3-r1-n2', 'active', y0_n2);
+            setClass('c-3-y1-nc', 'active', !e3_y1);
+            let y0_out = y0_n2 && !e3_y1;
+            setClass('l-3-r1-end', 'active', y0_out);
+            setClass('co-3-y0', 'active', y0_out);
+            setClass('l-3-r1-rt', 'active', y0_out);
+            setLED('led-3-y0', y0_out);
+
+            // Update UI Y1 Rung
+            setClass('c-3-x1', 'active', e3_x1);
+            setClass('c-3-y1-no', 'active', e3_y1);
+            let y1_node = e3_x1 || e3_y1;
+            setClass('l-3-y1-branch-end', 'active', e3_y1);
+            setClass('v-3-y1-node', 'active', y1_node);
+            setClass('l-3-r2-n1', 'active', y1_node);
+            setClass('c-3-x2b', 'active', !e3_x2);
+            let y1_n2 = y1_node && !e3_x2;
+            setClass('l-3-r2-n2', 'active', y1_n2);
+            setClass('c-3-y0-nc', 'active', !e3_y0);
+            let y1_out = y1_n2 && !e3_y0;
+            setClass('l-3-r2-end', 'active', y1_out);
+            setClass('co-3-y1', 'active', y1_out);
+            setClass('l-3-r2-rt', 'active', y1_out);
+            setLED('led-3-y1', y1_out);
+        }
+
+        bindButton('btn-3-x0', state => { e3_x0 = state; updateEx3(); });
+        bindButton('btn-3-x1', state => { e3_x1 = state; updateEx3(); });
+        bindButton('btn-3-x2', state => { e3_x2 = state; updateEx3(); });
+        updateEx3();
+
+        // ================= EX 4: Timer =================
+        let e4_x0 = false;
+        let e4_t0_val = 0;
+        let e4_t0_done = false;
+        let e4_timer_interval = null;
+
+        function renderEx4() {
+            setClass('c-4-x0', 'active', e4_x0);
+            setClass('l-4-r1-end', 'active', e4_x0);
+            setClass('co-4-t0', 'active', e4_x0);
+            
+            document.getElementById('t0-display').innerText = e4_t0_val;
+            
+            setClass('c-4-t0', 'active', e4_t0_done);
+            setClass('l-4-r2-end', 'active', e4_t0_done);
+            setClass('co-4-y0', 'active', e4_t0_done);
+            setClass('l-4-r2-rt', 'active', e4_t0_done);
+            setLED('led-4-y0', e4_t0_done);
+        }
+
+        bindButton('btn-4-x0', state => { 
+            e4_x0 = state; 
+            if(e4_x0) {
+                if(!e4_timer_interval) {
+                    e4_timer_interval = setInterval(() => {
+                        if(e4_t0_val < 30) {
+                            e4_t0_val++;
+                            if(e4_t0_val >= 30) e4_t0_done = true;
+                            renderEx4();
+                        }
+                    }, 100); // 100ms time base
+                }
+            } else {
+                clearInterval(e4_timer_interval);
+                e4_timer_interval = null;
+                e4_t0_val = 0;
+                e4_t0_done = false;
+            }
+            renderEx4();
+        });
+        renderEx4();
+
+        // ================= EX 5: Counter =================
+        let e5_x0 = false;
+        let e5_x1 = false;
+        let e5_x0_prev = false;
+        let e5_c0_val = 0;
+        let e5_c0_done = false;
+
+        function updateEx5() {
+            // Rising edge detection for X0
+            if(e5_x0 && !e5_x0_prev && !e5_x1) {
+                if(e5_c0_val < 5) {
+                    e5_c0_val++;
+                    if(e5_c0_val >= 5) e5_c0_done = true;
+                }
+            }
+            e5_x0_prev = e5_x0;
+
+            // Reset Logic
+            if(e5_x1) {
+                e5_c0_val = 0;
+                e5_c0_done = false;
+            }
+
+            // Update UI
+            document.getElementById('c0-display').innerText = e5_c0_val;
+            
+            setClass('c-5-x0', 'active', e5_x0);
+            setClass('l-5-r1-end', 'active', e5_x0);
+            setClass('co-5-c0', 'active', e5_x0);
+
+            setClass('c-5-c0', 'active', e5_c0_done);
+            setClass('l-5-r2-end', 'active', e5_c0_done);
+            setClass('co-5-y0', 'active', e5_c0_done);
+            setClass('l-5-r2-rt', 'active', e5_c0_done);
+            setLED('led-5-y0', e5_c0_done);
+
+            setClass('c-5-x1', 'active', e5_x1);
+            setClass('l-5-r3-end', 'active', e5_x1);
+            setClass('co-5-rst', 'active', e5_x1);
+        }
+
+        bindButton('btn-5-x0', state => { e5_x0 = state; updateEx5(); });
+        bindButton('btn-5-x1', state => { e5_x1 = state; updateEx5(); });
+        updateEx5();
+
+        // ================= EX 6: SET/RST =================
+        let e6_x0 = false;
+        let e6_x1 = false;
+        let e6_y0 = false;
+
+        function updateEx6() {
+            if (e6_x0) e6_y0 = true;
+            if (e6_x1) e6_y0 = false; // RST priority
+
+            setClass('c-6-x0', 'active', e6_x0);
+            setClass('l-6-r1-end', 'active', e6_x0);
+            setClass('co-6-set', 'active', e6_x0);
+
+            setClass('c-6-x1', 'active', e6_x1);
+            setClass('l-6-r2-end', 'active', e6_x1);
+            setClass('co-6-rst', 'active', e6_x1);
+            
+            setLED('led-6-y0', e6_y0);
+        }
+
+        bindButton('btn-6-x0', state => { e6_x0 = state; updateEx6(); });
+        bindButton('btn-6-x1', state => { e6_x1 = state; updateEx6(); });
+
+        // ================= EX 7: ALT =================
+        let e7_x0 = false;
+        let e7_x0_prev = false;
+        let e7_y0 = false;
+
+        function updateEx7() {
+            if (e7_x0 && !e7_x0_prev) {
+                e7_y0 = !e7_y0; // Toggle on Rising Edge
+            }
+            e7_x0_prev = e7_x0;
+
+            setClass('c-7-x0', 'active', e7_x0);
+            setClass('l-7-r1-end', 'active', e7_x0);
+            setClass('co-7-alt', 'active', e7_x0); // Momentary flash on function block
+            setLED('led-7-y0', e7_y0);
+        }
+
+        bindButton('btn-7-x0', state => { e7_x0 = state; updateEx7(); });
+
+        // ================= EX 8: Flicker =================
+        let e8_x0 = false;
+        let e8_t0_val = 0;
+        let e8_t1_val = 0;
+        let e8_interval = null;
+
+        function renderEx8() {
+            let t1_not = e8_t1_val < 10;
+            let t0_done = e8_t0_val >= 10;
+
+            setClass('c-8-x0', 'active', e8_x0);
+            setClass('l-8-r1-n1', 'active', e8_x0);
+            setClass('c-8-t1-nc', 'active', t1_not);
+            let r1_end = e8_x0 && t1_not;
+            setClass('l-8-r1-end', 'active', r1_end);
+            setClass('co-8-t0', 'active', r1_end);
+
+            setClass('c-8-t0', 'active', t0_done);
+            setClass('l-8-r2-end', 'active', t0_done);
+            setClass('co-8-t1', 'active', t0_done);
+
+            setClass('c-8-t0-out', 'active', t0_done);
+            setClass('l-8-r3-end', 'active', t0_done);
+            setClass('co-8-y0', 'active', t0_done);
+            setClass('l-8-r3-rt', 'active', t0_done);
+            
+            setLED('led-8-y0', t0_done);
+            document.getElementById('t0-val').innerText = e8_t0_val;
+            document.getElementById('t1-val').innerText = e8_t1_val;
+        }
+
+        bindButton('btn-8-x0', state => {
+            e8_x0 = state;
+            if(e8_x0 && !e8_interval) {
+                e8_interval = setInterval(() => {
+                    if (e8_t0_val < 10) {
+                        e8_t0_val++;
+                    } else if (e8_t1_val < 10) {
+                        e8_t1_val++;
+                        if (e8_t1_val >= 10) {
+                            // Reset cycle
+                            e8_t0_val = 0;
+                            e8_t1_val = 0;
+                        }
+                    }
+                    renderEx8();
+                }, 100);
+            } else if (!e8_x0) {
+                clearInterval(e8_interval);
+                e8_interval = null;
+                e8_t0_val = 0;
+                e8_t1_val = 0;
+            }
+            renderEx8();
+        });
+        renderEx8();
+
+        // ================= EX 9: Sequential Start =================
+        let e9_x0 = false;
+        let e9_x1 = false;
+        let e9_y0 = false;
+        let e9_t0_val = 0;
+        let e9_interval = null;
+
+        function renderEx9() {
+            let n1 = e9_x0 || e9_y0;
+            let r1_end = n1 && !e9_x1;
+            
+            setClass('c-9-x0', 'active', e9_x0);
+            setClass('c-9-y0-no', 'active', e9_y0);
+            setClass('l-9-n1', 'active', n1);
+            setClass('v-9-node', 'active', n1);
+            setClass('l-9-branch-end', 'active', e9_y0);
+            setClass('c-9-x1', 'active', !e9_x1);
+            setClass('l-9-r1-end', 'active', r1_end);
+            setClass('co-9-y0', 'active', r1_end);
+            setClass('l-9-r1-rt', 'active', r1_end);
+
+            setClass('c-9-y0-timer', 'active', e9_y0);
+            setClass('l-9-r2-end', 'active', e9_y0);
+            setClass('co-9-t0', 'active', e9_y0);
+
+            let t0_done = e9_t0_val >= 30;
+            setClass('c-9-t0', 'active', t0_done);
+            setClass('l-9-r3-end', 'active', t0_done);
+            setClass('co-9-y1', 'active', t0_done);
+            setClass('l-9-r3-rt', 'active', t0_done);
+
+            setLED('led-9-y0', e9_y0);
+            setLED('led-9-y1', t0_done);
+            document.getElementById('e9-t0-display').innerText = e9_t0_val;
+        }
+
+        function updateEx9Logic() {
+            if ((e9_x0 || e9_y0) && !e9_x1) {
+                e9_y0 = true;
+                if (!e9_interval) {
+                    e9_interval = setInterval(() => {
+                        if(e9_t0_val < 30) e9_t0_val++;
+                        renderEx9();
+                    }, 100);
+                }
+            } else {
+                e9_y0 = false;
+                clearInterval(e9_interval);
+                e9_interval = null;
+                e9_t0_val = 0;
+            }
+            renderEx9();
+        }
+
+        bindButton('btn-9-x0', state => { e9_x0 = state; updateEx9Logic(); });
+        bindButton('btn-9-x1', state => { e9_x1 = state; updateEx9Logic(); });
+        renderEx9();
+
+        // ================= EX 10: Limit Switch =================
+        let e10_x0 = false; // Move L
+        let e10_x1 = false; // Move R
+        let e10_x2 = false; // Limit L
+        let e10_x3 = false; // Limit R
+        let e10_y0 = false;
+        let e10_y1 = false;
+
+        function updateEx10() {
+            // Logic Y0 (Left)
+            if ((e10_x0 || e10_y0) && !e10_x2 && !e10_y1) e10_y0 = true;
+            else e10_y0 = false;
+
+            // Logic Y1 (Right)
+            if ((e10_x1 || e10_y1) && !e10_x3 && !e10_y0) e10_y1 = true;
+            else e10_y1 = false;
+
+            // UI Y0
+            let n1 = e10_x0 || e10_y0;
+            let n2 = n1 && !e10_x2;
+            let r1_end = n2 && !e10_y1;
+            setClass('c-10-x0', 'active', e10_x0);
+            setClass('c-10-y0-no', 'active', e10_y0);
+            setClass('v-10-n1', 'active', n1);
+            setClass('l-10-b1-end', 'active', e10_y0);
+            setClass('l-10-n1', 'active', n1);
+            setClass('c-10-x2', 'active', !e10_x2);
+            setClass('l-10-n2', 'active', n2);
+            setClass('c-10-y1-nc', 'active', !e10_y1);
+            setClass('l-10-r1-end', 'active', r1_end);
+            setClass('co-10-y0', 'active', r1_end);
+            setClass('l-10-r1-rt', 'active', r1_end);
+
+            // UI Y1
+            let n3 = e10_x1 || e10_y1;
+            let n4 = n3 && !e10_x3;
+            let r2_end = n4 && !e10_y0;
+            setClass('c-10-x1', 'active', e10_x1);
+            setClass('c-10-y1-no', 'active', e10_y1);
+            setClass('v-10-n2', 'active', n3);
+            setClass('l-10-b2-end', 'active', e10_y1);
+            setClass('l-10-n3', 'active', n3);
+            setClass('c-10-x3', 'active', !e10_x3);
+            setClass('l-10-n4', 'active', n4);
+            setClass('c-10-y0-nc', 'active', !e10_y0);
+            setClass('l-10-r2-end', 'active', r2_end);
+            setClass('co-10-y1', 'active', r2_end);
+            setClass('l-10-r2-rt', 'active', r2_end);
+
+            setLED('led-10-y0', r1_end);
+            setLED('led-10-y1', r2_end);
+        }
+
+        bindButton('btn-10-x0', state => { e10_x0 = state; updateEx10(); });
+        bindButton('btn-10-x1', state => { e10_x1 = state; updateEx10(); });
+        bindButton('btn-10-x2', state => { e10_x2 = state; updateEx10(); });
+        bindButton('btn-10-x3', state => { e10_x3 = state; updateEx10(); });
+        updateEx10();
+
+    </script>
+</body>
+</html>

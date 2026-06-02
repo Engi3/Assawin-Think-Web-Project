@@ -1,0 +1,27 @@
+[
+  {
+    "id": "plc-basics",
+    "title_en": "Chapter 1: Introduction to PLC and Industrial Interfaces",
+    "title_th": "บทที่ 1: ความรู้เบื้องต้นเกี่ยวกับ PLC และอินเทอร์เฟซอุตสาหกรรม",
+    "iframeUrl": "/simulations/interactive_plc_lesson.html",
+    "content_en": "This lesson introduces the fundamental concepts of Programmable Logic Controllers (PLCs) and their role in industrial automation. The interactive simulation on the right allows you to explore a basic PLC interface, understand input/output modules, and see how ladder logic corresponds to real-world control scenarios.",
+    "content_th": "บทเรียนนี้แนะนำแนวคิดพื้นฐานของ PLC และบทบาทของมันในระบบอัตโนมัติทางอุตสาหกรรม แบบจำลองอินเทอร์แอคทีฟด้านขวาช่วยให้คุณสามารถสำรวจอินเทอร์เฟซพื้นฐานของ PLC ทำความเข้าใจโมดูลอินพุต/เอาต์พุต และดูว่าแลดเดอร์ลอจิกสอดคล้องกับสถานการณ์การควบคุมในโลกแห่งความเป็นจริงอย่างไร",
+    "resources": []
+  },
+  {
+    "id": "sensors-and-actuators",
+    "title_en": "Chapter 2: Sensors and Actuators (Awaiting Update)",
+    "title_th": "บทที่ 2: เซ็นเซอร์และแอคชูเอเตอร์ (รอการอัปเดต)",
+    "content_en": "Content for this chapter is currently being developed.",
+    "content_th": "เนื้อหาสำหรับบทนี้กำลังอยู่ในระหว่างการพัฒนา",
+    "resources": []
+  },
+  {
+    "id": "control-strategies",
+    "title_en": "Chapter 3: Advanced Control Strategies (Awaiting Update)",
+    "title_th": "บทที่ 3: กลยุทธ์การควบคุมขั้นสูง (รอการอัปเดต)",
+    "content_en": "Content for this chapter is currently being developed.",
+    "content_th": "เนื้อหาสำหรับบทนี้กำลังอยู่ในระหว่างการพัฒนา",
+    "resources": []
+  }
+]

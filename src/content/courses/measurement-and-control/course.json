@@ -1,0 +1,11 @@
+{
+  "id": "measurement-and-control",
+  "code": "30127-2005",
+  "title_en": "Measurement Techniques and Control Equipment",
+  "title_th": "เทคนิคการวัดและเครื่องมือควบคุม",
+  "description_en": "This course studies and practices design principles considering inspection factors and test plans for machine inspection, structure, operating principles, material preparation, installation, testing, adjustment, and maintenance of industrial measurement equipment in conjunction with PLCs. It covers reading values ​​and controlling machine operation related to speed, position, torque, temperature, light, pressure, flow rate, level, and weight using industrial control modules. The course includes writing programs to read values ​​from industrial control modules and verifying the correctness of the control programs using PLCs. It applies the 7-level inspection system and ensures safety in operations according to relevant standards.",
+  "description_th": "ศึกษาวิเคราะห์และปฏิบัติเกี่ยวกับหลักการออกแบบโดยคำนึงถึงปัจจัยในการตรวจสอบและวางแผนการทดสอบ การตรวจสอบเครื่องจักร โครงสร้าง หลักการทำงาน การเตรียมวัสดุ การติดตั้ง การทดสอบ การปรับแต่ง และการบำรุงรักษาเครื่องมือวัดอุตสาหกรรมร่วมกับ PLC การอ่านค่าและควบคุมการทำงานของเครื่องจักรที่เกี่ยวข้องกับความเร็ว ตำแหน่ง ทอร์ก อุณหภูมิ แสงสว่าง ความดัน อัตราการไหล ระดับ และน้ำหนัก โดยใช้โมดูลควบคุมอุตสาหกรรม เขียนโปรแกรมอ่านค่าจากโมดูลควบคุมอุตสาหกรรมและตรวจสอบความถูกต้องของโปรแกรมควบคุมด้วย PLC ประยุกต์ใช้ระบบการตรวจสอบ 7 ระดับ และความปลอดภัยในการปฏิบัติงานตามมาตรฐานที่เกี่ยวข้อง",
+  "image": "/assets/courses/measurement-and-control/Gemini_Generated_Image_oxfpphoxfpphoxfp.jpg",
+  "syllabus_en": "Covers design, installation, testing, and maintenance of industrial measurement equipment with PLCs, focusing on controlling various physical parameters and ensuring operational safety.",
+  "syllabus_th": "ครอบคลุมการออกแบบ ติดตั้ง ทดสอบ และบำรุงรักษาเครื่องมือวัดอุตสาหกรรมร่วมกับ PLC โดยเน้นการควบคุมพารามิเตอร์ทางกายภาพต่างๆ และความปลอดภัยในการปฏิบัติงาน"
+}
