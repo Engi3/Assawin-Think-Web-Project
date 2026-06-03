@@ -1,26 +1,55 @@
 [
   {
-    "id": "plc-basics",
-    "title_en": "Chapter 1: Introduction to PLC and Industrial Interfaces",
-    "title_th": "บทที่ 1: ความรู้เบื้องต้นเกี่ยวกับ PLC และอินเทอร์เฟซอุตสาหกรรม",
-    "iframeUrl": "/simulations/interactive_plc_lesson.html",
-    "content_en": "This lesson introduces the fundamental concepts of Programmable Logic Controllers (PLCs) and their role in industrial automation. The interactive simulation on the right allows you to explore a basic PLC interface, understand input/output modules, and see how ladder logic corresponds to real-world control scenarios.",
-    "content_th": "บทเรียนนี้แนะนำแนวคิดพื้นฐานของ PLC และบทบาทของมันในระบบอัตโนมัติทางอุตสาหกรรม แบบจำลองอินเทอร์แอคทีฟด้านขวาช่วยให้คุณสามารถสำรวจอินเทอร์เฟซพื้นฐานของ PLC ทำความเข้าใจโมดูลอินพุต/เอาต์พุต และดูว่าแลดเดอร์ลอจิกสอดคล้องกับสถานการณ์การควบคุมในโลกแห่งความเป็นจริงอย่างไร",
+    "id": "hardware-architecture-and-io",
+    "title_en": "Unit 1: Hardware Architecture and I/O Circuit Wiring",
+    "title_th": "บทที่ 1: สถาปัตยกรรมฮาร์ดแวร์และการเชื่อมต่อวงจร I/O",
+    "iframeUrl": "/simulations/measurement-and-control/unit_1.html",
+    "content_en": "Simulation of Physical Wiring together with PLC Ladder Diagram (12 engineering case studies).",
+    "content_th": "การจำลองระบบ Physical Wiring ร่วมกับ PLC Ladder Diagram (12 กรณีศึกษาเชิงวิศวกรรม)",
     "resources": []
   },
   {
-    "id": "sensors-and-actuators",
-    "title_en": "Chapter 2: Sensors and Actuators (Awaiting Update)",
-    "title_th": "บทที่ 2: เซ็นเซอร์และแอคชูเอเตอร์ (รอการอัปเดต)",
-    "content_en": "Content for this chapter is currently being developed.",
-    "content_th": "เนื้อหาสำหรับบทนี้กำลังอยู่ในระหว่างการพัฒนา",
+    "id": "digital-logic-programming",
+    "title_en": "Unit 2: Digital Logic Programming",
+    "title_th": "บทที่ 2: การเขียนโปรแกรมลอจิกดิจิทัล",
+    "iframeUrl": "/simulations/measurement-and-control/unit_2.html",
+    "content_en": "Interactive Logic Engine: Click on Input (X) to send signals and learn about real PLC program scanning (11 complete case studies).",
+    "content_th": "Interactive Logic Engine: คลิกที่ Input (X) เพื่อจ่ายสัญญาณและเรียนรู้การสแกนโปรแกรม PLC จริง (11 กรณีศึกษาที่สมบูรณ์)",
     "resources": []
   },
   {
-    "id": "control-strategies",
-    "title_en": "Chapter 3: Advanced Control Strategies (Awaiting Update)",
-    "title_th": "บทที่ 3: กลยุทธ์การควบคุมขั้นสูง (รอการอัปเดต)",
-    "content_en": "Content for this chapter is currently being developed.",
+    "id": "advanced-timer-and-counter",
+    "title_en": "Unit 3: Advanced Timer and Counter Systems",
+    "title_th": "บทที่ 3: ระบบหน่วงเวลาและนับจำนวนเชิงลึก",
+    "iframeUrl": "/simulations/measurement-and-control/unit_3.html",
+    "content_en": "In-depth study of Timer and Counter systems (10 case studies).",
+    "content_th": "ระบบหน่วงเวลาและนับจำนวนเชิงลึก (10 กรณีศึกษา)",
+    "resources": []
+  },
+  {
+    "id": "analog-signal-scaling",
+    "title_en": "Unit 4: Analog Signal Scaling",
+    "title_th": "บทที่ 4: การปรับสเกลสัญญาณอนาล็อก",
+    "iframeUrl": "/simulations/measurement-and-control/unit_4.html",
+    "content_en": "Scaling analog signals for 10 industrial sensors: converting 4-20mA to Raw ADC 0-4000 and Engineering Value using linear equations.",
+    "content_th": "การปรับสเกลสัญญาณอนาล็อก (10 เซ็นเซอร์อุตสาหกรรม) แปลงกระแส 4-20mA -> Raw ADC 0-4000 -> Engineering Value (สมการเส้นตรงเชิงคณิตศาสตร์)",
+    "resources": []
+  },
+  {
+    "id": "pid-closed-loop-control",
+    "title_en": "Unit 5: PID Closed-Loop Control and Ladder Diagram",
+    "title_th": "บทที่ 5: การอินทิเกรตระบบ PID ควบคุมลูปปิดและ Ladder Diagram",
+    "iframeUrl": "/simulations/measurement-and-control/unit_5.html",
+    "content_en": "Integration of PID closed-loop control systems with Ladder Diagram (10 systems).",
+    "content_th": "การอินทิเกรตระบบ PID ควบคุมลูปปิดและ Ladder Diagram (10 ระบบ)",
+    "resources": []
+  },
+  {
+    "id": "canvas-workspace",
+    "title_en": "Unit 6: Canvas Workspace (Awaiting Update)",
+    "title_th": "บทที่ 6: Canvas Workspace (รอการอัปเดต)",
+    "iframeUrl": "/simulations/measurement-and-control/unit_6.html",
+    "content_en": "Content for this unit is currently being developed.",
     "content_th": "เนื้อหาสำหรับบทนี้กำลังอยู่ในระหว่างการพัฒนา",
     "resources": []
   }

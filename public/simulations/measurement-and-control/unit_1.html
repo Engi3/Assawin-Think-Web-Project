@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit 1: สถาปัตยกรรมฮาร์ดแวร์ PLC (12 ตัวอย่าง)</title>
+    <style>
+        :root { --primary: #1e3a8a; --bg: #f1f5f9; --panel: #ffffff; --text: #334155; --active: #10b981; --inactive: #94a3b8; --ladder-bg: #f8fafc;}
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .header { background: var(--primary); color: white; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgb(0 0 0 / 0.1);}
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(600px, 1fr)); gap: 20px; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+        
+        .card { background: var(--panel); border-radius: 8px; padding: 15px; box-shadow: 0 4px 6px rgb(0 0 0 / 0.1); border-top: 4px solid var(--primary); display: flex; flex-direction: column;}
+        .title { font-weight: bold; font-size: 1.1em; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;}
+        
+        .sim-workspace { display: flex; gap: 15px; flex-grow: 1; margin-bottom: 15px; }
+        @media (max-width: 600px) { .sim-workspace { flex-direction: column; } }
+
+        /* Hardware Panel */
+        .hw-panel { flex: 2; background: #0f172a; border-radius: 6px; padding: 10px; display: flex; align-items: center; justify-content: center; position: relative;}
+        svg { width: 100%; height: 180px; }
+        .wire { stroke: var(--inactive); stroke-width: 3; fill: none; transition: stroke 0.3s; }
+        .wire.active { stroke: var(--active); filter: drop-shadow(0 0 5px var(--active)); }
+        .wire.power-24v { stroke: #ef4444; } /* Red for 24V */
+        .wire.power-0v { stroke: #3b82f6; } /* Blue for 0V */
+        .component { stroke: #cbd5e1; stroke-width: 2; fill: none; }
+        .label { fill: #f8fafc; font-family: monospace; font-size: 11px; }
+        .label-dark { fill: #94a3b8; font-size: 10px; }
+        .terminal { fill: #cbd5e1; stroke: #334155; stroke-width: 2; }
+
+        /* Ladder Panel */
+        .ladder-panel { flex: 1; background: var(--ladder-bg); border: 2px solid #e2e8f0; border-radius: 6px; padding: 10px; display: flex; flex-direction: column; justify-content: center; min-width: 180px;}
+        .ladder-title { font-size: 0.8em; color: #64748b; text-align: center; margin-bottom: 10px; font-weight: bold; text-transform: uppercase;}
+        .rung { display: flex; align-items: center; border-left: 3px solid #ef4444; border-right: 3px solid #ef4444; height: 60px; position: relative; padding: 0 10px;}
+        .rung-line { position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: var(--inactive); z-index: 1; transition: 0.3s;}
+        .rung.powered .rung-line { background: var(--active); box-shadow: 0 0 5px var(--active); }
+        .contact { position: relative; z-index: 2; background: var(--ladder-bg); padding: 0 5px; margin: 0 auto 0 10px; text-align: center; font-family: monospace; font-weight: bold; color: #334155; transition: 0.3s;}
+        .coil { position: relative; z-index: 2; background: var(--ladder-bg); padding: 0 5px; margin: 0 10px 0 auto; text-align: center; font-family: monospace; font-weight: bold; color: #334155; transition: 0.3s;}
+        .contact.active, .coil.active { color: var(--active); text-shadow: 0 0 5px var(--active); }
+        
+        button { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 1em;}
+        button.active { background: #ef4444; }
+        button:hover { filter: brightness(1.1); }
+        .desc { font-size: 0.85em; color: #64748b; margin-top: 10px; background: #f1f5f9; padding: 10px; border-radius: 4px; border-left: 3px solid var(--primary); line-height: 1.5;}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>บทที่ 1: สถาปัตยกรรมฮาร์ดแวร์และการเชื่อมต่อวงจร I/O</h1>
+        <p>การจำลองระบบ <b>Physical Wiring</b> ร่วมกับ <b>PLC Ladder Diagram</b> (12 กรณีศึกษาเชิงวิศวกรรม)</p>
+    </div>
+    <div class="grid" id="sim-container"></div>
+
+    <script>
+        // ฟังก์ชันวาดวงจรฮาร์ดแวร์จำลอง (SVG Generator)
+        const getHardwareSVG = (sim) => {
+            const id = sim.id;
+            let svg = `
+                <!-- Power Supply 24VDC -->
+                <rect x="10" y="20" width="40" height="140" class="component" fill="#1e293b"/>
+                <text x="15" y="40" class="label" fill="#ef4444">+24V</text>
+                <text x="20" y="150" class="label" fill="#3b82f6">0V</text>
+                <path d="M 50 35 L 380 35" class="wire power-24v"/> <!-- 24V Rail -->
+                <path d="M 50 145 L 380 145" class="wire power-0v"/> <!-- 0V Rail -->
+            `;
+
+            if(sim.hwType === 'sinking-in') {
+                svg += `
+                    <!-- 2-Wire Sensor / Switch -->
+                    <rect x="80" y="60" width="70" height="60" class="component" stroke-dasharray="2"/>
+                    <text x="85" y="75" class="label-dark">${sim.devName}</text>
+                    <path id="hw-s1-${id}" d="M 115 80 L 115 100" class="component" stroke-width="2"/>
+                    
+                    <!-- PLC Input Terminal Block -->
+                    <rect x="220" y="50" width="120" height="80" class="component"/>
+                    <text x="250" y="65" class="label">PLC Input</text>
+                    
+                    <!-- Terminals -->
+                    <circle cx="230" cy="85" r="4" class="terminal"/> <text x="240" y="88" class="label">${sim.pin}</text>
+                    <circle cx="230" cy="115" r="4" class="terminal"/> <text x="240" y="118" class="label">S/S</text>
+                    
+                    <!-- Internal Optocoupler -->
+                    <path d="M 230 85 L 280 85 L 280 95 L 310 95 L 310 115 L 230 115" class="wire hw-logic-${id}" stroke-dasharray="2"/>
+                    <text x="290" y="90" class="label-dark">Opto</text>
+
+                    <!-- External Wiring -->
+                    <path d="M 230 115 L 210 115 L 210 35" class="wire power-24v"/> <!-- S/S to 24V -->
+                    <path d="M 115 145 L 115 120" class="wire power-0v"/> <!-- Sensor to 0V -->
+                    <path d="M 230 85 L 115 85" class="wire hw-logic-${id}"/> <!-- Signal to PLC -->
+                `;
+            } else if (sim.hwType === 'sourcing-in') {
+                svg += `
+                    <!-- 2-Wire Sensor / Switch -->
+                    <rect x="80" y="60" width="70" height="60" class="component" stroke-dasharray="2"/>
+                    <text x="85" y="75" class="label-dark">${sim.devName}</text>
+                    <path id="hw-s1-${id}" d="M 115 80 L 115 100" class="component" stroke-width="2"/> 
+                    
+                    <!-- PLC Input -->
+                    <rect x="220" y="50" width="120" height="80" class="component"/>
+                    <text x="250" y="65" class="label">PLC Input</text>
+                    <circle cx="230" cy="85" r="4" class="terminal"/> <text x="240" y="88" class="label">${sim.pin}</text>
+                    <circle cx="230" cy="115" r="4" class="terminal"/> <text x="240" y="118" class="label">S/S</text>
+                    
+                    <!-- Internal Optocoupler -->
+                    <path d="M 230 85 L 280 85 L 280 95 L 310 95 L 310 115 L 230 115" class="wire hw-logic-${id}" stroke-dasharray="2"/>
+                    <text x="290" y="90" class="label-dark">Opto</text>
+
+                    <!-- External Wiring -->
+                    <path d="M 230 115 L 210 115 L 210 145" class="wire power-0v"/> <!-- S/S to 0V -->
+                    <path d="M 115 35 L 115 60" class="wire power-24v"/> <!-- Sensor to 24V -->
+                    <path d="M 115 85 L 230 85" class="wire hw-logic-${id}"/> <!-- Signal to PLC -->
+                `;
+            } else if (sim.hwType === 'sinking-in-3w') {
+                svg += `
+                    <!-- 3-Wire NPN Sensor -->
+                    <rect x="75" y="50" width="75" height="85" class="component" stroke-dasharray="2"/>
+                    <text x="80" y="65" class="label-dark">${sim.devName}</text>
+                    
+                    <!-- Power Wires for Sensor -->
+                    <path d="M 85 50 L 85 35" class="wire power-24v"/> <text x="90" y="45" class="label-dark">BN(+)</text>
+                    <path d="M 85 135 L 85 145" class="wire power-0v"/> <text x="90" y="142" class="label-dark">BU(-)</text>
+                    
+                    <!-- Internal Switch Mechanism -->
+                    <path id="hw-s1-${id}" d="M 115 80 L 115 100" class="component" stroke-width="2"/> 
+                    <path d="M 115 115 L 115 145" class="wire power-0v"/> <!-- NPN switches Signal to 0V -->
+                    
+                    <!-- Signal Wire (Black) -->
+                    <path d="M 115 80 L 130 80 L 130 85 L 230 85" class="wire hw-logic-${id}"/> 
+                    <text x="135" y="80" class="label-dark">BK(Sig)</text>
+                    
+                    <!-- PLC Input -->
+                    <rect x="220" y="50" width="120" height="80" class="component"/>
+                    <text x="250" y="65" class="label">PLC Input</text>
+                    <circle cx="230" cy="85" r="4" class="terminal"/> <text x="240" y="88" class="label">${sim.pin}</text>
+                    <circle cx="230" cy="115" r="4" class="terminal"/> <text x="240" y="118" class="label">S/S</text>
+                    
+                    <!-- Optocoupler & S/S Wiring -->
+                    <path d="M 230 85 L 280 85 L 280 95 L 310 95 L 310 115 L 230 115" class="wire hw-logic-${id}" stroke-dasharray="2"/>
+                    <text x="290" y="90" class="label-dark">Opto</text>
+                    <path d="M 230 115 L 210 115 L 210 35" class="wire power-24v"/> <!-- Sinking = S/S to +24V -->
+                `;
+            } else if (sim.hwType === 'sourcing-in-3w') {
+                svg += `
+                    <!-- 3-Wire PNP Sensor -->
+                    <rect x="75" y="50" width="75" height="85" class="component" stroke-dasharray="2"/>
+                    <text x="80" y="65" class="label-dark">${sim.devName}</text>
+                    
+                    <!-- Power Wires for Sensor -->
+                    <path d="M 85 50 L 85 35" class="wire power-24v"/> <text x="90" y="45" class="label-dark">BN(+)</text>
+                    <path d="M 85 135 L 85 145" class="wire power-0v"/> <text x="90" y="142" class="label-dark">BU(-)</text>
+                    
+                    <!-- Internal Switch Mechanism -->
+                    <path id="hw-s1-${id}" d="M 115 80 L 115 100" class="component" stroke-width="2"/> 
+                    <path d="M 115 115 L 115 35" class="wire power-24v"/> <!-- PNP switches Signal to +24V -->
+                    
+                    <!-- Signal Wire (Black) -->
+                    <path d="M 115 80 L 130 80 L 130 85 L 230 85" class="wire hw-logic-${id}"/> 
+                    <text x="135" y="80" class="label-dark">BK(Sig)</text>
+                    
+                    <!-- PLC Input -->
+                    <rect x="220" y="50" width="120" height="80" class="component"/>
+                    <text x="250" y="65" class="label">PLC Input</text>
+                    <circle cx="230" cy="85" r="4" class="terminal"/> <text x="240" y="88" class="label">${sim.pin}</text>
+                    <circle cx="230" cy="115" r="4" class="terminal"/> <text x="240" y="118" class="label">S/S</text>
+                    
+                    <!-- Optocoupler & S/S Wiring -->
+                    <path d="M 230 85 L 280 85 L 280 95 L 310 95 L 310 115 L 230 115" class="wire hw-logic-${id}" stroke-dasharray="2"/>
+                    <text x="290" y="90" class="label-dark">Opto</text>
+                    <path d="M 230 115 L 210 115 L 210 145" class="wire power-0v"/> <!-- Sourcing = S/S to 0V -->
+                `;
+            } else if (sim.hwType === 'relay-out') {
+                svg += `
+                    <!-- PLC Output (Relay) -->
+                    <rect x="70" y="50" width="100" height="80" class="component"/>
+                    <text x="75" y="65" class="label">PLC Output</text>
+                    <circle cx="160" cy="85" r="4" class="terminal"/> <text x="125" y="88" class="label">${sim.pin}</text>
+                    <circle cx="160" cy="115" r="4" class="terminal"/> <text x="120" y="118" class="label">COM0</text>
+                    
+                    <path id="hw-s1-${id}" d="M 160 115 L 140 115 L 140 85 L 160 85" class="wire hw-logic-${id}" stroke-dasharray="2"/>
+                    <text x="90" y="105" class="label-dark">Relay</text>
+
+                    <circle cx="280" cy="100" r="20" class="component"/> <text x="265" y="105" class="label-dark">Load</text>
+
+                    <!-- Wiring -->
+                    <path d="M 160 115 L 180 115 L 180 35" class="wire power-24v"/>
+                    <path d="M 160 85 L 260 85" class="wire hw-logic-${id}"/>
+                    <path d="M 300 100 L 320 100 L 320 145" class="wire power-0v"/>
+                `;
+            } else if (sim.hwType === 'npn-out') { 
+                svg += `
+                    <rect x="70" y="50" width="100" height="80" class="component"/>
+                    <text x="75" y="65" class="label">NPN Output</text>
+                    <circle cx="160" cy="85" r="4" class="terminal"/> <text x="125" y="88" class="label">${sim.pin}</text>
+                    <circle cx="160" cy="115" r="4" class="terminal"/> <text x="120" y="118" class="label">COM-</text>
+                    
+                    <path d="M 160 85 L 140 85 L 140 115 L 160 115" class="wire hw-logic-${id}" stroke-dasharray="2"/>
+                    
+                    <circle cx="280" cy="100" r="20" class="component"/> <text x="265" y="105" class="label-dark">Load</text>
+
+                    <path d="M 280 80 L 280 35" class="wire power-24v"/>
+                    <path d="M 160 85 L 260 85" class="wire hw-logic-${id}"/>
+                    <path d="M 160 115 L 180 115 L 180 145" class="wire power-0v"/>
+                `;
+            } else if (sim.hwType === 'pnp-out') { 
+                svg += `
+                    <rect x="70" y="50" width="100" height="80" class="component"/>
+                    <text x="75" y="65" class="label">PNP Output</text>
+                    <circle cx="160" cy="85" r="4" class="terminal"/> <text x="125" y="88" class="label">${sim.pin}</text>
+                    <circle cx="160" cy="115" r="4" class="terminal"/> <text x="110" y="118" class="label">+V(COM)</text>
+                    
+                    <path d="M 160 115 L 140 115 L 140 85 L 160 85" class="wire hw-logic-${id}" stroke-dasharray="2"/>
+                    
+                    <circle cx="280" cy="100" r="20" class="component"/> <text x="265" y="105" class="label-dark">Load</text>
+
+                    <path d="M 160 115 L 180 115 L 180 35" class="wire power-24v"/>
+                    <path d="M 160 85 L 260 85" class="wire hw-logic-${id}"/>
+                    <path d="M 280 120 L 280 145" class="wire power-0v"/>
+                `;
+            }
+            return svg;
+        };
+
+        // ฐานข้อมูล 12 กรณีศึกษา
+        const simulations = [
+            { id: 1, title: "1. 2-Wire NPN (Sinking Input)", hwType: "sinking-in", devName: "NPN Switch", pin: "X0", logicType: "NO", logicOut: "M0", desc: "ฮาร์ดแวร์: เซ็นเซอร์แบบ 2 สาย (NPN) ดึงกระแสจาก X0 ลงกราวด์ (0V). ลอจิก: ขั้ว NO จะทำงานเมื่อมีสัญญาณเข้า X0" },
+            { id: 2, title: "2. 2-Wire PNP (Sourcing Input)", hwType: "sourcing-in", devName: "PNP Switch", pin: "X1", logicType: "NO", logicOut: "M1", desc: "ฮาร์ดแวร์: เซ็นเซอร์แบบ 2 สาย (PNP) จ่ายไฟ +24V เข้าขา X1. ขา S/S จึงต้องต่อลง 0V เพื่อให้ครบวงจร" },
+            { id: 3, title: "3. Limit Switch NO (Sinking)", hwType: "sinking-in", devName: "Limit Sw.", pin: "X2", logicType: "NO", logicOut: "Y0", desc: "หน้าสัมผัสปกติเปิด (NO) ของสวิตช์กลไก เมื่อถูกชนจะดึงกระแสของ PLC ลงกราวด์" },
+            { id: 4, title: "4. Limit Switch NC (Sinking)", hwType: "sinking-in", devName: "Limit NC", pin: "X3", logicType: "NC", logicOut: "Y1", desc: "หน้าสัมผัสปกติปิด (NC) กระแสไหลเข้า PLC ตลอดเวลา เมื่อถูกชนกระแสจึงจะหยุดไหล (Fail-Safe Standard)" },
+            { id: 5, title: "5. Push Button NO (Sourcing)", hwType: "sourcing-in", devName: "Push Btn", pin: "X4", logicType: "NO", logicOut: "M2", desc: "ปุ่มกดปกติเปิด รับไฟจากแหล่งจ่าย 24V แล้วนำไปทริกเข้าที่ขา Input ของ PLC" },
+            { id: 6, title: "6. Emergency Stop NC (Sourcing)", hwType: "sourcing-in", devName: "EMG Stop", pin: "X5", logicType: "NC", logicOut: "M3", desc: "ปุ่มฉุกเฉิน (NC) จ่ายไฟ 24V เลี้ยง PLC ตลอดเวลา เพื่อให้ระบบสามารถตรวจจับได้ทันทีหากสายไฟขาด" },
+            { id: 7, title: "7. Relay Output (Solenoid Valve)", hwType: "relay-out", devName: "Relay", pin: "Y0", logicType: "NO", logicOut: "Y0", devIn: "M4", desc: "โมดูล Output แบบ Relay: เมื่อลอจิกสั่งงาน หน้าสัมผัสทางกลภายใน PLC จะต่อวงจรให้โหลดภายนอก (ทนกระแสสูงได้ดี)" },
+            { id: 8, title: "8. Transistor NPN Output (Sinking)", hwType: "npn-out", devName: "NPN Out", pin: "Y1", logicType: "NO", logicOut: "Y1", devIn: "X6", desc: "เอาต์พุตแบบ ทรานซิสเตอร์ (NPN) ทำหน้าที่ดึงกระแสของโหลดให้ไหลลงกราวด์ (0V) ที่ขา COM- (ทำงานได้รวดเร็ว)" },
+            { id: 9, title: "9. Transistor PNP Output (Sourcing)", hwType: "pnp-out", devName: "PNP Out", pin: "Y2", logicType: "NO", logicOut: "Y2", devIn: "X7", desc: "เอาต์พุตแบบ ทรานซิสเตอร์ (PNP) ทำหน้าที่จ่ายกระแสบวกจากแหล่งจ่าย (ขา COM+) ตรงเข้าสู่ตัวโหลด" },
+            { id: 10, title: "10. 2-Wire Sensor (Sinking Input)", hwType: "sinking-in", devName: "2-Wire", pin: "X10", logicType: "NO", logicOut: "M5", desc: "เซ็นเซอร์แบบ 2 สายทั่วไป กินกระแสเลี้ยงวงจรผ่านลูปอนุกรมเส้นเดียวกัน (ต้องระวังแรงดันตกคร่อมตัวเซ็นเซอร์)" },
+            { id: 11, title: "11. 3-Wire Sensor NPN (Sinking Input)", hwType: "sinking-in-3w", devName: "3W NPN", pin: "X11", logicType: "NO", logicOut: "M11", desc: "<b>เซ็นเซอร์ 3 สาย (NPN):</b> มีสายไฟเลี้ยงวงจรแยกอิสระ สีน้ำตาล (Brown: +24V) และ สีน้ำเงิน (Blue: 0V) ส่วนสายสัญญาณ สีดำ (Black: Signal) จะดึงกระแสลอจิกลงกราวด์" },
+            { id: 12, title: "12. 3-Wire Sensor PNP (Sourcing Input)", hwType: "sourcing-in-3w", devName: "3W PNP", pin: "X12", logicType: "NO", logicOut: "M12", desc: "<b>เซ็นเซอร์ 3 สาย (PNP):</b> มีสายไฟเลี้ยงอิสระเช่นกัน แต่สายสัญญาณ สีดำ (Black) จะจ่ายแรงดันไฟบวก +24V เข้า PLC ทำให้ขั้ว S/S ของ PLC ต้องต่อรอไว้ที่ 0V" }
+        ];
+
+        const container = document.getElementById('sim-container');
+
+        simulations.forEach(sim => {
+            const isOutputModule = sim.hwType.includes('out');
+            const ladIn = isOutputModule ? (sim.devIn || 'M0') : sim.pin;
+            const ladSym = sim.logicType === 'NC' ? '|/|' : '| |';
+            
+            container.innerHTML += `
+                <div class="card">
+                    <div class="title">${sim.title}</div>
+                    <div class="sim-workspace">
+                        <div class="hw-panel">
+                            <div style="position:absolute; top:5px; left:10px; color:#64748b; font-size:0.8em; font-weight:bold;">Hardware Wiring</div>
+                            <svg viewBox="0 0 400 180">${getHardwareSVG(sim)}</svg>
+                        </div>
+                        <div class="ladder-panel">
+                            <div class="ladder-title">PLC Ladder Logic</div>
+                            <div class="rung" id="lad-rung-${sim.id}">
+                                <div class="rung-line"></div>
+                                <div class="contact" id="lad-contact-${sim.id}"><span>${ladSym}</span><br>${ladIn}</div>
+                                <div class="coil" id="lad-coil-${sim.id}"><span>( )</span><br>${sim.logicOut}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="btn-${sim.id}" onclick="toggleState(${sim.id}, '${sim.logicType}', ${isOutputModule})">
+                        ${sim.logicType === 'NC' ? 'ปล่อย/ตัดวงจร' : 'กระตุ้นทำงาน (Trigger)'}
+                    </button>
+                    <div class="desc"><strong>วิเคราะห์ทางวิศวกรรม:</strong> ${sim.desc}</div>
+                </div>
+            `;
+            if(sim.logicType === 'NC') toggleState(sim.id, sim.logicType, false, true);
+        });
+
+        // ฟังก์ชันควบคุม State และ Animation (เชื่อมฮาร์ดแวร์กับซอฟต์แวร์)
+        function toggleState(id, logicType, isOutput, isInit = false) {
+            const btn = document.getElementById(`btn-${id}`);
+            const hwWires = document.querySelectorAll(`.hw-logic-${id}`);
+            const hwSwitch = document.getElementById(`hw-s1-${id}`);
+            const ladRung = document.getElementById(`lad-rung-${id}`);
+            const ladContact = document.getElementById(`lad-contact-${id}`);
+            const ladCoil = document.getElementById(`lad-coil-${id}`);
+            
+            let isActive = false;
+            
+            if(!isInit) {
+                if (btn.classList.contains('active')) {
+                    btn.classList.remove('active');
+                    btn.innerText = "กระตุ้นทำงาน (Trigger)";
+                } else {
+                    btn.classList.add('active');
+                    btn.innerText = "ทำงานอยู่ (Active)";
+                    isActive = true;
+                }
+            } else {
+                isActive = true;
+                btn.classList.add('active');
+                btn.innerText = "ทำงานอยู่ (Active / Safe State)";
+            }
+
+            // แอนิเมชันสำหรับวงจรจำลอง (Physical SVG)
+            if(isActive) {
+                hwWires.forEach(w => w.classList.add('active'));
+                if(hwSwitch) hwSwitch.setAttribute('d', 'M 115 80 L 115 115'); // ปิดหน้าสัมผัส (Closed)
+            } else {
+                hwWires.forEach(w => w.classList.remove('active'));
+                if(hwSwitch) hwSwitch.setAttribute('d', 'M 115 80 L 115 100'); // เปิดหน้าสัมผัส (Open)
+            }
+
+            // คำนวณลอจิก Ladder Diagram
+            let logicPower = false;
+            if(logicType === 'NO') logicPower = isActive;
+            if(logicType === 'NC') logicPower = !isActive; 
+
+            if(logicPower || (isOutput && isActive)) {
+                ladRung.classList.add('powered');
+                ladContact.classList.add('active');
+                ladCoil.classList.add('active');
+            } else {
+                ladRung.classList.remove('powered');
+                ladContact.classList.remove('active');
+                ladCoil.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>

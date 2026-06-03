@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit 2: การเขียนโปรแกรมลอจิกดิจิทัล</title>
+    <style>
+        :root { --primary: #0f172a; --panel: #ffffff; --rail: #ef4444; --wire: #94a3b8; --power: #22c55e; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #e2e8f0; margin: 0; padding: 20px;}
+        .header { background: var(--primary); color: white; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgb(0 0 0 / 0.1);}
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; }
+        .tab-btn { padding: 10px 20px; background: #94a3b8; border: none; color: white; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; transition: 0.2s;}
+        .tab-btn:hover { background: #64748b; }
+        .tab-btn.active { background: var(--primary); }
+        .tab-content { display: none; background: var(--panel); padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgb(0 0 0 / 0.1); }
+        .tab-content.active { display: block; }
+        
+        /* Ladder Structure CSS */
+        .rung { display: flex; align-items: center; border-left: 4px solid var(--rail); border-right: 4px solid var(--rail); min-height: 80px; position: relative; margin-bottom: 20px; background: #f8fafc; padding: 10px 20px; overflow-x: auto;}
+        .wire-line { position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: var(--wire); z-index: 1; }
+        .rung.powered .wire-line { background: var(--power); box-shadow: 0 0 5px var(--power); }
+        
+        /* Parallel Branching CSS */
+        .parallel-group { display: flex; flex-direction: column; justify-content: center; position: relative; margin: 0 20px; z-index: 2;}
+        .parallel-group::before, .parallel-group::after { content: ''; position: absolute; top: 30px; bottom: 30px; width: 2px; background: var(--wire); z-index: 1; }
+        .parallel-group::before { left: 0; }
+        .parallel-group::after { right: 0; }
+        .rung.powered .parallel-group::before, .rung.powered .parallel-group::after { background: var(--power); box-shadow: 0 0 5px var(--power); }
+        
+        .branch { display: flex; align-items: center; justify-content: center; position: relative; padding: 10px 15px; }
+        .branch-wire { position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: var(--wire); z-index: 1; }
+        .rung.powered .branch-wire { background: var(--power); box-shadow: 0 0 5px var(--power); }
+
+        /* Elements */
+        .element { position: relative; z-index: 3; background: #f8fafc; padding: 5px 10px; margin: 0 5px; text-align: center; cursor: pointer; font-family: monospace; font-weight: bold; border: 2px solid transparent; border-radius: 4px; transition: 0.2s;}
+        .element:hover { border-color: #3b82f6; background: #eff6ff;}
+        .symbol { font-size: 22px; color: #334155; }
+        .element.active .symbol { color: var(--power); text-shadow: 0 0 5px var(--power); }
+        .element.disabled-click { cursor: not-allowed; border-color: #e2e8f0; }
+        .element.disabled-click:hover { background: #f8fafc; border-color: #e2e8f0; }
+        
+        .coil { margin-left: auto; border-radius: 5px; min-width: 60px; padding: 5px 10px; text-align: center; background: white; border: 2px solid var(--wire); z-index: 2; font-family: monospace; font-weight: bold; font-size: 1.1em;}
+        .coil.active { border-color: var(--power); background: #dcfce7; color: var(--power); box-shadow: 0 0 10px var(--power);}
+        
+        .instruction-table { width: 100%; border-collapse: collapse; margin-top: 20px;}
+        .instruction-table th, .instruction-table td { border: 1px solid #cbd5e1; padding: 12px; text-align: left; }
+        .instruction-table th { background: #f1f5f9; color: var(--primary); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>บทที่ 2: การเขียนโปรแกรมลอจิกดิจิทัล (11 กรณีศึกษาที่สมบูรณ์)</h1>
+        <p>Interactive Logic Engine: คลิกที่ Input (X) เพื่อจ่ายสัญญาณและเรียนรู้การสแกนโปรแกรม PLC จริง</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(0)">1. Virtual Logic Engine (วงจรจำลองการทำงาน)</button>
+        <button class="tab-btn" onclick="switchTab(1)">2. พจนานุกรมคำสั่งพื้นฐาน (Instruction Set)</button>
+    </div>
+
+    <div id="tab-0" class="tab-content active">
+        <div id="ladder-workspace"></div>
+    </div>
+
+    <div id="tab-1" class="tab-content">
+        <h3 style="color: var(--primary);">คำสั่งพื้นฐานทางลอจิก (Basic Logic Instructions)</h3>
+        <table class="instruction-table">
+            <tr><th>คำสั่ง (Instruction)</th><th>สัญลักษณ์ (Symbol)</th><th>การทำงานทางวิศวกรรม (Engineering Function)</th></tr>
+            <tr><td><strong>LD (Load)</strong></td><td>| |</td><td>หน้าสัมผัสปกติเปิด (NO) เริ่มต้น Rung ตรวจสอบว่ามีสัญญาณ Logic '1' หรือไม่</td></tr>
+            <tr><td><strong>LDI (Load Inverse)</strong></td><td>|/|</td><td>หน้าสัมผัสปกติปิด (NC) เริ่มต้น Rung ตรวจสอบว่าไม่มีสัญญาณ Logic '0' หรือไม่</td></tr>
+            <tr><td><strong>AND</strong></td><td>อนุกรม | |</td><td>เชื่อมต่อแบบอนุกรม (Series) ลอจิก AND (กระแสจะไหลเมื่อเงื่อนไขเป็นจริงทั้งหมด)</td></tr>
+            <tr><td><strong>OR</strong></td><td>ขนาน | |</td><td>เชื่อมต่อแบบขนาน (Parallel) ลอจิก OR (กระแสจะไหลเมื่อเงื่อนไขใดเงื่อนไขหนึ่งเป็นจริง)</td></tr>
+            <tr><td><strong>OUT</strong></td><td>( )</td><td>ส่งผลลัพธ์ไปกระตุ้น Coil ของ Output (Y) หรือ Internal Relay (M)</td></tr>
+            <tr><td><strong>SET</strong></td><td>[SET]</td><td>สั่ง Output ทำงานค้าง (Latching Instruction) แบบฮาร์ดแวร์</td></tr>
+            <tr><td><strong>RST (Reset)</strong></td><td>[RST]</td><td>ยกเลิกการทำงานค้าง (Unlatch) ของคำสั่ง SET หรือ Timer/Counter</td></tr>
+            <tr><td><strong>LDP (Load Pulse)</strong></td><td>|P|</td><td>Edge Trigger ขอบขาขึ้น ทำงานเพียง 1 Scan Cycle (ส่งสัญญาณพัลส์สั้นๆ เมื่อ Input เปลี่ยนจาก 0 -> 1)</td></tr>
+            <tr><td><strong>LDF (Load Falling)</strong></td><td>|F|</td><td>Edge Trigger ขอบขาลง ทำงานเพียง 1 Scan Cycle (ส่งสัญญาณพัลส์สั้นๆ เมื่อ Input เปลี่ยนจาก 1 -> 0)</td></tr>
+        </table>
+    </div>
+
+    <script>
+        function switchTab(index) {
+            document.querySelectorAll('.tab-content').forEach((el, i) => el.classList.toggle('active', i === index));
+            document.querySelectorAll('.tab-btn').forEach((el, i) => el.classList.toggle('active', i === index));
+        }
+
+        // PLC State Registers (Memory Mapping)
+        const M = { X0:false, X1:false, X2:false, X3:false, X4:false, X5:false, X6:false, X7:false, X8:false, X9:false, X10:false, X11:false };
+        const Out = {}; 
+        const PrevM = {...M}; // ใช้สำหรับการคำนวณ Edge Trigger (LDP, LDF)
+
+        // โครงสร้างข้อมูล Data-Driven สำหรับวาด Ladder Diagram ตามหลักวิศวกรรม
+        const scenarios = [
+            { id: 1, title: "1. Direct Control (NO)", layout: [{id:'X0', t:'NO'}], out: 'Y0', l: () => M.X0 },
+            { id: 2, title: "2. Inverse Control (NC)", layout: [{id:'X1', t:'NC'}], out: 'Y1', l: () => !M.X1 },
+            { id: 3, title: "3. AND Logic (อนุกรม)", layout: [{id:'X2', t:'NO'}, {id:'X3', t:'NO'}], out: 'Y2', l: () => M.X2 && M.X3 },
+            { id: 4, title: "4. OR Logic (ขนาน)", layout: [{ parallel: [[{id:'X4', t:'NO'}], [{id:'X5', t:'NO'}]] }], out: 'Y3', l: () => M.X4 || M.X5 },
+            { id: 5, title: "5. Latching / Self-Holding (วงจรล็อกตัวเอง)", 
+              layout: [
+                  { parallel: [ [{id:'X6', t:'NO', label:'START'}], [{id:'Y4', t:'NO', label:'HOLD', isOut:true}] ] },
+                  { id:'X7', t:'NC', label:'STOP' }
+              ], out: 'Y4', l: () => (M.X6 || Out.Y4) && !M.X7 
+            },
+            { id: 6, title: "6. SET Instruction", layout: [{id:'X8', t:'NO'}], out: '[SET Y5]', l: () => { if(M.X8) Out.Y5 = true; return Out.Y5; } },
+            { id: 7, title: "7. RESET Instruction", layout: [{id:'X9', t:'NO'}], out: '[RST Y5]', l: () => { if(M.X9) Out.Y5 = false; return M.X9; } },
+            { id: 8, title: "8. Hardware Interlock (Motor FWD)", 
+              layout: [{id:'X10', t:'NO', label:'FWD_BTN'}, {id:'Y7', t:'NC', label:'REV_IL', isOut:true}], out: 'Y6', l: () => M.X10 && !Out.Y7 
+            },
+            { id: 9, title: "9. Hardware Interlock (Motor REV)", 
+              layout: [{id:'X11', t:'NO', label:'REV_BTN'}, {id:'Y6', t:'NC', label:'FWD_IL', isOut:true}], out: 'Y7', l: () => M.X11 && !Out.Y6 
+            },
+            { id: 10, title: "10. Edge Trigger ขอบขาขึ้น (LDP)", layout: [{id:'X0', t:'P'}], out: 'M0(Pulse)', l: () => M.X0 && !PrevM.X0 },
+            { id: 11, title: "11. Edge Trigger ขอบขาลง (LDF)", layout: [{id:'X1', t:'F'}], out: 'M1(Pulse)', l: () => !M.X1 && PrevM.X1 }
+        ];
+
+        // ฟังก์ชันสร้าง UI องค์ประกอบสัญลักษณ์
+        function renderElement(inp) {
+            let sym = '||'; let active = M[inp.id];
+            if(inp.isOut) active = Out[inp.id] || false; // อิงจาก Output Register (Feedback)
+            if(inp.t === 'NC') { sym = '|/|'; active = (inp.isOut ? !Out[inp.id] : !M[inp.id]); }
+            if(inp.t === 'P') { sym = '|P|'; active = M[inp.id]; }
+            if(inp.t === 'F') { sym = '|F|'; active = !M[inp.id]; }
+            
+            const isClickable = !(inp.isOut || inp.id.includes('Y'));
+            const clickFn = isClickable ? `onclick="toggleMem('${inp.id}')"` : '';
+            const cls = isClickable ? 'element' : 'element disabled-click';
+            const label = inp.label ? `<br><small style="color:#64748b">${inp.label}</small>` : '';
+
+            return `<div class="${cls} ${active ? 'active' : ''}" ${clickFn}>
+                        <div class="symbol">${sym}</div><div>${inp.id}${label}</div>
+                    </div>`;
+        }
+
+        // Core Rendering Engine
+        function renderEngine() {
+            const ws = document.getElementById('ladder-workspace');
+            ws.innerHTML = '';
+            
+            scenarios.forEach(sc => {
+                const isPowered = sc.l();
+                if(!sc.out.includes('[')) Out[sc.out] = isPowered; // Update Output Coil
+                
+                let html = `
+                    <div style="margin-top:15px; font-weight:bold; color:var(--primary); font-size:1em;">${sc.title}</div>
+                    <div class="rung ${isPowered ? 'powered' : ''}">
+                        <div class="wire-line"></div>
+                `;
+
+                // Render Layout (Series & Parallel)
+                sc.layout.forEach(item => {
+                    if(item.parallel) {
+                        html += `<div class="parallel-group">`;
+                        item.parallel.forEach(branch => {
+                            html += `<div class="branch"><div class="branch-wire"></div>`;
+                            branch.forEach(el => { html += renderElement(el); });
+                            html += `</div>`;
+                        });
+                        html += `</div>`;
+                    } else {
+                        html += renderElement(item);
+                    }
+                });
+
+                const outLabel = sc.out.includes('[') ? sc.out : `( )<br>${sc.out}`;
+                html += `<div class="coil ${isPowered ? 'active' : ''}">${outLabel}</div></div>`;
+                ws.innerHTML += html;
+            });
+            
+            // จบ Scan Cycle: อัปเดต Memory สถานะก่อนหน้า (PrevM) สำหรับ Edge Trigger
+            Object.keys(M).forEach(k => PrevM[k] = M[k]);
+        }
+
+        // ฟังก์ชัน Toggle อินพุตและจำลอง Scan Cycle
+        function toggleMem(id) { 
+            M[id] = !M[id]; 
+            renderEngine(); // รัน Logic สแกนครั้งที่ 1
+            
+            // ทฤษฎี Edge Trigger (Pulse): หลังจากรันครบ 1 Scan วงจรจะต้องดับลง
+            // ใช้ setTimeout จำลอง Scan Cycle ที่ยาวขึ้น (300ms) ให้นักศึกษามองเห็นไฟ M0, M1 กะพริบได้
+            setTimeout(() => {
+                renderEngine(); // รัน Logic สแกนครั้งที่ 2 (Pulse จะดับลงเพราะ PrevM ตามทัน M)
+            }, 300); 
+        }
+        
+        // Initial Render
+        renderEngine();
+    </script>
+</body>
+</html>

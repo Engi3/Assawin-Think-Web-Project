@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit 4: Analog Scaling</title>
+    <style>
+        :root { --primary: #0284c7; --bg: #f0fdfa; --card: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .header { text-align: center; color: var(--primary); padding-bottom: 20px; border-bottom: 2px solid #cbd5e1; margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
+        .card { background: var(--card); padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgb(0 0 0 / 0.1); border-top: 4px solid var(--primary);}
+        .title { font-weight: bold; font-size: 1em; color: #334155; margin-bottom: 10px; }
+        input[type=range] { width: 100%; margin: 10px 0; accent-color: var(--primary); }
+        .math-box { background: #1e293b; color: #10b981; font-family: monospace; padding: 8px; border-radius: 6px; font-size: 0.85em; line-height: 1.4;}
+        
+        .visual-area { height: 100px; background: #e2e8f0; border-radius: 6px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; margin-bottom: 10px;}
+        
+        /* Specific SVGs */
+        .tank { width: 60px; height: 80px; border: 2px solid #64748b; border-top: none; position: relative; background: #fff;}
+        .fill { position: absolute; bottom: 0; width: 100%; transition: height 0.3s; }
+        .gauge { width: 80px; height: 40px; border: 2px solid #64748b; border-bottom: none; border-radius: 40px 40px 0 0; position: relative; background: #fff;}
+        .needle { width: 3px; height: 38px; background: #ef4444; position: absolute; bottom: 0; left: 38px; transform-origin: bottom center; transition: transform 0.3s; }
+        .bar-bg { width: 80%; height: 20px; background: #cbd5e1; border-radius: 10px; overflow: hidden;}
+        .bar-fill { height: 100%; transition: width 0.3s; }
+
+        .pv-text { position: absolute; z-index: 10; font-weight: bold; font-size: 1.1em; color: #0f172a; text-shadow: 1px 1px 0px #fff; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>บทที่ 4: การปรับสเกลสัญญาณอนาล็อก (10 เซ็นเซอร์อุตสาหกรรม)</h1>
+        <p>แปลงกระแส 4-20mA -> Raw ADC 0-4000 -> Engineering Value (สมการเส้นตรงเชิงคณิตศาสตร์)</p>
+    </div>
+    <div class="grid" id="main-grid"></div>
+
+    <script>
+        const sensors = [
+            { id: 1, name: "1. อุณหภูมิ (RTD)", min: -50, max: 150, u: "°C", t: 'bar', col: '#ef4444' },
+            { id: 2, name: "2. ระดับน้ำ (Hydrostatic)", min: 0, max: 10, u: "m", t: 'tank', col: '#3b82f6' },
+            { id: 3, name: "3. ความดัน (Pressure)", min: 0, max: 16, u: "Bar", t: 'gauge', col: '#000' },
+            { id: 4, name: "4. อัตราการไหล (Flow)", min: 0, max: 500, u: "L/m", t: 'gauge', col: '#000' },
+            { id: 5, name: "5. น้ำหนัก (Load Cell)", min: 0, max: 1000, u: "kg", t: 'bar', col: '#f59e0b' },
+            { id: 6, name: "6. ความเป็นกรด (pH)", min: 0, max: 14, u: "pH", t: 'bar', col: '#10b981' },
+            { id: 7, name: "7. ความเร็วรอบ (Tacho)", min: 0, max: 3000, u: "RPM", t: 'gauge', col: '#000' },
+            { id: 8, name: "8. แรงบิด (Torque)", min: 0, max: 50, u: "Nm", t: 'gauge', col: '#000' },
+            { id: 9, name: "9. ก๊าซ CO2 (NDIR)", min: 0, max: 2000, u: "ppm", t: 'bar', col: '#64748b' },
+            { id: 10, name: "10. ความชื้น (Humidity)", min: 0, max: 100, u: "%RH", t: 'tank', col: '#06b6d4' }
+        ];
+
+        const grid = document.getElementById('main-grid');
+
+        sensors.forEach(s => {
+            let vis = '';
+            if(s.t === 'tank') vis = `<div class="tank"><div class="fill" id="v-${s.id}" style="background:${s.col}; height:0%;"></div></div>`;
+            if(s.t === 'gauge') vis = `<div class="gauge"><div class="needle" id="v-${s.id}" style="transform: rotate(-90deg);"></div></div>`;
+            if(s.t === 'bar') vis = `<div class="bar-bg"><div class="bar-fill" id="v-${s.id}" style="background:${s.col}; width:0%;"></div></div>`;
+
+            grid.innerHTML += `
+                <div class="card">
+                    <div class="title">${s.name}</div>
+                    <div class="visual-area">${vis}<div class="pv-text" id="t-${s.id}">${s.min} ${s.u}</div></div>
+                    <div style="font-size:0.8em; color:#64748b;">4-20mA Input Simulator</div>
+                    <input type="range" id="sl-${s.id}" min="4" max="20" step="0.1" value="4" oninput="c(${s.id},${s.min},${s.max},'${s.t}')">
+                    <div class="math-box" id="m-${s.id}">Raw = 0<br>PV = ${s.min}</div>
+                </div>
+            `;
+        });
+
+        function c(id, min, max, t) {
+            const ma = parseFloat(document.getElementById(`sl-${id}`).value);
+            const raw = Math.round(((ma - 4.0) / 16.0) * 4000);
+            const span = max - min;
+            const pv = min + ((raw / 4000) * span);
+            const pct = (raw / 4000) * 100;
+
+            document.getElementById(`t-${id}`).innerText = `${pv.toFixed(1)} ${sensors.find(x=>x.id==id).u}`;
+            document.getElementById(`m-${id}`).innerHTML = `Raw ADC = ${raw} Counts<br>PV = ${min} + (${raw}/4000)*${span}<br>PV = ${pv.toFixed(2)}`;
+
+            const v = document.getElementById(`v-${id}`);
+            if(t === 'tank') v.style.height = `${pct}%`;
+            if(t === 'bar') v.style.width = `${pct}%`;
+            if(t === 'gauge') v.style.transform = `rotate(${-90 + (pct * 1.8)}deg)`; 
+        }
+    </script>
+</body>
+</html>

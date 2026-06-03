@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit 5: ระบบควบคุมลูปปิด (PID) + Ladder Diagram</title>
+    <style>
+        :root { --bg: #292524; --panel: #44403c; --text: #fafaf9; --sp: #3b82f6; --pv: #22c55e; --ladder: #f8fafc; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; }
+        h1 { text-align: center; color: #a8a29e; border-bottom: 1px solid #57534e; padding-bottom: 10px; }
+        
+        .tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px; padding-bottom: 10px; }
+        .tab-btn { background: #57534e; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; font-size: 0.9em; flex-grow: 1; text-align: center;}
+        .tab-btn.active { background: var(--sp); font-weight: bold; }
+        
+        .tab-content { display: none; background: var(--panel); padding: 20px; border-radius: 8px; }
+        .tab-content.active { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 800px) { .tab-content.active { grid-template-columns: 1fr; } }
+        
+        /* Process Section */
+        .process-box { border-right: 2px dashed #78716c; padding-right: 20px; }
+        .trend-bar-container { background: #1c1917; height: 40px; border-radius: 4px; position: relative; margin: 20px 0; overflow: hidden; }
+        .sp-marker { position: absolute; width: 3px; height: 100%; background: var(--sp); z-index: 2; top:0;}
+        .pv-bar { height: 100%; background: var(--pv); width: 0%; transition: width 0.2s; }
+        .control-group { margin: 15px 0; display: flex; align-items: center; justify-content: space-between; }
+        input[type=range] { width: 60%; }
+        
+        /* Ladder Section */
+        .ladder-box { background: var(--ladder); color: #333; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 1em; border-left: 4px solid #ef4444; border-right: 4px solid #ef4444;}
+        .l-rung { display: flex; align-items: center; min-height: 50px; position: relative; margin-bottom: 10px;}
+        .l-line { position: absolute; left: 0; right: 0; height: 2px; background: #94a3b8; z-index: 1;}
+        .l-item { position: relative; z-index: 2; background: var(--ladder); padding: 0 5px; margin: 0 15px; font-weight: bold; text-align: center;}
+        .l-block { position: relative; z-index: 2; background: white; border: 2px solid #333; padding: 10px; margin-left: auto; width: 180px;}
+        .active-l { color: var(--pv); }
+    </style>
+</head>
+<body>
+    <h1>บทที่ 5: การอินทิเกรตระบบ PID ควบคุมลูปปิดและ Ladder Diagram (10 ระบบ)</h1>
+    
+    <div class="tabs" id="tab-headers"></div>
+    <div id="tab-contents"></div>
+
+    <script>
+        // 10 Industrial Closed-Loop Systems
+        const systems = [
+            { id: 0, name: "1. VFD Speed (ความเร็วมอเตอร์)", unit: "Hz", sp: 50, pv: 0, scale: 100, kp: 0.15 },
+            { id: 1, name: "2. Temp Heater (อุณหภูมิ)", unit: "°C", sp: 120, pv: 25, scale: 200, kp: 0.05 },
+            { id: 2, name: "3. Flow Valve (การไหล)", unit: "L/m", sp: 300, pv: 0, scale: 500, kp: 0.2 },
+            { id: 3, name: "4. Tank Level (ระดับน้ำ)", unit: "%", sp: 75, pv: 20, scale: 100, kp: 0.1 },
+            { id: 4, name: "5. Gas Pressure (ความดัน)", unit: "Bar", sp: 8, pv: 0, scale: 16, kp: 0.3 },
+            { id: 5, name: "6. Web Tension (แรงตึงกระดาษ)", unit: "N", sp: 45, pv: 0, scale: 100, kp: 0.25 },
+            { id: 6, name: "7. Room Lux (ความสว่างแสง)", unit: "Lux", sp: 500, pv: 0, scale: 1000, kp: 0.4 },
+            { id: 7, name: "8. pH Dosing (การปรับกรดด่าง)", unit: "pH", sp: 7, pv: 2, scale: 14, kp: 0.08 },
+            { id: 8, name: "9. Servo Position (ตำแหน่ง)", unit: "mm", sp: 150, pv: 0, scale: 300, kp: 0.5 },
+            { id: 9, name: "10. Blend Ratio (อัตราส่วนผสม)", unit: "%", sp: 40, pv: 0, scale: 100, kp: 0.12 }
+        ];
+
+        const headers = document.getElementById('tab-headers');
+        const contents = document.getElementById('tab-contents');
+
+        systems.forEach((sys, i) => {
+            headers.innerHTML += `<button class="tab-btn ${i===0?'active':''}" onclick="openTab(${i})">${sys.name}</button>`;
+            
+            contents.innerHTML += `
+                <div class="tab-content ${i===0?'active':''}" id="content-${i}">
+                    <div class="process-box">
+                        <h3 style="color:#fdba74;">Process Model: ${sys.name}</h3>
+                        <div>Setpoint (SP): <span style="color:var(--sp); font-weight:bold; font-size:1.2em;" id="sp-txt-${i}">${sys.sp}</span> ${sys.unit}</div>
+                        <div>Process Var (PV): <span style="color:var(--pv); font-weight:bold; font-size:1.2em;" id="pv-txt-${i}">${sys.pv}</span> ${sys.unit}</div>
+                        
+                        <div class="trend-bar-container">
+                            <div class="sp-marker" style="left: ${(sys.sp/sys.scale)*100}%;" id="sp-mark-${i}"></div>
+                            <div class="pv-bar" id="pv-bar-${i}" style="width: ${(sys.pv/sys.scale)*100}%;"></div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>ปรับเป้าหมาย (SP):</label>
+                            <input type="range" min="0" max="${sys.scale}" value="${sys.sp}" oninput="updateSP(${i}, this.value)">
+                        </div>
+                        <div class="control-group">
+                            <label>ปรับ Kp (Proportional Gain):</label>
+                            <input type="range" min="0.01" max="1" step="0.01" value="${sys.kp}" oninput="updateKp(${i}, this.value)">
+                            <span id="kp-txt-${i}" style="font-family:monospace;">${sys.kp.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="ladder-box">
+                        <h3 style="margin-top:0; color:#1e40af;">PLC Ladder Diagram (Real-time)</h3>
+                        <!-- Rung 1: Read PV -->
+                        <div class="l-rung">
+                            <div class="l-line" style="background:var(--pv)"></div>
+                            <div class="l-item active-l">| |<br>M8000<br><small>(RUN)</small></div>
+                            <div class="l-block" style="border-color:var(--pv)">
+                                <strong>[ MOV ]</strong><br>S: SD6020 (ADC)<br>D: D100 (PV)
+                            </div>
+                        </div>
+                        <!-- Rung 2: PID Execution -->
+                        <div class="l-rung">
+                            <div class="l-line" style="background:var(--sp)"></div>
+                            <div class="l-item active-l" style="color:var(--sp)">| |<br>M8000</div>
+                            <div class="l-block" style="border-color:var(--sp);">
+                                <div style="text-align:center; font-weight:bold; border-bottom:1px solid #ccc; margin-bottom:5px;">[ PID Instruction ]</div>
+                                <div style="font-size:0.9em; line-height:1.4;">
+                                    S1(SP): K<span id="lad-sp-${i}">${sys.sp}</span><br>
+                                    S2(PV): D100 (<span id="lad-pv-${i}">0</span>)<br>
+                                    S3(Param): D500<br>
+                                    D(MV Out): D200
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        function openTab(idx) {
+            document.querySelectorAll('.tab-btn').forEach((btn, i) => btn.classList.toggle('active', i === idx));
+            document.querySelectorAll('.tab-content').forEach((content, i) => content.classList.toggle('active', i === idx));
+        }
+
+        function updateSP(idx, val) {
+            systems[idx].sp = parseFloat(val);
+            document.getElementById(`sp-txt-${idx}`).innerText = systems[idx].sp;
+            document.getElementById(`lad-sp-${idx}`).innerText = systems[idx].sp;
+            document.getElementById(`sp-mark-${idx}`).style.left = `${(systems[idx].sp / systems[idx].scale) * 100}%`;
+        }
+
+        function updateKp(idx, val) {
+            systems[idx].kp = parseFloat(val);
+            document.getElementById(`kp-txt-${idx}`).innerText = systems[idx].kp.toFixed(2);
+        }
+
+        // Real-time PID Engine (Proportional + Process Inertia simulation)
+        setInterval(() => {
+            systems.forEach((sys, i) => {
+                const error = sys.sp - sys.pv;
+                let output = error * sys.kp; 
+                
+                // Add inertia/noise based on engineering principles
+                sys.pv += output + (Math.random() - 0.5) * (sys.scale * 0.015);
+                
+                if(sys.pv < 0) sys.pv = 0;
+                if(sys.pv > sys.scale) sys.pv = sys.scale;
+
+                // Update UI visually
+                document.getElementById(`pv-txt-${i}`).innerText = sys.pv.toFixed(1);
+                document.getElementById(`lad-pv-${i}`).innerText = sys.pv.toFixed(0);
+                document.getElementById(`pv-bar-${i}`).style.width = `${(sys.pv / sys.scale) * 100}%`;
+            });
+        }, 500); 
+    </script>
+</body>
+</html>

@@ -5,7 +5,7 @@
   "title_th": "พื้นฐานเมคคาทรอนิกส์",
   "description_en": "Explore the integration of mechanical engineering, electronics, and computer control systems.",
   "description_th": "เรียนรู้เกี่ยวกับการผสมผสานระหว่างวิศวกรรมเครื่องกล อิเล็กทรอนิกส์ และการควบคุมด้วยคอมพิวเตอร์",
-  "image": "/assets/courses/mct101/cover.jpg",
+  "image": "/assets/courses/mct101/Mecha_workaround.png",
   "syllabus_en": "This course covers everything from basic sensors and actuators to micro-controller programming for automation.",
   "syllabus_th": "รายวิชานี้ครอบคลุมเนื้อหาตั้งแต่พื้นฐานของเซนเซอร์ (Sensors), ตัวขับเคลื่อน (Actuators), ไปจนถึงการเขียนโปรแกรมควบคุมไมโครคอนโทรลเลอร์เบื้องต้น"
 }

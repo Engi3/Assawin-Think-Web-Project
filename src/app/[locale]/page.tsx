@@ -111,14 +111,40 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
               </p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                {/* Education Section */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 text-foreground font-bold">
                     <GraduationCap className="h-5 w-5 text-primary" /> {dict.home.education_title}
                   </div>
-                  <p className="text-secondary">
-                    {locale === 'en' ? "B.Eng. in Mechatronics Engineering" : "วศ.บ. เมคคาทรอนิกส์"}
-                  </p>
+                  
+                  <div className="space-y-3">
+                    {/* Master's Degree */}
+                    <div>
+                      <p className="font-semibold text-foreground">
+                        {locale === 'en' ? "Khon Kaen University" : "มหาวิทยาลัยขอนแก่น"}
+                      </p>
+                      <p className="text-secondary text-sm">
+                        {locale === 'en' 
+                          ? "M.Eng. in Mechanical Engineering (Master's)" 
+                          : "ป.โท วศ.ม. วิศวกรรมเครื่องกล"}
+                      </p>
+                    </div>
+
+                    {/* Bachelor's Degree */}
+                    <div>
+                      <p className="font-semibold text-foreground">
+                        {locale === 'en' ? "Mahasarakham University" : "มหาวิทยาลัยมหาสารคาม"}
+                      </p>
+                      <p className="text-secondary text-sm">
+                        {locale === 'en' 
+                          ? "B.Eng. in Mechatronics Engineering (Bachelor's)" 
+                          : "ป.ตรี วศ.บ. เมคคาทรอนิกส์"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Expertise Section */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 text-foreground font-bold">
                     <Award className="h-5 w-5 text-primary" /> {dict.home.expertise_title}
