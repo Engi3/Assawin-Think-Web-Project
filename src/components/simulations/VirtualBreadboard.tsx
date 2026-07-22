@@ -63,7 +63,7 @@ export default function VirtualBreadboard({ locale }: { locale: string }) {
               <button 
                 key={ic.id}
                 onClick={() => setSelectedIC(ic)}
-                className={`w-full text-left px-4 py-3 rounded-xl transition-all font-bold text-sm flex items-center gap-3 ${selectedIC.id === ic.id ? 'bg-primary text-white shadow-md' : 'text-secondary hover:bg-secondary/10'}`}
+                className={`w-full text-left px-4 py-3 rounded-xl transition-all font-bold text-sm flex items-center gap-3 ${selectedIC.id === ic.id ? 'bg-primary text-on-primary shadow-md' : 'text-secondary hover:bg-secondary/10'}`}
               >
                 <Cpu size={16} /> {ic.name}
               </button>

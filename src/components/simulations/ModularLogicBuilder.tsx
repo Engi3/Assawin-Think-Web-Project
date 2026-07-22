@@ -166,7 +166,7 @@ export default function ModularLogicBuilder({ locale }: { locale: string }) {
              <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-3 block">In A</span>
              <button 
                 onClick={() => setInA(inA?0:1)} 
-                className={`w-14 h-14 rounded-xl flex items-center justify-center font-black text-xl transition-all duration-500 shadow-2xl relative ${inA ? 'bg-primary text-white scale-110' : 'bg-background/80 border border-border text-secondary hover:border-primary/50'}`}
+                className={`w-14 h-14 rounded-xl flex items-center justify-center font-black text-xl transition-all duration-500 shadow-2xl relative ${inA ? 'bg-primary text-on-primary scale-110' : 'bg-background/80 border border-border text-secondary hover:border-primary/50'}`}
              >
                 {inA}
                 {inA === 1 && <span className="absolute inset-0 rounded-xl bg-primary animate-ping opacity-20"></span>}
@@ -176,7 +176,7 @@ export default function ModularLogicBuilder({ locale }: { locale: string }) {
              <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-3 block">In B</span>
              <button 
                 onClick={() => setInB(inB?0:1)} 
-                className={`w-14 h-14 rounded-xl flex items-center justify-center font-black text-xl transition-all duration-500 shadow-2xl relative ${inB ? 'bg-primary text-white scale-110' : 'bg-background/80 border border-border text-secondary hover:border-primary/50'}`}
+                className={`w-14 h-14 rounded-xl flex items-center justify-center font-black text-xl transition-all duration-500 shadow-2xl relative ${inB ? 'bg-primary text-on-primary scale-110' : 'bg-background/80 border border-border text-secondary hover:border-primary/50'}`}
              >
                 {inB}
                 {inB === 1 && <span className="absolute inset-0 rounded-xl bg-primary animate-ping opacity-20"></span>}
@@ -246,7 +246,7 @@ export default function ModularLogicBuilder({ locale }: { locale: string }) {
         {/* Final Output Register */}
         <div className="flex flex-col items-center gap-4">
            <span className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Out Y</span>
-           <div className={`w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-700 shadow-2xl relative overflow-hidden ${result ? 'bg-primary text-white scale-110 shadow-primary/40' : 'bg-background/80 border border-border text-secondary/30'}`}>
+           <div className={`w-20 h-20 rounded-2xl flex items-center justify-center transition-all duration-700 shadow-2xl relative overflow-hidden ${result ? 'bg-primary text-on-primary scale-110 shadow-primary/40' : 'bg-background/80 border border-border text-secondary/30'}`}>
              <Zap fill={result ? "currentColor" : "none"} size={32} className="relative z-10" />
              {result === 1 && (
                <motion.div 

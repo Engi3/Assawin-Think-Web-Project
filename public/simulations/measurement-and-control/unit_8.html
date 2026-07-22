@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unit 8 - Preventive Maintenance &amp; Safety</title>
+  <link rel="stylesheet" href="/simulations/_shared/codenest-canvas.css">
+  <style>
+    .checklist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .checklist li {
+      display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 13px;
+    }
+    .checklist li.done { opacity: 0.5; text-decoration: line-through; }
+    .checklist input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+    .freq-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+    .loto-steps { counter-reset: step; list-style: none; margin: 0; padding: 0; }
+    .loto-steps li {
+      counter-increment: step; position: relative; padding: 14px 14px 14px 44px; margin-bottom: 10px;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; font-size: 13px;
+      opacity: 0.4; transition: opacity 0.2s, border-color 0.2s;
+    }
+    .loto-steps li.active { opacity: 1; border-color: var(--accent); }
+    .loto-steps li.completed { opacity: 0.7; }
+    .loto-steps li.completed::before { background: var(--accent); color: var(--accent-ink); }
+    .loto-steps li::before {
+      counter-content: counter(step);
+      content: counter(step);
+      position: absolute; left: 14px; top: 12px; width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(255,255,255,0.08); color: var(--fg); font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="eyebrow" data-i18n="eyebrow">Measurement &amp; Control &middot; Unit 8</span>
+    <h1 data-i18n="h1">Preventive Maintenance &amp; Safety Inspection</h1>
+    <p class="intro" data-i18n="intro">
+      The final unit ties every sensor from Units 1&ndash;7 into one habit:
+      check it on a schedule, and never work on it live. Build a check
+      sheet, then walk the Lockout&ndash;Tagout sequence step by step.
+    </p>
+
+    <div class="panel">
+      <div class="toolbar freq-tabs">
+        <button class="tool-btn active" data-freq="daily" data-i18n="btnDaily">Daily</button>
+        <button class="tool-btn" data-freq="weekly" data-i18n="btnWeekly">Weekly</button>
+        <button class="tool-btn" data-freq="monthly" data-i18n="btnMonthly">Monthly</button>
+      </div>
+      <ul class="checklist" id="checklist"></ul>
+      <p class="hint" data-i18n="hintChecklist">
+        Check items off as if you were walking the floor right now. Preventive maintenance beats
+        <b>breakdown maintenance</b> because a five-minute check today avoids an unplanned stop next week.
+      </p>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <div class="toolbar"><span class="tool-btn active" style="cursor:default" data-i18n="panelLoto">Lockout&ndash;Tagout (LOTO) Walkthrough</span></div>
+      <ol class="loto-steps" id="lotoSteps"></ol>
+      <div class="toolbar" style="margin-top:6px;">
+        <button class="tool-btn" id="lotoNext" data-i18n="btnLotoNext">Complete This Step →</button>
+        <button class="tool-btn danger" id="lotoReset" data-i18n="btnLotoReset">Restart Walkthrough</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/simulations/_shared/i18n.js"></script>
+  <script>
+    const LANG = getLang();
+    applyI18n({
+      eyebrow: "Measurement &amp; Control &middot; Unit 8",
+      h1: LANG === "th" ? "หน่วยที่ 8: การบำรุงรักษาและตรวจสอบความปลอดภัย" : "Preventive Maintenance &amp; Safety Inspection",
+      intro: LANG === "th"
+        ? "หน่วยสุดท้ายนี้เชื่อมโยงเซนเซอร์ทุกตัวจากหน่วยที่ 1&ndash;7 เข้ากับนิสัยเดียว: ตรวจตามตารางเวลา และห้ามทำงานกับอุปกรณ์ที่ยังมีไฟอยู่เด็ดขาด สร้างแบบตรวจสอบ (Check sheet) แล้วเดินตามขั้นตอน Lockout&ndash;Tagout ทีละขั้น"
+        : "The final unit ties every sensor from Units 1&ndash;7 into one habit: check it on a schedule, and never work on it live. Build a check sheet, then walk the Lockout&ndash;Tagout sequence step by step.",
+      btnDaily: LANG === "th" ? "รายวัน" : "Daily",
+      btnWeekly: LANG === "th" ? "รายสัปดาห์" : "Weekly",
+      btnMonthly: LANG === "th" ? "รายเดือน" : "Monthly",
+      hintChecklist: LANG === "th"
+        ? "ติ๊กรายการเหมือนกำลังเดินตรวจหน้างานจริง การบำรุงรักษาเชิงป้องกันดีกว่า <b>การซ่อมบำรุงแบบเสียแล้วซ่อม</b> เพราะตรวจ 5 นาทีวันนี้ ช่วยเลี่ยงการหยุดเครื่องแบบไม่ทันตั้งตัวในสัปดาห์หน้า"
+        : "Check items off as if you were walking the floor right now. Preventive maintenance beats <b>breakdown maintenance</b> because a five-minute check today avoids an unplanned stop next week.",
+      panelLoto: LANG === "th" ? "ขั้นตอน Lockout&ndash;Tagout (LOTO)" : "Lockout&ndash;Tagout (LOTO) Walkthrough",
+      btnLotoNext: LANG === "th" ? "ทำขั้นตอนนี้เสร็จแล้ว →" : "Complete This Step →",
+      btnLotoReset: LANG === "th" ? "เริ่มขั้นตอนใหม่" : "Restart Walkthrough",
+    });
+
+    const CHECKLISTS = {
+      en: {
+        daily: [
+          "Visual check: no loose wiring or damaged cable insulation on sensors",
+          "Verify PLC analog/digital input module status LEDs are normal",
+          "Check displayed process values against expected operating range",
+          "Confirm no error codes on HMI / control panel",
+        ],
+        weekly: [
+          "Clean sensor lenses/faces (photoelectric, ultrasonic) of dust and residue",
+          "Check load cell / pressure transducer mounting for looseness or corrosion",
+          "Verify encoder coupling has no slip or excess play",
+          "Inspect pneumatic/hydraulic lines near pressure sensors for leaks",
+        ],
+        monthly: [
+          "Calibrate load cells and pressure transducers against reference standards",
+          "Re-verify analog scaling constants (Raw ↔ Engineering Value) in the PLC program",
+          "Test pressure switch and level switch trip points against setpoints",
+          "Review maintenance log for recurring faults and update the inspection plan",
+        ],
+      },
+      th: {
+        daily: [
+          "ตรวจสอบด้วยสายตา: ไม่มีสายไฟหลวมหรือฉนวนสายเคเบิลชำรุดที่เซนเซอร์",
+          "ตรวจสอบไฟสถานะ LED ของโมดูลอนาล็อก/ดิจิทัลอินพุตของ PLC ว่าปกติ",
+          "เทียบค่ากระบวนการที่แสดงผลกับย่านการทำงานที่คาดหวัง",
+          "ยืนยันว่าไม่มีรหัสข้อผิดพลาดบน HMI / แผงควบคุม",
+        ],
+        weekly: [
+          "ทำความสะอาดเลนส์/หน้าเซนเซอร์ (โฟโต้อิเล็กทริก, อัลตราโซนิก) จากฝุ่นและคราบสกปรก",
+          "ตรวจสอบจุดยึดโหลดเซลล์/เพรสเชอร์ทรานสดิวเซอร์ว่าไม่หลวมหรือเป็นสนิม",
+          "ตรวจสอบคัปปลิ้งเอนโค้ดเดอร์ว่าไม่ลื่นไถลหรือมีระยะห่างเกิน",
+          "ตรวจสอบท่อระบบนิวเมติกส์/ไฮดรอลิกส์ใกล้เพรสเชอร์เซนเซอร์ว่าไม่รั่ว",
+        ],
+        monthly: [
+          "คาลิเบรตโหลดเซลล์และเพรสเชอร์ทรานสดิวเซอร์เทียบกับมาตรฐานอ้างอิง",
+          "ตรวจทานค่าคงที่การปรับสเกลสัญญาณ (Raw ↔ ค่าทางวิศวกรรม) ในโปรแกรม PLC อีกครั้ง",
+          "ทดสอบจุดตัดของเพรสเชอร์สวิตช์และเลเวลสวิตช์เทียบกับค่าที่ตั้งไว้",
+          "ทบทวนบันทึกการบำรุงรักษาเพื่อหาปัญหาที่เกิดซ้ำและปรับปรุงแผนตรวจสอบ",
+        ],
+      },
+    };
+
+    const checklist = document.getElementById("checklist");
+    function renderChecklist(freq) {
+      checklist.innerHTML = "";
+      CHECKLISTS[LANG][freq].forEach((item, i) => {
+        const li = document.createElement("li");
+        const id = "chk-" + freq + "-" + i;
+        li.innerHTML = `<input type="checkbox" id="${id}"><label for="${id}">${item}</label>`;
+        const checkbox = li.querySelector("input");
+        checkbox.addEventListener("change", () => li.classList.toggle("done", checkbox.checked));
+        checklist.appendChild(li);
+      });
+    }
+    document.querySelectorAll("[data-freq]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-freq]").forEach((b) => b.classList.toggle("active", b === btn));
+        renderChecklist(btn.dataset.freq);
+      });
+    });
+    renderChecklist("daily");
+
+    // --- LOTO walkthrough ---
+    const LOTO = {
+      en: [
+        "Notify affected personnel that equipment will be shut down for maintenance.",
+        "Identify all energy sources (electrical, pneumatic, hydraulic, stored mechanical energy).",
+        "Shut down the equipment using its normal stopping procedure.",
+        "Isolate the equipment from every energy source (open breakers, close valves).",
+        "Apply your personal lock and warning tag to each isolation point.",
+        "Release or restrain any stored/residual energy (bleed pressure, block suspended parts).",
+        "Verify isolation: attempt to start the equipment to confirm zero energy state.",
+        "Perform the maintenance / measurement work with appropriate PPE.",
+        "Remove tools, confirm the area is clear, and remove locks/tags in reverse order.",
+        "Restore energy and verify normal operation before returning equipment to service.",
+      ],
+      th: [
+        "แจ้งผู้เกี่ยวข้องว่าจะหยุดเครื่องเพื่อบำรุงรักษา",
+        "ระบุแหล่งพลังงานทั้งหมด (ไฟฟ้า นิวเมติกส์ ไฮดรอลิกส์ พลังงานกลที่สะสมไว้)",
+        "หยุดเครื่องจักรตามขั้นตอนการหยุดเครื่องปกติ",
+        "ตัดแยกเครื่องจักรออกจากแหล่งพลังงานทุกแหล่ง (เปิดเบรกเกอร์ ปิดวาล์ว)",
+        "ล็อกและติดป้ายเตือนส่วนตัวที่จุดตัดแยกแต่ละจุด",
+        "ปลดปล่อยหรือกักพลังงานคงค้าง (ระบายความดัน ค้ำยันชิ้นส่วนที่แขวนอยู่)",
+        "ตรวจสอบการตัดแยก: ลองสตาร์ทเครื่องเพื่อยืนยันว่าไม่มีพลังงานเหลือ",
+        "ปฏิบัติงานบำรุงรักษา/ตรวจวัดโดยสวมอุปกรณ์ป้องกันส่วนบุคคลที่เหมาะสม",
+        "เก็บเครื่องมือ ตรวจสอบพื้นที่ว่าง แล้วปลดล็อก/ป้ายเตือนตามลำดับย้อนกลับ",
+        "คืนพลังงานและตรวจสอบการทำงานปกติก่อนส่งมอบเครื่องจักรกลับเข้าใช้งาน",
+      ],
+    };
+
+    let currentStep = 0;
+    const lotoList = document.getElementById("lotoSteps");
+
+    function renderLoto() {
+      lotoList.innerHTML = "";
+      LOTO[LANG].forEach((text, i) => {
+        const li = document.createElement("li");
+        li.textContent = text;
+        if (i < currentStep) li.classList.add("completed");
+        else if (i === currentStep) li.classList.add("active");
+        lotoList.appendChild(li);
+      });
+      const btn = document.getElementById("lotoNext");
+      btn.disabled = currentStep >= LOTO[LANG].length;
+      btn.textContent = currentStep >= LOTO[LANG].length
+        ? (LANG === "th" ? "✓ ครบทุกขั้นตอนแล้ว" : "✓ Sequence Complete")
+        : (LANG === "th" ? "ทำขั้นตอนนี้เสร็จแล้ว →" : "Complete This Step →");
+    }
+
+    document.getElementById("lotoNext").addEventListener("click", () => {
+      if (currentStep < LOTO[LANG].length) currentStep++;
+      renderLoto();
+    });
+    document.getElementById("lotoReset").addEventListener("click", () => {
+      currentStep = 0;
+      renderLoto();
+    });
+
+    renderLoto();
+  </script>
+</body>
+</html>

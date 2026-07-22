@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unit 7 - PLC Analog Scaling &amp; Ladder Programming</title>
+  <link rel="stylesheet" href="/simulations/_shared/codenest-canvas.css">
+  <style>
+    canvas#ladder { height: 420px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="eyebrow" data-i18n="eyebrow">Measurement &amp; Control &middot; Unit 7</span>
+    <h1 data-i18n="h1">PLC Programming: Reading &amp; Scaling Industrial Control Modules</h1>
+    <p class="intro" data-i18n="intro">
+      An analog module hands the PLC a raw ADC count. Scaling converts that
+      count into a real engineering value; a ladder program then reads,
+      scales, and acts on it. Try both steps below.
+    </p>
+
+    <div class="panel">
+      <div class="toolbar"><span class="tool-btn active" style="cursor:default" data-i18n="panelScaling">Analog Scaling Calculator</span></div>
+      <div class="slider-row">
+        <div class="slider-field">
+          <label><span data-i18n="lblRaw">Raw ADC Reading</span> <span id="rawVal">2000</span></label>
+          <input type="range" id="raw" min="0" max="4000" value="2000">
+        </div>
+        <div class="slider-field">
+          <label><span data-i18n="lblMin">Sensor Range Min</span> <span id="euMinVal">0</span></label>
+          <input type="range" id="euMin" min="-100" max="500" value="0">
+        </div>
+        <div class="slider-field">
+          <label><span data-i18n="lblMax">Sensor Range Max</span> <span id="euMaxVal">100</span></label>
+          <input type="range" id="euMax" min="0" max="1000" value="100">
+        </div>
+      </div>
+      <div class="readout-grid">
+        <div class="readout"><div class="label" data-i18n="lblRawFrac">Raw / Full Scale</div><div class="value" id="rawFrac">2000 / 4000</div></div>
+        <div class="readout"><div class="label" data-i18n="lblScaled">Scaled Engineering Value</div><div class="value" id="scaledOut">50.0</div></div>
+      </div>
+      <p class="hint" data-i18n="hintScaling">
+        <b>Engineering Value = ((Raw &minus; 0) / (4000 &minus; 0)) &times; (Max &minus; Min) + Min</b> — this is the exact
+        formula behind a PLC's <code>SCL</code>/scaling instruction. Try Raw ADC = 1500, Min = &minus;50, Max = 150 to
+        match a typical 4&ndash;20mA temperature transmitter reading roughly 25&deg;C.
+      </p>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <div class="toolbar" id="toolbar">
+        <span class="tool-btn active" style="cursor:default;pointer-events:none;" data-i18n="panelLadder">Ladder Diagram Builder</span>
+        <button class="tool-btn active" data-tool="no" data-i18n="btnNo">NO Contact</button>
+        <button class="tool-btn" data-tool="nc" data-i18n="btnNc">NC Contact</button>
+        <button class="tool-btn" data-tool="coil" data-i18n="btnCoil">Coil</button>
+        <button class="tool-btn" data-tool="eraser" data-i18n="btnEraser">Eraser</button>
+        <button class="tool-btn" id="addRung" data-i18n="btnAddRung">+ Add Rung</button>
+        <button class="tool-btn danger" id="delRung" data-i18n="btnDelRung">- Delete Last Rung</button>
+        <button class="tool-btn danger" id="clearAll" data-i18n="btnClear">Clear</button>
+      </div>
+      <canvas id="ladder"></canvas>
+      <p class="hint" data-i18n="hintLadder">
+        Pick a tool, click a slot to place it (you'll be asked for an address tag — try <b>D0</b> for the module's raw
+        value, <b>MOV</b>/<b>SCL</b> style tags for the scaling instruction, and <b>Y0</b> for the output coil that
+        acts on the scaled result). Layout auto-saves in this browser.
+      </p>
+    </div>
+  </div>
+
+  <script src="/simulations/_shared/i18n.js"></script>
+  <script>
+    const LANG = getLang();
+    applyI18n({
+      eyebrow: "Measurement &amp; Control &middot; Unit 7",
+      h1: LANG === "th" ? "หน่วยที่ 7: เขียนโปรแกรม PLC อ่านค่าและปรับสเกลสัญญาณ" : "PLC Programming: Reading &amp; Scaling Industrial Control Modules",
+      intro: LANG === "th"
+        ? "โมดูลอนาล็อกส่งค่า Raw ADC ดิบให้ PLC การปรับสเกลจะแปลงค่าดิบนั้นเป็นค่าทางวิศวกรรมจริง จากนั้นโปรแกรมแลดเดอร์จะอ่าน ปรับสเกล และสั่งงานตามค่านั้น ลองทำทั้งสองขั้นตอนด้านล่าง"
+        : "An analog module hands the PLC a raw ADC count. Scaling converts that count into a real engineering value; a ladder program then reads, scales, and acts on it. Try both steps below.",
+      panelScaling: LANG === "th" ? "เครื่องคำนวณการปรับสเกลสัญญาณ" : "Analog Scaling Calculator",
+      lblRaw: LANG === "th" ? "ค่า Raw ADC" : "Raw ADC Reading",
+      lblMin: LANG === "th" ? "ค่าต่ำสุดของเซนเซอร์" : "Sensor Range Min",
+      lblMax: LANG === "th" ? "ค่าสูงสุดของเซนเซอร์" : "Sensor Range Max",
+      lblRawFrac: LANG === "th" ? "ค่าดิบ / เต็มสเกล" : "Raw / Full Scale",
+      lblScaled: LANG === "th" ? "ค่าทางวิศวกรรมที่ปรับสเกลแล้ว" : "Scaled Engineering Value",
+      hintScaling: LANG === "th"
+        ? "<b>ค่าทางวิศวกรรม = ((Raw &minus; 0) / (4000 &minus; 0)) &times; (Max &minus; Min) + Min</b> — สูตรนี้คือคำสั่งปรับสเกล <code>SCL</code> ของ PLC เป๊ะ ลองใส่ Raw ADC = 1500, Min = &minus;50, Max = 150 เพื่อจำลองทรานสมิตเตอร์วัดอุณหภูมิ 4&ndash;20mA ที่อ่านได้ประมาณ 25&deg;C"
+        : "<b>Engineering Value = ((Raw &minus; 0) / (4000 &minus; 0)) &times; (Max &minus; Min) + Min</b> — this is the exact formula behind a PLC's <code>SCL</code>/scaling instruction. Try Raw ADC = 1500, Min = &minus;50, Max = 150 to match a typical 4&ndash;20mA temperature transmitter reading roughly 25&deg;C.",
+      panelLadder: LANG === "th" ? "ตัวช่วยสร้างแผนภาพแลดเดอร์" : "Ladder Diagram Builder",
+      btnNo: "NO Contact",
+      btnNc: "NC Contact",
+      btnCoil: LANG === "th" ? "คอยล์ (Coil)" : "Coil",
+      btnEraser: LANG === "th" ? "ยางลบ" : "Eraser",
+      btnAddRung: LANG === "th" ? "+ เพิ่มรัง" : "+ Add Rung",
+      btnDelRung: LANG === "th" ? "- ลบรังล่าสุด" : "- Delete Last Rung",
+      btnClear: LANG === "th" ? "ล้างทั้งหมด" : "Clear",
+      hintLadder: LANG === "th"
+        ? "เลือกเครื่องมือ แล้วคลิกช่องเพื่อวาง (จะถามหาแท็กแอดเดรส — ลอง <b>D0</b> สำหรับค่าดิบของโมดูล, แท็กสไตล์ <b>MOV</b>/<b>SCL</b> สำหรับคำสั่งปรับสเกล และ <b>Y0</b> สำหรับคอยล์เอาต์พุตที่สั่งงานตามผลลัพธ์) เลย์เอาต์บันทึกอัตโนมัติในเบราว์เซอร์นี้"
+        : "Pick a tool, click a slot to place it (you'll be asked for an address tag — try <b>D0</b> for the module's raw value, <b>MOV</b>/<b>SCL</b> style tags for the scaling instruction, and <b>Y0</b> for the output coil that acts on the scaled result). Layout auto-saves in this browser.",
+    });
+
+    // --- Scaling calculator ---
+    const rawSlider = document.getElementById("raw");
+    const euMinSlider = document.getElementById("euMin");
+    const euMaxSlider = document.getElementById("euMax");
+
+    function updateScaling() {
+      const raw = Number(rawSlider.value);
+      const euMin = Number(euMinSlider.value);
+      const euMax = Number(euMaxSlider.value);
+      document.getElementById("rawVal").textContent = raw;
+      document.getElementById("euMinVal").textContent = euMin;
+      document.getElementById("euMaxVal").textContent = euMax;
+      document.getElementById("rawFrac").textContent = raw + " / 4000";
+      const scaled = (raw / 4000) * (euMax - euMin) + euMin;
+      document.getElementById("scaledOut").textContent = scaled.toFixed(1);
+    }
+    [rawSlider, euMinSlider, euMaxSlider].forEach((s) => s.addEventListener("input", updateScaling));
+    updateScaling();
+
+    // --- Ladder diagram builder (same engine as the Unit 8 maintenance workspace) ---
+    const canvas = document.getElementById("ladder");
+    const ctx = canvas.getContext("2d");
+    const toolbar = document.getElementById("toolbar");
+    const STORAGE_KEY = "codenest-canvas-mct-unit7-ladder";
+
+    const SLOTS_PER_RUNG = 6;
+    const ROW_HEIGHT = 90;
+    const RAIL_MARGIN = 40;
+
+    let rungs = [];
+    let currentTool = "no";
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        rungs = raw ? JSON.parse(raw) : defaultRungs();
+      } catch (e) {
+        rungs = defaultRungs();
+      }
+    }
+
+    function defaultRungs() {
+      return [
+        {
+          slots: [
+            { type: "no", tag: "X0" },
+            { type: "empty", tag: "" },
+            { type: "empty", tag: "" },
+            { type: "empty", tag: "" },
+            { type: "empty", tag: "" },
+            { type: "coil", tag: "MOV D0" },
+          ],
+        },
+      ];
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(rungs));
+    }
+
+    function resize() {
+      canvas.style.height = Math.max(420, rungs.length * ROW_HEIGHT + 40) + "px";
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * devicePixelRatio;
+      canvas.height = rect.height * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      draw();
+    }
+
+    function slotGeometry(rect) {
+      const usableWidth = rect.width - RAIL_MARGIN * 2;
+      const slotWidth = usableWidth / SLOTS_PER_RUNG;
+      return { usableWidth, slotWidth };
+    }
+
+    function drawContact(x, y, tag, isNC) {
+      ctx.strokeStyle = "#5ed29c";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(x - 10, y - 16);
+      ctx.lineTo(x - 10, y + 16);
+      ctx.moveTo(x + 10, y - 16);
+      ctx.lineTo(x + 10, y + 16);
+      ctx.stroke();
+      if (isNC) {
+        ctx.beginPath();
+        ctx.moveTo(x - 13, y + 17);
+        ctx.lineTo(x + 13, y - 17);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#f1f5f9";
+      ctx.font = "bold 11px Inter, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(tag || "?", x, y - 26);
+    }
+
+    function drawCoil(x, y, tag) {
+      ctx.strokeStyle = "#facc15";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(x, y, 16, Math.PI * 0.5, Math.PI * 1.5);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x, y, 16, Math.PI * 1.5, Math.PI * 0.5);
+      ctx.stroke();
+      ctx.fillStyle = "#f1f5f9";
+      ctx.font = "bold 11px Inter, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(tag || "?", x, y - 26);
+    }
+
+    function draw() {
+      const rect = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      const { slotWidth } = slotGeometry(rect);
+
+      const totalHeight = rungs.length * ROW_HEIGHT + 20;
+      const leftX = RAIL_MARGIN;
+      const rightX = rect.width - RAIL_MARGIN;
+
+      ctx.strokeStyle = "rgba(241,245,249,0.5)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(leftX, 10);
+      ctx.lineTo(leftX, totalHeight);
+      ctx.moveTo(rightX, 10);
+      ctx.lineTo(rightX, totalHeight);
+      ctx.stroke();
+
+      rungs.forEach((rung, rowIdx) => {
+        const y = 10 + rowIdx * ROW_HEIGHT + ROW_HEIGHT / 2;
+        ctx.strokeStyle = "rgba(241,245,249,0.3)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(leftX, y);
+        ctx.lineTo(rightX, y);
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(241,245,249,0.35)";
+        ctx.font = "10px monospace";
+        ctx.textAlign = "left";
+        ctx.fillText(String(rowIdx + 1).padStart(2, "0"), 4, y + 3);
+
+        rung.slots.forEach((slot, colIdx) => {
+          const x = leftX + slotWidth * (colIdx + 0.5);
+          if (slot.type === "no") drawContact(x, y, slot.tag, false);
+          else if (slot.type === "nc") drawContact(x, y, slot.tag, true);
+          else if (slot.type === "coil") drawCoil(x, y, slot.tag);
+        });
+      });
+    }
+
+    function hitTest(clickX, clickY, rect) {
+      const { slotWidth } = slotGeometry(rect);
+      const rowIdx = Math.floor((clickY - 10) / ROW_HEIGHT);
+      if (rowIdx < 0 || rowIdx >= rungs.length) return null;
+      const colIdx = Math.floor((clickX - RAIL_MARGIN) / slotWidth);
+      if (colIdx < 0 || colIdx >= SLOTS_PER_RUNG) return null;
+      return { rowIdx, colIdx };
+    }
+
+    canvas.addEventListener("click", (evt) => {
+      const rect = canvas.getBoundingClientRect();
+      const hit = hitTest(evt.clientX - rect.left, evt.clientY - rect.top, rect);
+      if (!hit) return;
+      const slot = rungs[hit.rowIdx].slots[hit.colIdx];
+
+      if (currentTool === "eraser") {
+        slot.type = "empty";
+        slot.tag = "";
+        save();
+        draw();
+        return;
+      }
+
+      const defaultTag = currentTool === "coil" ? "D0" : "X0";
+      const promptText = LANG === "th" ? "แท็กแอดเดรส / คำสั่งสำหรับองค์ประกอบนี้:" : "Address / instruction tag for this element:";
+      const tag = prompt(promptText, slot.tag || defaultTag);
+      if (tag === null) return;
+      slot.type = currentTool;
+      slot.tag = tag.trim().toUpperCase();
+      save();
+      draw();
+    });
+
+    toolbar.querySelectorAll("[data-tool]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        currentTool = btn.dataset.tool;
+        toolbar.querySelectorAll("[data-tool]").forEach((b) => b.classList.toggle("active", b === btn));
+      });
+    });
+
+    document.getElementById("addRung").addEventListener("click", () => {
+      rungs.push({
+        slots: Array.from({ length: SLOTS_PER_RUNG }, () => ({ type: "empty", tag: "" })),
+      });
+      save();
+      resize();
+    });
+
+    document.getElementById("delRung").addEventListener("click", () => {
+      if (rungs.length <= 1) return;
+      rungs.pop();
+      save();
+      resize();
+    });
+
+    document.getElementById("clearAll").addEventListener("click", () => {
+      if (!confirm(LANG === "th" ? "ล้างแผนภาพแลดเดอร์ทั้งหมดหรือไม่?" : "Clear the whole ladder diagram?")) return;
+      rungs = defaultRungs();
+      save();
+      resize();
+    });
+
+    load();
+    window.addEventListener("resize", resize);
+    resize();
+  </script>
+</body>
+</html>

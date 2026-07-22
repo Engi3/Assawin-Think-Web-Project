@@ -17,25 +17,31 @@ export default function LessonDisplay({ lesson, locale }: LessonDisplayProps) {
 
   const content = locale === 'en' ? lesson.content_en : lesson.content_th;
   const title = locale === 'en' ? lesson.title_en : lesson.title_th;
+  const hasResources = lesson.resources.length > 0;
+  const iframeSrc = lesson.iframeUrl
+    ? `${lesson.iframeUrl}${lesson.iframeUrl.includes('?') ? '&' : '?'}lang=${locale}`
+    : undefined;
 
   return (
     <>
       <div className="grid grid-cols-12 gap-8">
         {/* Main Content Column */}
-        <div className={`transition-all duration-300 ${isSidebarCollapsed ? 'col-span-12' : 'col-span-12 xl:col-span-8'}`}>
+        <div className={`transition-all duration-300 ${!hasResources || isSidebarCollapsed ? 'col-span-12' : 'col-span-12 xl:col-span-8'}`}>
             <div className="prose prose-slate dark:prose-invert max-w-none mb-12">
               <h2 className="text-2xl font-black text-foreground mb-8 uppercase tracking-tight flex items-center justify-between">
                 <span className="flex items-center gap-4">
                   <span className="w-1.5 h-8 bg-primary rounded-full"></span>
                   {locale === 'en' ? "Theoretical Overview" : "รายละเอียดเชิงทฤษฎี"}
                 </span>
-                <button
-                    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                    className="p-2 rounded-lg hover:bg-secondary/10 text-secondary hover:text-primary transition-colors xl:hidden"
-                    title={isSidebarCollapsed ? "Show Sidebar" : "Hide Sidebar"}
-                >
-                    {isSidebarCollapsed ? <Columns size={20} /> : <PanelRight size={20} />}
-                </button>
+                {hasResources && (
+                  <button
+                      onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                      className="p-2 rounded-lg hover:bg-secondary/10 text-secondary hover:text-primary transition-colors xl:hidden"
+                      title={isSidebarCollapsed ? "Show Sidebar" : "Hide Sidebar"}
+                  >
+                      {isSidebarCollapsed ? <Columns size={20} /> : <PanelRight size={20} />}
+                  </button>
+                )}
               </h2>
               <p className="text-xl text-secondary leading-relaxed whitespace-pre-wrap font-medium font-sans opacity-90">
                 {content}
@@ -59,7 +65,7 @@ export default function LessonDisplay({ lesson, locale }: LessonDisplayProps) {
                 </div>
                 <div className="w-full h-[700px] bg-background rounded-lg shadow-md border border-gray-200 dark:border-white/10 overflow-hidden">
                     <iframe
-                        src={lesson.iframeUrl}
+                        src={iframeSrc}
                         className="w-full h-full"
                         frameBorder="0"
                         title={`${title} Interactive Simulation`}
@@ -70,36 +76,34 @@ export default function LessonDisplay({ lesson, locale }: LessonDisplayProps) {
             )}
         </div>
 
-        {/* Sidebar Column */}
-        <div className={`transition-all duration-300 ${isSidebarCollapsed ? 'w-0 opacity-0 p-0 scale-95 hidden' : 'col-span-12 xl:col-span-4 w-full opacity-100 block'}`}>
-            <div className="eng-card p-8 sticky top-24">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xs font-black text-foreground uppercase tracking-widest flex items-center gap-2">
-                        <Download size={14} className="text-primary" /> 
-                        {locale === 'en' ? "Lesson Content" : "เนื้อหาบทเรียน"}
-                    </h3>
-                    <button
-                        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                        className="p-2 rounded-lg hover:bg-secondary/10 text-secondary hover:text-primary transition-colors hidden xl:block"
-                        title={isSidebarCollapsed ? "Show Sidebar" : "Hide Sidebar"}
-                    >
-                        {isSidebarCollapsed ? <Columns size={20} /> : <PanelRight size={20} />}
-                    </button>
-                </div>
-                {lesson.resources.length > 0 ? (
-                    <div className="space-y-3">
-                    {lesson.resources.map((resource: Resource, idx: number) => (
-                        <a key={idx} href={resource.url} className="flex items-center justify-between p-4 bg-background/60 border border-border rounded-xl hover:border-primary/50 hover:bg-background transition-all group/res">
-                        <span className="text-sm font-black text-secondary group-hover/res:text-primary transition-colors">{locale === 'en' ? resource.name_en : resource.name_th}</span>
-                        <ExternalLink size={14} className="text-border group-hover/res:text-primary" />
-                        </a>
-                    ))}
-                    </div>
-                ) : (
-                    <p className="text-sm text-secondary font-medium italic">{locale === 'en' ? 'No resources for this lesson.' : 'ไม่มีเนื้อหาสำหรับบทเรียนนี้'}</p>
-                )}
-            </div>
-        </div>
+        {/* Sidebar Column — only takes space when there's something to show */}
+        {hasResources && (
+          <div className={`transition-all duration-300 ${isSidebarCollapsed ? 'w-0 opacity-0 p-0 scale-95 hidden' : 'col-span-12 xl:col-span-4 w-full opacity-100 block'}`}>
+              <div className="eng-card p-8 sticky top-24">
+                  <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-xs font-black text-foreground uppercase tracking-widest flex items-center gap-2">
+                          <Download size={14} className="text-primary" />
+                          {locale === 'en' ? "Lesson Content" : "เนื้อหาบทเรียน"}
+                      </h3>
+                      <button
+                          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                          className="p-2 rounded-lg hover:bg-secondary/10 text-secondary hover:text-primary transition-colors hidden xl:block"
+                          title={isSidebarCollapsed ? "Show Sidebar" : "Hide Sidebar"}
+                      >
+                          {isSidebarCollapsed ? <Columns size={20} /> : <PanelRight size={20} />}
+                      </button>
+                  </div>
+                  <div className="space-y-3">
+                  {lesson.resources.map((resource: Resource, idx: number) => (
+                      <a key={idx} href={resource.url} className="flex items-center justify-between p-4 bg-background/60 border border-border rounded-xl hover:border-primary/50 hover:bg-background transition-all group/res">
+                      <span className="text-sm font-black text-secondary group-hover/res:text-primary transition-colors">{locale === 'en' ? resource.name_en : resource.name_th}</span>
+                      <ExternalLink size={14} className="text-border group-hover/res:text-primary" />
+                      </a>
+                  ))}
+                  </div>
+              </div>
+          </div>
+        )}
       </div>
       
       {/* Simulation Integration */}
@@ -132,7 +136,7 @@ export default function LessonDisplay({ lesson, locale }: LessonDisplayProps) {
             </div>
             <div className="flex-grow w-full">
               <iframe
-                  src={lesson.iframeUrl}
+                  src={iframeSrc}
                   className="w-full h-full"
                   frameBorder="0"
                   title={`${title} Interactive Simulation (Fullscreen)`}

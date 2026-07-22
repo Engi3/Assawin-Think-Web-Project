@@ -20,7 +20,7 @@ const CourseCard = ({ course, locale, dict }: CourseCardProps) => {
           alt={title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         />
-        <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-md border border-border px-3 py-1 rounded-lg text-xs font-bold text-primary shadow-xl">
+        <div className="absolute top-4 left-4 bg-background/90 backdrop-blur-md border border-primary/30 px-3 py-1 rounded-lg text-xs font-bold text-primary shadow-xl">
           {course.code}
         </div>
       </div>

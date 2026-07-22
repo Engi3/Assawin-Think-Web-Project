@@ -26,12 +26,15 @@ export default async function LessonPage({ params }: LessonPageProps) {
 
   return (
     <MotionWrapper>
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="codenest-glow-ellipse left-1/2 top-0 h-[240px] w-[700px] max-w-[140vw] -translate-x-1/2 -z-10" />
         {/* Header Branding */}
         <div className="mb-12 pt-8">
-          <div className="flex items-center gap-3 text-primary font-black text-[10px] uppercase tracking-[0.4em] mb-4">
+          <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-[1px] bg-primary/40"></div>
-            {locale === 'en' ? "Engineering Module" : "โมดูลวิศวกรรม"}
+            <span className="codenest-eyebrow">
+              {locale === 'en' ? "Engineering Module" : "โมดูลวิศวกรรม"}
+            </span>
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground tracking-tighter leading-tight mb-4">
             {title}
@@ -88,7 +91,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
                 <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Advance Protocol</p>
                 <p className="font-black text-foreground line-clamp-1">{locale === 'en' ? nextLesson.title_en : nextLesson.title_th}</p>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
                  <ChevronRight className="transition-transform group-hover:translate-x-1" />
               </div>
             </Link>

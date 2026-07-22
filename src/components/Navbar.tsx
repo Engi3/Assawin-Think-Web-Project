@@ -21,7 +21,7 @@ const Navbar = ({ locale, dict }: NavbarProps) => {
           <div className="flex items-center">
             <Link href={`/${locale}`} className="flex-shrink-0 flex items-center gap-2 group">
               <div className="bg-primary p-1.5 rounded-lg group-hover:rotate-6 transition-transform">
-                <Terminal className="h-6 w-6 text-white" />
+                <Terminal className="h-6 w-6 text-on-primary" />
               </div>
               <span className="text-xl font-bold text-foreground hidden sm:block">
                 Assawin Namsert

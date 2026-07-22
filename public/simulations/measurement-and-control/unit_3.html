@@ -1,163 +1,202 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unit 3: ระบบหน่วงเวลาและนับจำนวน</title>
-    <style>
-        :root { --bg: #1e293b; --text: #f8fafc; --accent: #3b82f6; --led-on: #10b981; --ladder-bg: #0f172a;}
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0;}
-        h1 { text-align: center; color: #93c5fd; border-bottom: 1px solid #334155; padding-bottom: 15px;}
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
-        .module { background: var(--ladder-bg); padding: 15px; border-radius: 8px; border: 1px solid #334155; }
-        
-        .process-view { background: #000; padding: 15px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;}
-        .segment { font-family: 'Courier New', monospace; font-size: 2em; color: #fbbf24; }
-        .led { width: 24px; height: 24px; border-radius: 50%; background: #334155; border: 2px solid #64748b; }
-        .led.on { background: var(--led-on); border-color: #fff; box-shadow: 0 0 15px var(--led-on); }
-        
-        .ladder { background: #f8fafc; color: #333; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 1em; border-left: 4px solid #ef4444; border-right: 4px solid #ef4444;}
-        .l-rung { display: flex; align-items: center; height: 40px; position: relative; }
-        .l-line { position: absolute; left: 0; right: 0; height: 2px; background: #cbd5e1; z-index: 1;}
-        .l-item { position: relative; z-index: 2; background: #f8fafc; padding: 0 5px; margin: 0 10px; font-weight: bold;}
-        .l-coil { margin-left: auto; z-index: 2; background: white; padding: 2px 5px; border:1px solid #333;}
-        
-        .active-rung .l-line { background: var(--led-on); box-shadow: 0 0 5px var(--led-on); }
-        .active-text { color: var(--led-on); }
-
-        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
-        button { background: var(--accent); border: none; color: white; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; flex: 1;}
-        button:active { background: #2563eb; }
-        .input-set { width: 60px; padding: 5px; background: #334155; color: white; border: 1px solid #64748b; border-radius: 4px; text-align: center; font-weight: bold;}
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unit 3 - Torque &amp; Weight Sensors</title>
+  <link rel="stylesheet" href="/simulations/_shared/codenest-canvas.css">
+  <style>
+    #bridge { height: 260px; cursor: default; background-image: none; background-color: rgba(255,255,255,0.02); }
+  </style>
 </head>
 <body>
-    <h1>บทที่ 3: ระบบหน่วงเวลาและนับจำนวนเชิงลึก (10 กรณีศึกษา)</h1>
-    <div class="grid" id="dash"></div>
+  <div class="wrap">
+    <span class="eyebrow" data-i18n="eyebrow">Measurement &amp; Control &middot; Unit 3</span>
+    <h1 data-i18n="h1">Torque &amp; Weight Sensors</h1>
+    <p class="intro" data-i18n="intro">
+      Load cells and torque transducers both rely on strain gauges wired
+      into a Wheatstone bridge. Apply a load, watch the bridge voltage
+      respond, then calibrate the reading against a known reference weight.
+    </p>
 
-    <script>
-        const configs = [
-            { id: 0, type: 'timer', title: "1. On-Delay Timer (หน่วงเวลาเปิด)", inst: "T0", in: "X0", set: 30, cur: 0, act: false, done: false },
-            { id: 1, type: 'timer', title: "2. Off-Delay Logic (หน่วงเวลาปิด)", inst: "T1", in: "X1", set: 50, cur: 0, act: false, done: false, spec: 'off-delay' },
-            { id: 2, type: 'timer', title: "3. Retentive Timer (สะสมเวลา ST)", inst: "ST0", in: "X2", set: 100, cur: 0, act: false, done: false, retentive: true },
-            { id: 3, type: 'timer', title: "4. Flasher (วงจรกะพริบ)", inst: "T2/T3", in: "X3", set: 10, cur: 0, act: false, done: false, spec: 'flasher' },
-            { id: 4, type: 'counter', title: "5. Up Counter (CTU)", inst: "C0", in: "X4", set: 5, cur: 0, done: false },
-            { id: 5, type: 'counter', title: "6. Down Counter (CTD)", inst: "C1", in: "X5", set: 10, cur: 10, done: false, spec: 'down' },
-            { id: 6, type: 'counter', title: "7. Up/Down Counter", inst: "C235", in: "X6(U)/X7(D)", set: 15, cur: 0, done: false, spec: 'ud' },
-            { id: 7, type: 'complex', title: "8. Timer Cascade (ไฟจราจร)", inst: "T4->T5", in: "X10", set: 20, cur: 0, act: false, done: false },
-            { id: 8, type: 'complex', title: "9. Counter triggers Timer", inst: "C3+T6", in: "X11", set: 3, cur: 0, done: false },
-            { id: 9, type: 'complex', title: "10. Batch Process Limit", inst: "C4", in: "X12", set: 20, cur: 0, done: false }
-        ];
+    <div class="panel">
+      <canvas id="bridge"></canvas>
+      <div class="slider-row" style="margin-top:16px;">
+        <div class="slider-field">
+          <label><span data-i18n="lblLoad">Applied Load</span> <span id="loadVal">0</span> kg</label>
+          <input type="range" id="load" min="0" max="100" value="0">
+        </div>
+      </div>
+      <div class="readout-grid">
+        <div class="readout"><div class="label" data-i18n="lblBridge">Bridge Output</div><div class="value" id="mvOut">0.00 mV</div></div>
+        <div class="readout"><div class="label" data-i18n="lblAmp">Amplified Signal</div><div class="value" id="ampOut">0.00 V</div></div>
+        <div class="readout"><div class="label" data-i18n="lblCal">Calibrated Weight</div><div class="value" id="calOut">0.0 kg</div></div>
+      </div>
 
-        function render() {
-            const dash = document.getElementById('dash');
-            dash.innerHTML = '';
-            configs.forEach((cfg, i) => {
-                const isT = cfg.type === 'timer' || cfg.type === 'complex';
-                const outState = cfg.spec === 'off-delay' ? (cfg.act || !cfg.done) : cfg.done; // Logic for off-delay
-                
-                dash.innerHTML += `
-                    <div class="module">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                            <h3 style="margin:0; color:#cbd5e1; font-size:1.1em;">${cfg.title}</h3>
-                            <div>Set: K <input type="number" class="input-set" value="${cfg.set}" onchange="updateSet(${i}, this.value)"></div>
-                        </div>
-                        
-                        <div class="process-view">
-                            <div class="segment">${cfg.cur.toString().padStart(4, '0')}</div>
-                            <div style="text-align:center;">
-                                <div style="color:#94a3b8; font-size:0.8em; margin-bottom:5px;">Output</div>
-                                <div class="led ${outState ? 'on' : ''}"></div>
-                            </div>
-                        </div>
+      <div class="toolbar" style="margin-top:20px;">
+        <button class="tool-btn" id="tareBtn" data-i18n="btnTare">1. Tare (zero, no load)</button>
+        <button class="tool-btn" id="spanBtn" data-i18n="btnSpan">2. Set Span (at reference weight)</button>
+        <button class="tool-btn danger" id="resetBtn" data-i18n="btnReset">Reset Calibration</button>
+      </div>
+      <p class="hint" id="calHint" data-i18n="hintUncal">
+        Not calibrated yet — set load to 0 and click <b>Tare</b>, then set load to a known reference weight and click <b>Set Span</b>.
+        Every load cell needs this two-point calibration before its reading means anything.
+      </p>
+    </div>
+  </div>
 
-                        <div class="ladder">
-                            <div class="l-rung ${cfg.act ? 'active-rung' : ''}">
-                                <div class="l-line"></div>
-                                <div class="l-item ${cfg.act ? 'active-text' : ''}">| | ${cfg.in}</div>
-                                <div class="l-coil ${cfg.act ? 'active-text' : ''}">[${isT?'OUT':'CNT'} ${cfg.inst} K${cfg.set}]</div>
-                            </div>
-                            <div class="l-rung ${outState ? 'active-rung' : ''}">
-                                <div class="l-line"></div>
-                                <div class="l-item ${outState ? 'active-text' : ''}">| | ${cfg.inst.split('/')[0]}</div>
-                                <div class="l-coil ${outState ? 'active-text' : ''}">( Y${i} )</div>
-                            </div>
-                        </div>
+  <script src="/simulations/_shared/i18n.js"></script>
+  <script>
+    const LANG = getLang();
+    const T = {
+      en: {
+        hintCalibrated: (t, s) => "Calibrated using tare = " + t + " kg and span = " + s + " kg reference points. The <b>Calibrated Weight</b> readout now converts bridge voltage to kg using that line.",
+        hintTareOnly: (t) => "Tare point set at " + t + " kg. Now move the slider to a known reference weight and click <b>Set Span</b>.",
+        hintUncal: "Not calibrated yet — set load to 0 and click <b>Tare</b>, then set load to a known reference weight and click <b>Set Span</b>. Every load cell needs this two-point calibration before its reading means anything.",
+      },
+      th: {
+        hintCalibrated: (t, s) => "คาลิเบรตแล้วโดยใช้จุด Tare = " + t + " kg และจุด Span = " + s + " kg เป็นค่าอ้างอิง ค่า <b>น้ำหนักที่คาลิเบรตแล้ว</b> ตอนนี้แปลงแรงดันบริดจ์เป็น kg ตามเส้นนี้",
+        hintTareOnly: (t) => "ตั้งจุด Tare ไว้ที่ " + t + " kg แล้ว ตอนนี้เลื่อนไปที่น้ำหนักมาตรฐานอ้างอิงแล้วกด <b>Set Span</b>",
+        hintUncal: "ยังไม่ได้คาลิเบรต — ตั้งน้ำหนักเป็น 0 แล้วกด <b>Tare</b> จากนั้นตั้งน้ำหนักเป็นค่ามาตรฐานอ้างอิงแล้วกด <b>Set Span</b> โหลดเซลล์ทุกตัวต้องคาลิเบรต 2 จุดนี้ก่อนค่าที่อ่านได้จะมีความหมาย",
+      },
+    };
+    applyI18n({
+      eyebrow: "Measurement &amp; Control &middot; Unit 3",
+      h1: LANG === "th" ? "หน่วยที่ 3: โหลดเซลล์และทอร์กทรานสดิวเซอร์" : "Torque &amp; Weight Sensors",
+      intro: LANG === "th"
+        ? "โหลดเซลล์และทอร์กทรานสดิวเซอร์อาศัยสเตรนเกจที่ต่อเป็นวงจรบริดจ์วีทสโตน ลองใส่น้ำหนัก ดูแรงดันบริดจ์ตอบสนอง แล้วคาลิเบรตค่าที่อ่านได้เทียบกับน้ำหนักมาตรฐานอ้างอิง"
+        : "Load cells and torque transducers both rely on strain gauges wired into a Wheatstone bridge. Apply a load, watch the bridge voltage respond, then calibrate the reading against a known reference weight.",
+      lblLoad: LANG === "th" ? "น้ำหนักที่กระทำ" : "Applied Load",
+      lblBridge: LANG === "th" ? "เอาต์พุตบริดจ์" : "Bridge Output",
+      lblAmp: LANG === "th" ? "สัญญาณหลังขยาย" : "Amplified Signal",
+      lblCal: LANG === "th" ? "น้ำหนักที่คาลิเบรตแล้ว" : "Calibrated Weight",
+      btnTare: LANG === "th" ? "1. Tare (ศูนย์, ไม่มีน้ำหนัก)" : "1. Tare (zero, no load)",
+      btnSpan: LANG === "th" ? "2. Set Span (ที่น้ำหนักอ้างอิง)" : "2. Set Span (at reference weight)",
+      btnReset: LANG === "th" ? "รีเซ็ตการคาลิเบรต" : "Reset Calibration",
+      hintUncal: T[LANG].hintUncal,
+    });
 
-                        <div class="btn-group">
-                            ${isT 
-                                ? `<button onmousedown="startT(${i})" onmouseup="stopT(${i})" onmouseleave="stopT(${i})">Hold Input</button>`
-                                : `<button onclick="pulseC(${i}, 1)">Pulse UP</button>
-                                   ${cfg.spec === 'ud' ? `<button onclick="pulseC(${i}, -1)">Pulse DN</button>` : ''}`}
-                            <button style="background:#ef4444; flex:0.5;" onclick="reset(${i})">RST</button>
-                        </div>
-                    </div>
-                `;
-            });
-        }
+    const canvas = document.getElementById("bridge");
+    const ctx = canvas.getContext("2d");
+    const loadSlider = document.getElementById("load");
 
-        function updateSet(i, val) { configs[i].set = parseInt(val) || 0; render(); }
-        
-        let timers = {};
-        function startT(i) {
-            if(timers[i]) return;
-            configs[i].act = true;
-            if(configs[i].spec === 'off-delay') configs[i].done = false; // Reset timer on input active
-            
-            timers[i] = setInterval(() => {
-                if(configs[i].spec === 'flasher') {
-                    configs[i].cur = (configs[i].cur + 1) % (configs[i].set * 2);
-                    configs[i].done = configs[i].cur >= configs[i].set;
-                } else {
-                    if(configs[i].cur < configs[i].set) configs[i].cur++;
-                    if(configs[i].cur >= configs[i].set) configs[i].done = true;
-                }
-                render();
-            }, 100);
-            render();
-        }
+    // Sensor physics: bridge output scales ~2mV/V excitation per kg (arbitrary demo constant)
+    const MV_PER_KG = 0.6;
+    const AMP_GAIN = 200; // amplifier gain: mV -> V roughly
+    let tarePoint = null; // { load, mv }
+    let spanPoint = null; // { load, mv }
 
-        function stopT(i) {
-            clearInterval(timers[i]); timers[i] = null;
-            configs[i].act = false;
-            if(!configs[i].retentive && configs[i].spec !== 'off-delay') {
-                configs[i].cur = 0; configs[i].done = false;
-            }
-            if(configs[i].spec === 'off-delay') {
-                // start counting off delay
-                timers[i] = setInterval(() => {
-                     if(configs[i].cur < configs[i].set) configs[i].cur++;
-                     if(configs[i].cur >= configs[i].set) {
-                         configs[i].done = true; // Timer done cuts off output in off-delay logic
-                         clearInterval(timers[i]); timers[i] = null;
-                     }
-                     render();
-                }, 100);
-            }
-            render();
-        }
+    function bridgeMv(load) {
+      return load * MV_PER_KG;
+    }
 
-        function pulseC(i, dir) {
-            configs[i].act = true;
-            setTimeout(() => { configs[i].act = false; render(); }, 150);
-            
-            if(configs[i].spec === 'down') {
-                if(configs[i].cur > 0) configs[i].cur--;
-                configs[i].done = configs[i].cur === 0;
-            } else {
-                configs[i].cur += dir;
-                configs[i].done = configs[i].cur >= configs[i].set;
-            }
-            render();
-        }
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * devicePixelRatio;
+      canvas.height = rect.height * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      draw();
+    }
 
-        function reset(i) {
-            configs[i].cur = configs[i].spec === 'down' ? configs[i].set : 0;
-            configs[i].done = false;
-            render();
-        }
-        
-        render();
-    </script>
+    function drawResistor(x, y, w, h, strained) {
+      ctx.strokeStyle = strained ? "#5ed29c" : "#94a3b8";
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(x - w / 2, y - h / 2, w, h);
+      ctx.fillStyle = "rgba(255,255,255,0.05)";
+      ctx.fillRect(x - w / 2, y - h / 2, w, h);
+    }
+
+    function draw() {
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width, h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const load = Number(loadSlider.value);
+      document.getElementById("loadVal").textContent = load;
+      const mv = bridgeMv(load);
+      const amp = (mv / 1000) * AMP_GAIN;
+      document.getElementById("mvOut").textContent = mv.toFixed(2) + " mV";
+      document.getElementById("ampOut").textContent = amp.toFixed(2) + " V";
+
+      // Draw a diamond Wheatstone bridge
+      const cx = w * 0.32, cy = h / 2, R = Math.min(h * 0.35, 90);
+      const top = { x: cx, y: cy - R };
+      const bottom = { x: cx, y: cy + R };
+      const left = { x: cx - R, y: cy };
+      const right = { x: cx + R, y: cy };
+
+      ctx.strokeStyle = "rgba(255,255,255,0.3)";
+      ctx.lineWidth = 2;
+      [[top, left], [top, right], [bottom, left], [bottom, right]].forEach(([a, b]) => {
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      });
+
+      // 4 gauges at midpoints, 2 in tension (strained) diagonally
+      const strainFrac = Math.min(1, load / 100);
+      [[top, left, true], [top, right, false], [bottom, left, false], [bottom, right, true]].forEach(([a, b, strained]) => {
+        const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        drawResistor(mx, my, 34, 14, strained && strainFrac > 0.05);
+      });
+
+      ctx.fillStyle = "#f1f5f9";
+      ctx.font = "bold 11px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("+V", top.x, top.y - 14);
+      ctx.fillText("GND", bottom.x, bottom.y + 22);
+      ctx.fillText("−", left.x - 14, left.y + 4);
+      ctx.fillText("+", right.x + 14, right.y + 4);
+
+      // Load cell body + weight on right side
+      const cellX = w * 0.68;
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(cellX - 60, cy - 10, 120, 20);
+      ctx.fillStyle = "rgba(94,210,156," + (0.2 + strainFrac * 0.6) + ")";
+      const boxSize = 20 + strainFrac * 40;
+      ctx.fillRect(cellX - boxSize / 2, cy - 10 - boxSize, boxSize, boxSize);
+      ctx.fillStyle = "#f1f5f9";
+      ctx.font = "11px monospace";
+      ctx.fillText(load.toFixed(0) + " kg", cellX, cy - 10 - boxSize - 8);
+      ctx.font = "10px monospace";
+      ctx.fillStyle = "rgba(241,245,249,0.5)";
+      ctx.fillText("load cell", cellX, cy + 34);
+
+      // Calibrated readout
+      let calibrated = null;
+      if (tarePoint && spanPoint && spanPoint.load !== tarePoint.load) {
+        const slope = (spanPoint.load - tarePoint.load) / (spanPoint.mv - tarePoint.mv);
+        calibrated = tarePoint.load + (mv - tarePoint.mv) * slope;
+      }
+      document.getElementById("calOut").textContent = calibrated !== null ? calibrated.toFixed(1) + " kg" : "— kg";
+    }
+
+    document.getElementById("tareBtn").addEventListener("click", () => {
+      tarePoint = { load: Number(loadSlider.value), mv: bridgeMv(Number(loadSlider.value)) };
+      updateHint();
+      draw();
+    });
+    document.getElementById("spanBtn").addEventListener("click", () => {
+      spanPoint = { load: Number(loadSlider.value), mv: bridgeMv(Number(loadSlider.value)) };
+      updateHint();
+      draw();
+    });
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      tarePoint = null; spanPoint = null; updateHint(); draw();
+    });
+
+    function updateHint() {
+      const hint = document.getElementById("calHint");
+      if (tarePoint && spanPoint) {
+        hint.innerHTML = T[LANG].hintCalibrated(tarePoint.load, spanPoint.load);
+      } else if (tarePoint) {
+        hint.innerHTML = T[LANG].hintTareOnly(tarePoint.load);
+      } else {
+        hint.innerHTML = T[LANG].hintUncal;
+      }
+    }
+
+    loadSlider.addEventListener("input", draw);
+    window.addEventListener("resize", resize);
+    resize();
+  </script>
 </body>
 </html>

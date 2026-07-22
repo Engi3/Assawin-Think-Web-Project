@@ -74,7 +74,7 @@ export default function AdvancedKMapSim({ locale }: { locale: string }) {
         <div className="flex items-center gap-4">
           <button 
             onClick={() => setPracticeMode(!practiceMode)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition-all ${practiceMode ? 'bg-accent text-white' : 'bg-secondary/10 text-secondary'}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition-all ${practiceMode ? 'bg-accent text-on-accent' : 'bg-secondary/10 text-secondary'}`}
           >
             {practiceMode ? <EyeOff size={16} /> : <Eye size={16} />}
             {practiceMode ? (locale === 'en' ? 'Practice Mode' : 'โหมดฝึกฝน') : (locale === 'en' ? 'Learning Mode' : 'โหมดเรียนรู้')}
@@ -86,7 +86,7 @@ export default function AdvancedKMapSim({ locale }: { locale: string }) {
                 onClick={() => updateVariables(v as 2|3|4)}
                 className={`px-5 py-2.5 rounded-xl font-black text-xs transition-all duration-300 ${
                   variables === v 
-                    ? 'bg-primary text-white shadow-lg scale-105 shadow-primary/20' 
+                    ? 'bg-primary text-on-primary shadow-lg scale-105 shadow-primary/20' 
                     : 'text-secondary hover:text-foreground'
                 }`}
               >
@@ -113,7 +113,7 @@ export default function AdvancedKMapSim({ locale }: { locale: string }) {
                     onClick={() => toggleCell(idx)}
                     className={`w-16 h-16 md:w-20 md:h-20 text-3xl font-black rounded-2xl transition-all duration-500 shadow-2xl relative group/cell ${
                       val 
-                        ? 'bg-primary text-white scale-110 shadow-primary/30 ring-4 ring-primary/20' 
+                        ? 'bg-primary text-on-primary scale-110 shadow-primary/30 ring-4 ring-primary/20' 
                         : 'bg-white/5 border border-white/10 text-white/20 hover:bg-white/10 hover:text-white/40'
                     }`}
                   >
@@ -154,7 +154,7 @@ export default function AdvancedKMapSim({ locale }: { locale: string }) {
                     <div className="flex gap-4">
                       <button 
                         onClick={checkAnswer}
-                        className="flex-grow bg-primary text-white py-3 rounded-xl font-black text-sm shadow-xl shadow-primary/20 hover:scale-105 transition-transform"
+                        className="flex-grow bg-primary text-on-primary py-3 rounded-xl font-black text-sm shadow-xl shadow-primary/20 hover:scale-105 transition-transform"
                       >
                         {locale === 'en' ? 'Check Result' : 'ตรวจคำตอบ'}
                       </button>

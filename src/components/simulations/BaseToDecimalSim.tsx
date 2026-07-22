@@ -69,7 +69,7 @@ export default function BaseToDecimalSim({ locale }: { locale: string }) {
         <div className="flex items-end pt-6">
           <button
             onClick={() => setShowResult(true)}
-            className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-all flex items-center gap-2"
+            className="bg-primary text-on-primary px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-all flex items-center gap-2"
           >
             {locale === 'en' ? 'Convert' : 'แปลงเลขฐาน'}
           </button>
@@ -123,14 +123,14 @@ export default function BaseToDecimalSim({ locale }: { locale: string }) {
                 </div>
               </div>
 
-              <div className="bg-primary text-white rounded-2xl p-8 flex flex-col justify-center items-center text-center shadow-xl shadow-primary/20">
+              <div className="bg-primary text-on-primary rounded-2xl p-8 flex flex-col justify-center items-center text-center shadow-xl shadow-primary/20">
                 <h4 className="text-sm font-bold mb-4 uppercase tracking-[0.2em] opacity-80">
                   {locale === 'en' ? 'Decimal Result' : 'ผลลัพธ์ฐานสิบ'}
                 </h4>
                 <div className="text-5xl lg:text-7xl font-black tracking-tighter mb-2">
                   {decimalResult}
                 </div>
-                <p className="text-white/60 font-bold text-xs uppercase tracking-widest">
+                <p className="text-on-primary/60 font-bold text-xs uppercase tracking-widest">
                   Base 10
                 </p>
               </div>

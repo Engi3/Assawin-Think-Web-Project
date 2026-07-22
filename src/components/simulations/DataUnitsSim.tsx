@@ -50,7 +50,7 @@ export default function DataUnitsSim({ locale }: { locale: string }) {
               <button 
                 key={i}
                 onClick={() => toggleBit(i)}
-                className={`w-10 h-12 rounded-lg font-mono font-bold text-xl transition-all shadow-md ${b ? 'bg-primary text-white scale-110' : 'bg-secondary/20 text-secondary'}`}
+                className={`w-10 h-12 rounded-lg font-mono font-bold text-xl transition-all shadow-md ${b ? 'bg-primary text-on-primary scale-110' : 'bg-secondary/20 text-secondary'}`}
               >
                 {b}
               </button>

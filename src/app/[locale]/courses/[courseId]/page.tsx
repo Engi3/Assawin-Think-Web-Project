@@ -23,6 +23,8 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
     <div className="bg-background min-h-screen">
       {/* Header Section */}
       <section className="border-b border-border py-20 lg:py-32 relative overflow-hidden bg-secondary/5">
+        <div className="codenest-grid-lines opacity-30" />
+        <div className="codenest-glow-ellipse left-1/2 top-0 h-[320px] w-[800px] max-w-[140vw] -translate-x-1/2" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <Link
             href={`/${locale}/courses`}
@@ -31,6 +33,9 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
             <ArrowLeft className="h-4 w-4" /> {locale === 'en' ? "Back to Courses" : "กลับสู่หน้ารวมวิชา"}
           </Link>
           <div className="max-w-4xl">
+            <span className="codenest-eyebrow block mb-4">
+              {locale === 'en' ? 'Course Module' : 'รายวิชา'}
+            </span>
             <span className="bg-primary/10 text-primary border border-primary/20 px-4 py-1 rounded-full text-xs font-bold mb-6 inline-block uppercase tracking-widest">
               {course.code}
             </span>
@@ -89,7 +94,7 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
                     href={`/${locale}/courses/${course.id}/lessons/${lesson.id}`}
                     className="flex items-center gap-5 px-8 py-5 hover:bg-secondary/5 transition-all group"
                   >
-                    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-sm font-mono font-bold text-secondary group-hover:bg-primary group-hover:text-white transition-all">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-sm font-mono font-bold text-secondary group-hover:bg-primary group-hover:text-on-primary transition-all">
                       {(index + 1).toString().padStart(2, '0')}
                     </div>
                     <div className="flex-grow">
@@ -97,7 +102,12 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
                         {locale === 'en' ? lesson.title_en : lesson.title_th}
                       </h4>
                       <div className="flex items-center gap-2 text-[10px] font-bold text-secondary uppercase tracking-widest mt-1">
-                        <PlayCircle className="h-3 w-3 text-primary" /> {locale === 'en' ? "Video" : "วิดีโอ"}
+                        <PlayCircle className="h-3 w-3 text-primary" />
+                        {lesson.videoUrl
+                          ? (locale === 'en' ? "Video" : "วิดีโอ")
+                          : lesson.iframeUrl
+                          ? (locale === 'en' ? "Interactive Lab" : "ห้องปฏิบัติการ")
+                          : (locale === 'en' ? "Lesson" : "บทเรียน")}
                       </div>
                     </div>
                     <ChevronRight className="h-4 w-4 text-border group-hover:text-primary transition-colors" />

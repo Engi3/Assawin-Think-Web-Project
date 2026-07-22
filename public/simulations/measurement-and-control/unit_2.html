@@ -1,189 +1,294 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unit 2: การเขียนโปรแกรมลอจิกดิจิทัล</title>
-    <style>
-        :root { --primary: #0f172a; --panel: #ffffff; --rail: #ef4444; --wire: #94a3b8; --power: #22c55e; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #e2e8f0; margin: 0; padding: 20px;}
-        .header { background: var(--primary); color: white; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgb(0 0 0 / 0.1);}
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; }
-        .tab-btn { padding: 10px 20px; background: #94a3b8; border: none; color: white; cursor: pointer; border-radius: 4px; font-weight: bold; white-space: nowrap; transition: 0.2s;}
-        .tab-btn:hover { background: #64748b; }
-        .tab-btn.active { background: var(--primary); }
-        .tab-content { display: none; background: var(--panel); padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgb(0 0 0 / 0.1); }
-        .tab-content.active { display: block; }
-        
-        /* Ladder Structure CSS */
-        .rung { display: flex; align-items: center; border-left: 4px solid var(--rail); border-right: 4px solid var(--rail); min-height: 80px; position: relative; margin-bottom: 20px; background: #f8fafc; padding: 10px 20px; overflow-x: auto;}
-        .wire-line { position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: var(--wire); z-index: 1; }
-        .rung.powered .wire-line { background: var(--power); box-shadow: 0 0 5px var(--power); }
-        
-        /* Parallel Branching CSS */
-        .parallel-group { display: flex; flex-direction: column; justify-content: center; position: relative; margin: 0 20px; z-index: 2;}
-        .parallel-group::before, .parallel-group::after { content: ''; position: absolute; top: 30px; bottom: 30px; width: 2px; background: var(--wire); z-index: 1; }
-        .parallel-group::before { left: 0; }
-        .parallel-group::after { right: 0; }
-        .rung.powered .parallel-group::before, .rung.powered .parallel-group::after { background: var(--power); box-shadow: 0 0 5px var(--power); }
-        
-        .branch { display: flex; align-items: center; justify-content: center; position: relative; padding: 10px 15px; }
-        .branch-wire { position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: var(--wire); z-index: 1; }
-        .rung.powered .branch-wire { background: var(--power); box-shadow: 0 0 5px var(--power); }
-
-        /* Elements */
-        .element { position: relative; z-index: 3; background: #f8fafc; padding: 5px 10px; margin: 0 5px; text-align: center; cursor: pointer; font-family: monospace; font-weight: bold; border: 2px solid transparent; border-radius: 4px; transition: 0.2s;}
-        .element:hover { border-color: #3b82f6; background: #eff6ff;}
-        .symbol { font-size: 22px; color: #334155; }
-        .element.active .symbol { color: var(--power); text-shadow: 0 0 5px var(--power); }
-        .element.disabled-click { cursor: not-allowed; border-color: #e2e8f0; }
-        .element.disabled-click:hover { background: #f8fafc; border-color: #e2e8f0; }
-        
-        .coil { margin-left: auto; border-radius: 5px; min-width: 60px; padding: 5px 10px; text-align: center; background: white; border: 2px solid var(--wire); z-index: 2; font-family: monospace; font-weight: bold; font-size: 1.1em;}
-        .coil.active { border-color: var(--power); background: #dcfce7; color: var(--power); box-shadow: 0 0 10px var(--power);}
-        
-        .instruction-table { width: 100%; border-collapse: collapse; margin-top: 20px;}
-        .instruction-table th, .instruction-table td { border: 1px solid #cbd5e1; padding: 12px; text-align: left; }
-        .instruction-table th { background: #f1f5f9; color: var(--primary); }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unit 2 - Speed &amp; Position Sensors</title>
+  <link rel="stylesheet" href="/simulations/_shared/codenest-canvas.css">
+  <style>
+    #pulses { height: 220px; cursor: default; background-image: none; background-color: rgba(255,255,255,0.02); }
+    #proxScene { height: 200px; cursor: default; background-image: none; background-color: rgba(255,255,255,0.02); }
+    .type-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <h1>บทที่ 2: การเขียนโปรแกรมลอจิกดิจิทัล (11 กรณีศึกษาที่สมบูรณ์)</h1>
-        <p>Interactive Logic Engine: คลิกที่ Input (X) เพื่อจ่ายสัญญาณและเรียนรู้การสแกนโปรแกรม PLC จริง</p>
+  <div class="wrap">
+    <span class="eyebrow" data-i18n="eyebrow">Measurement &amp; Control &middot; Unit 2</span>
+    <h1 data-i18n="h1">Speed &amp; Position Sensors</h1>
+    <p class="intro" data-i18n="intro">
+      Encoders turn rotation into pulses; proximity sensors detect a target
+      without touching it. Both feed a PLC's digital input or High-Speed
+      Counter module — sweep the controls below to see how.
+    </p>
+
+    <div class="panel">
+      <div class="toolbar">
+        <div class="type-toggle">
+          <button class="tool-btn active" data-enc="incremental" data-i18n="btnIncremental">Incremental Encoder</button>
+          <button class="tool-btn" data-enc="absolute" data-i18n="btnAbsolute">Absolute Encoder</button>
+        </div>
+      </div>
+      <canvas id="pulses"></canvas>
+      <div class="slider-row" style="margin-top:16px;">
+        <div class="slider-field">
+          <label><span data-i18n="lblRpm">Shaft Speed</span> <span id="rpmVal">120</span> RPM</label>
+          <input type="range" id="rpm" min="0" max="600" value="120">
+        </div>
+        <div class="slider-field">
+          <label><span data-i18n="lblPpr">Pulses per Revolution (PPR)</span> <span id="pprVal">12</span></label>
+          <input type="range" id="ppr" min="4" max="60" value="12" step="4">
+        </div>
+      </div>
+      <div class="readout-grid">
+        <div class="readout"><div class="label" data-i18n="lblFreq">Pulses / sec</div><div class="value" id="freqOut">0</div></div>
+        <div class="readout"><div class="label" data-i18n="lblSpeed">Calculated Speed</div><div class="value" id="speedOut">0 RPM</div></div>
+        <div class="readout"><div class="label" data-i18n="lblDir">Direction (A leads B)</div><div class="value" id="dirOut">CW</div></div>
+      </div>
+      <p class="hint" id="encHint" data-i18n="hintIncremental">
+        <b>Incremental</b> mode: count A/B pulses over time, divide by PPR, to get speed — the phase of A vs B gives direction.
+        Speed = (pulses/sec ÷ PPR) × 60.
+      </p>
     </div>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab(0)">1. Virtual Logic Engine (วงจรจำลองการทำงาน)</button>
-        <button class="tab-btn" onclick="switchTab(1)">2. พจนานุกรมคำสั่งพื้นฐาน (Instruction Set)</button>
+    <div class="panel" style="margin-top:20px;">
+      <div class="toolbar">
+        <div class="type-toggle">
+          <button class="tool-btn active" data-prox="inductive" data-i18n="btnInductive">Inductive (metal)</button>
+          <button class="tool-btn" data-prox="capacitive" data-i18n="btnCapacitive">Capacitive (any material)</button>
+        </div>
+      </div>
+      <canvas id="proxScene"></canvas>
+      <div class="slider-row" style="margin-top:16px;">
+        <div class="slider-field">
+          <label><span data-i18n="lblDist">Target Distance</span> <span id="distVal">4</span> mm</label>
+          <input type="range" id="dist" min="0" max="20" value="4">
+        </div>
+        <div class="slider-field">
+          <label><span data-i18n="lblSn">Sensing Distance (Sn)</span> <span id="snVal">8</span> mm</label>
+          <input type="range" id="sn" min="2" max="20" value="8">
+        </div>
+      </div>
+      <div class="readout-grid">
+        <div class="readout"><div class="label" data-i18n="lblOutState">Output State</div><div class="value" id="proxOut">OFF</div></div>
+        <div class="readout"><div class="label" data-i18n="lblWiring">Wiring</div><div class="value" id="wireOut">PNP → X0</div></div>
+      </div>
+      <p class="hint" data-i18n="hintProx">
+        The sensor switches ON once the target is closer than its rated sensing distance <b>Sn</b>. Inductive sensors only
+        trigger on metal targets; capacitive sensors trigger on almost any material (including liquids and plastics).
+      </p>
     </div>
+  </div>
 
-    <div id="tab-0" class="tab-content active">
-        <div id="ladder-workspace"></div>
-    </div>
+  <script src="/simulations/_shared/i18n.js"></script>
+  <script>
+    const LANG = getLang();
+    const T = {
+      en: {
+        hintIncremental: "<b>Incremental</b> mode: count A/B pulses over time, divide by PPR, to get speed — the phase of A vs B gives direction. Speed = (pulses/sec ÷ PPR) × 60.",
+        hintAbsolute: "<b>Absolute</b> mode: each shaft position maps to one unique digital code — no pulse counting needed, and the position is still known immediately after a power cycle.",
+      },
+      th: {
+        hintIncremental: "โหมด <b>Incremental</b>: นับพัลส์ A/B ต่อหน่วยเวลา หารด้วย PPR จะได้ความเร็ว — ลำดับเฟส A กับ B บอกทิศทางการหมุน ความเร็ว = (พัลส์/วินาที ÷ PPR) × 60",
+        hintAbsolute: "โหมด <b>Absolute</b>: แต่ละตำแหน่งของเพลาแมปกับรหัสดิจิทัลเฉพาะตัว ไม่ต้องนับพัลส์ และรู้ตำแหน่งได้ทันทีแม้หลังไฟดับ-เปิดใหม่",
+      },
+    };
+    applyI18n({
+      eyebrow: "Measurement &amp; Control &middot; Unit 2",
+      h1: LANG === "th" ? "หน่วยที่ 2: เอนโค้ดเดอร์และเซนเซอร์ตรวจจับตำแหน่ง" : "Speed &amp; Position Sensors",
+      intro: LANG === "th"
+        ? "เอนโค้ดเดอร์แปลงการหมุนเป็นพัลส์ พร็อกซิมิตี้เซนเซอร์ตรวจจับเป้าหมายโดยไม่ต้องสัมผัส ทั้งคู่ป้อนเข้าดิจิทัลอินพุตหรือโมดูล High-Speed Counter ของ PLC — ลองปรับตัวควบคุมด้านล่างเพื่อดูความสัมพันธ์"
+        : "Encoders turn rotation into pulses; proximity sensors detect a target without touching it. Both feed a PLC's digital input or High-Speed Counter module — sweep the controls below to see how.",
+      btnIncremental: LANG === "th" ? "เอนโค้ดเดอร์แบบสัมพัทธ์ (Incremental)" : "Incremental Encoder",
+      btnAbsolute: LANG === "th" ? "เอนโค้ดเดอร์แบบสัมบูรณ์ (Absolute)" : "Absolute Encoder",
+      lblRpm: LANG === "th" ? "ความเร็วเพลา (Shaft Speed)" : "Shaft Speed",
+      lblPpr: LANG === "th" ? "พัลส์ต่อรอบ (PPR)" : "Pulses per Revolution (PPR)",
+      lblFreq: LANG === "th" ? "พัลส์ / วินาที" : "Pulses / sec",
+      lblSpeed: LANG === "th" ? "ความเร็วที่คำนวณได้" : "Calculated Speed",
+      lblDir: LANG === "th" ? "ทิศทาง (A นำหน้า B)" : "Direction (A leads B)",
+      hintIncremental: T[LANG].hintIncremental,
+      btnInductive: LANG === "th" ? "เหนี่ยวนำ Inductive (โลหะ)" : "Inductive (metal)",
+      btnCapacitive: LANG === "th" ? "เก็บประจุ Capacitive (วัสดุใดก็ได้)" : "Capacitive (any material)",
+      lblDist: LANG === "th" ? "ระยะเป้าหมาย" : "Target Distance",
+      lblSn: LANG === "th" ? "ระยะตรวจจับ (Sn)" : "Sensing Distance (Sn)",
+      lblOutState: LANG === "th" ? "สถานะเอาต์พุต" : "Output State",
+      lblWiring: LANG === "th" ? "การต่อวงจร" : "Wiring",
+      hintProx: LANG === "th"
+        ? "เซนเซอร์จะสวิตช์ ON เมื่อเป้าหมายเข้าใกล้กว่าระยะตรวจจับที่กำหนด <b>Sn</b> ชนิดเหนี่ยวนำ (Inductive) ตรวจจับได้เฉพาะโลหะ ส่วนชนิดเก็บประจุ (Capacitive) ตรวจจับได้แทบทุกวัสดุ (รวมถึงของเหลวและพลาสติก)"
+        : "The sensor switches ON once the target is closer than its rated sensing distance <b>Sn</b>. Inductive sensors only trigger on metal targets; capacitive sensors trigger on almost any material (including liquids and plastics).",
+    });
 
-    <div id="tab-1" class="tab-content">
-        <h3 style="color: var(--primary);">คำสั่งพื้นฐานทางลอจิก (Basic Logic Instructions)</h3>
-        <table class="instruction-table">
-            <tr><th>คำสั่ง (Instruction)</th><th>สัญลักษณ์ (Symbol)</th><th>การทำงานทางวิศวกรรม (Engineering Function)</th></tr>
-            <tr><td><strong>LD (Load)</strong></td><td>| |</td><td>หน้าสัมผัสปกติเปิด (NO) เริ่มต้น Rung ตรวจสอบว่ามีสัญญาณ Logic '1' หรือไม่</td></tr>
-            <tr><td><strong>LDI (Load Inverse)</strong></td><td>|/|</td><td>หน้าสัมผัสปกติปิด (NC) เริ่มต้น Rung ตรวจสอบว่าไม่มีสัญญาณ Logic '0' หรือไม่</td></tr>
-            <tr><td><strong>AND</strong></td><td>อนุกรม | |</td><td>เชื่อมต่อแบบอนุกรม (Series) ลอจิก AND (กระแสจะไหลเมื่อเงื่อนไขเป็นจริงทั้งหมด)</td></tr>
-            <tr><td><strong>OR</strong></td><td>ขนาน | |</td><td>เชื่อมต่อแบบขนาน (Parallel) ลอจิก OR (กระแสจะไหลเมื่อเงื่อนไขใดเงื่อนไขหนึ่งเป็นจริง)</td></tr>
-            <tr><td><strong>OUT</strong></td><td>( )</td><td>ส่งผลลัพธ์ไปกระตุ้น Coil ของ Output (Y) หรือ Internal Relay (M)</td></tr>
-            <tr><td><strong>SET</strong></td><td>[SET]</td><td>สั่ง Output ทำงานค้าง (Latching Instruction) แบบฮาร์ดแวร์</td></tr>
-            <tr><td><strong>RST (Reset)</strong></td><td>[RST]</td><td>ยกเลิกการทำงานค้าง (Unlatch) ของคำสั่ง SET หรือ Timer/Counter</td></tr>
-            <tr><td><strong>LDP (Load Pulse)</strong></td><td>|P|</td><td>Edge Trigger ขอบขาขึ้น ทำงานเพียง 1 Scan Cycle (ส่งสัญญาณพัลส์สั้นๆ เมื่อ Input เปลี่ยนจาก 0 -> 1)</td></tr>
-            <tr><td><strong>LDF (Load Falling)</strong></td><td>|F|</td><td>Edge Trigger ขอบขาลง ทำงานเพียง 1 Scan Cycle (ส่งสัญญาณพัลส์สั้นๆ เมื่อ Input เปลี่ยนจาก 1 -> 0)</td></tr>
-        </table>
-    </div>
+    // --- Encoder pulse visualizer ---
+    const canvas = document.getElementById("pulses");
+    const ctx = canvas.getContext("2d");
+    const rpmSlider = document.getElementById("rpm");
+    const pprSlider = document.getElementById("ppr");
+    let encMode = "incremental";
 
-    <script>
-        function switchTab(index) {
-            document.querySelectorAll('.tab-content').forEach((el, i) => el.classList.toggle('active', i === index));
-            document.querySelectorAll('.tab-btn').forEach((el, i) => el.classList.toggle('active', i === index));
+    let t = 0;
+    function resizePulses() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * devicePixelRatio;
+      canvas.height = rect.height * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    }
+
+    function drawPulses() {
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width, h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+      const rpm = Number(rpmSlider.value);
+      const ppr = Number(pprSlider.value);
+      const freq = (rpm / 60) * ppr; // pulses per second
+
+      document.getElementById("rpmVal").textContent = rpm;
+      document.getElementById("pprVal").textContent = ppr;
+      document.getElementById("freqOut").textContent = freq.toFixed(1);
+      document.getElementById("speedOut").textContent = rpm + " RPM";
+      document.getElementById("dirOut").textContent = rpm === 0 ? "-" : "CW";
+
+      if (encMode === "absolute") {
+        // Draw a Gray-code-like static bit pattern representing an absolute position
+        const bits = 8;
+        const position = Math.floor((t * 20) % Math.pow(2, bits));
+        ctx.font = "bold 13px monospace";
+        ctx.fillStyle = "#f1f5f9";
+        ctx.textAlign = "center";
+        ctx.fillText("Absolute position code (8-bit):", w / 2, 30);
+        for (let i = 0; i < bits; i++) {
+          const bit = (position >> (bits - 1 - i)) & 1;
+          const x = w / 2 - (bits * 30) / 2 + i * 30 + 15;
+          ctx.fillStyle = bit ? "#5ed29c" : "rgba(255,255,255,0.08)";
+          ctx.fillRect(x - 12, 60, 24, 40);
+          ctx.fillStyle = bit ? "#070b0a" : "rgba(255,255,255,0.4)";
+          ctx.textAlign = "center";
+          ctx.fillText(String(bit), x, 85);
         }
+        ctx.fillStyle = "rgba(241,245,249,0.6)";
+        ctx.font = "12px monospace";
+        ctx.fillText("code = " + position + " / " + (Math.pow(2, bits) - 1), w / 2, 130);
+        return;
+      }
 
-        // PLC State Registers (Memory Mapping)
-        const M = { X0:false, X1:false, X2:false, X3:false, X4:false, X5:false, X6:false, X7:false, X8:false, X9:false, X10:false, X11:false };
-        const Out = {}; 
-        const PrevM = {...M}; // ใช้สำหรับการคำนวณ Edge Trigger (LDP, LDF)
+      // Incremental: draw A and B square waves with phase offset
+      const period = freq > 0 ? 1 / freq : 999;
+      const pxPerSec = 220;
+      const rowA = h * 0.35, rowB = h * 0.7, amp = 22;
 
-        // โครงสร้างข้อมูล Data-Driven สำหรับวาด Ladder Diagram ตามหลักวิศวกรรม
-        const scenarios = [
-            { id: 1, title: "1. Direct Control (NO)", layout: [{id:'X0', t:'NO'}], out: 'Y0', l: () => M.X0 },
-            { id: 2, title: "2. Inverse Control (NC)", layout: [{id:'X1', t:'NC'}], out: 'Y1', l: () => !M.X1 },
-            { id: 3, title: "3. AND Logic (อนุกรม)", layout: [{id:'X2', t:'NO'}, {id:'X3', t:'NO'}], out: 'Y2', l: () => M.X2 && M.X3 },
-            { id: 4, title: "4. OR Logic (ขนาน)", layout: [{ parallel: [[{id:'X4', t:'NO'}], [{id:'X5', t:'NO'}]] }], out: 'Y3', l: () => M.X4 || M.X5 },
-            { id: 5, title: "5. Latching / Self-Holding (วงจรล็อกตัวเอง)", 
-              layout: [
-                  { parallel: [ [{id:'X6', t:'NO', label:'START'}], [{id:'Y4', t:'NO', label:'HOLD', isOut:true}] ] },
-                  { id:'X7', t:'NC', label:'STOP' }
-              ], out: 'Y4', l: () => (M.X6 || Out.Y4) && !M.X7 
-            },
-            { id: 6, title: "6. SET Instruction", layout: [{id:'X8', t:'NO'}], out: '[SET Y5]', l: () => { if(M.X8) Out.Y5 = true; return Out.Y5; } },
-            { id: 7, title: "7. RESET Instruction", layout: [{id:'X9', t:'NO'}], out: '[RST Y5]', l: () => { if(M.X9) Out.Y5 = false; return M.X9; } },
-            { id: 8, title: "8. Hardware Interlock (Motor FWD)", 
-              layout: [{id:'X10', t:'NO', label:'FWD_BTN'}, {id:'Y7', t:'NC', label:'REV_IL', isOut:true}], out: 'Y6', l: () => M.X10 && !Out.Y7 
-            },
-            { id: 9, title: "9. Hardware Interlock (Motor REV)", 
-              layout: [{id:'X11', t:'NO', label:'REV_BTN'}, {id:'Y6', t:'NC', label:'FWD_IL', isOut:true}], out: 'Y7', l: () => M.X11 && !Out.Y6 
-            },
-            { id: 10, title: "10. Edge Trigger ขอบขาขึ้น (LDP)", layout: [{id:'X0', t:'P'}], out: 'M0(Pulse)', l: () => M.X0 && !PrevM.X0 },
-            { id: 11, title: "11. Edge Trigger ขอบขาลง (LDF)", layout: [{id:'X1', t:'F'}], out: 'M1(Pulse)', l: () => !M.X1 && PrevM.X1 }
-        ];
+      function squareWaveY(x, phaseShift) {
+        if (freq === 0) return 0;
+        const time = t + x / pxPerSec + phaseShift;
+        const cyclePos = (time % period) / period;
+        return cyclePos < 0.5 ? -amp : amp;
+      }
 
-        // ฟังก์ชันสร้าง UI องค์ประกอบสัญลักษณ์
-        function renderElement(inp) {
-            let sym = '||'; let active = M[inp.id];
-            if(inp.isOut) active = Out[inp.id] || false; // อิงจาก Output Register (Feedback)
-            if(inp.t === 'NC') { sym = '|/|'; active = (inp.isOut ? !Out[inp.id] : !M[inp.id]); }
-            if(inp.t === 'P') { sym = '|P|'; active = M[inp.id]; }
-            if(inp.t === 'F') { sym = '|F|'; active = !M[inp.id]; }
-            
-            const isClickable = !(inp.isOut || inp.id.includes('Y'));
-            const clickFn = isClickable ? `onclick="toggleMem('${inp.id}')"` : '';
-            const cls = isClickable ? 'element' : 'element disabled-click';
-            const label = inp.label ? `<br><small style="color:#64748b">${inp.label}</small>` : '';
-
-            return `<div class="${cls} ${active ? 'active' : ''}" ${clickFn}>
-                        <div class="symbol">${sym}</div><div>${inp.id}${label}</div>
-                    </div>`;
+      [ [rowA, 0, "A", "#5ed29c"], [rowB, period / 4, "B", "#60a5fa"] ].forEach(([row, phase, label, color]) => {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 2) {
+          const y = row + squareWaveY(x, phase);
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
+        ctx.stroke();
+        ctx.fillStyle = color;
+        ctx.font = "bold 12px monospace";
+        ctx.fillText(label, 8, row - amp - 6);
+      });
+    }
 
-        // Core Rendering Engine
-        function renderEngine() {
-            const ws = document.getElementById('ladder-workspace');
-            ws.innerHTML = '';
-            
-            scenarios.forEach(sc => {
-                const isPowered = sc.l();
-                if(!sc.out.includes('[')) Out[sc.out] = isPowered; // Update Output Coil
-                
-                let html = `
-                    <div style="margin-top:15px; font-weight:bold; color:var(--primary); font-size:1em;">${sc.title}</div>
-                    <div class="rung ${isPowered ? 'powered' : ''}">
-                        <div class="wire-line"></div>
-                `;
+    document.querySelectorAll("[data-enc]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        encMode = btn.dataset.enc;
+        document.querySelectorAll("[data-enc]").forEach((b) => b.classList.toggle("active", b === btn));
+        document.getElementById("encHint").innerHTML = encMode === "incremental"
+          ? T[LANG].hintIncremental
+          : T[LANG].hintAbsolute;
+      });
+    });
 
-                // Render Layout (Series & Parallel)
-                sc.layout.forEach(item => {
-                    if(item.parallel) {
-                        html += `<div class="parallel-group">`;
-                        item.parallel.forEach(branch => {
-                            html += `<div class="branch"><div class="branch-wire"></div>`;
-                            branch.forEach(el => { html += renderElement(el); });
-                            html += `</div>`;
-                        });
-                        html += `</div>`;
-                    } else {
-                        html += renderElement(item);
-                    }
-                });
+    rpmSlider.addEventListener("input", () => {});
+    pprSlider.addEventListener("input", () => {});
 
-                const outLabel = sc.out.includes('[') ? sc.out : `( )<br>${sc.out}`;
-                html += `<div class="coil ${isPowered ? 'active' : ''}">${outLabel}</div></div>`;
-                ws.innerHTML += html;
-            });
-            
-            // จบ Scan Cycle: อัปเดต Memory สถานะก่อนหน้า (PrevM) สำหรับ Edge Trigger
-            Object.keys(M).forEach(k => PrevM[k] = M[k]);
-        }
+    function loop() {
+      t += 1 / 60;
+      resizePulses();
+      drawPulses();
+      requestAnimationFrame(loop);
+    }
+    window.addEventListener("resize", resizePulses);
+    requestAnimationFrame(loop);
 
-        // ฟังก์ชัน Toggle อินพุตและจำลอง Scan Cycle
-        function toggleMem(id) { 
-            M[id] = !M[id]; 
-            renderEngine(); // รัน Logic สแกนครั้งที่ 1
-            
-            // ทฤษฎี Edge Trigger (Pulse): หลังจากรันครบ 1 Scan วงจรจะต้องดับลง
-            // ใช้ setTimeout จำลอง Scan Cycle ที่ยาวขึ้น (300ms) ให้นักศึกษามองเห็นไฟ M0, M1 กะพริบได้
-            setTimeout(() => {
-                renderEngine(); // รัน Logic สแกนครั้งที่ 2 (Pulse จะดับลงเพราะ PrevM ตามทัน M)
-            }, 300); 
-        }
-        
-        // Initial Render
-        renderEngine();
-    </script>
+    // --- Proximity sensor scene ---
+    const proxCanvas = document.getElementById("proxScene");
+    const proxCtx = proxCanvas.getContext("2d");
+    const distSlider = document.getElementById("dist");
+    const snSlider = document.getElementById("sn");
+    let proxType = "inductive";
+
+    function resizeProx() {
+      const rect = proxCanvas.getBoundingClientRect();
+      proxCanvas.width = rect.width * devicePixelRatio;
+      proxCanvas.height = rect.height * devicePixelRatio;
+      proxCtx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      drawProx();
+    }
+
+    function drawProx() {
+      const rect = proxCanvas.getBoundingClientRect();
+      const w = rect.width, h = rect.height;
+      proxCtx.clearRect(0, 0, w, h);
+      const dist = Number(distSlider.value);
+      const sn = Number(snSlider.value);
+      const isOn = dist <= sn;
+
+      document.getElementById("distVal").textContent = dist;
+      document.getElementById("snVal").textContent = sn;
+      document.getElementById("proxOut").textContent = isOn ? "ON" : "OFF";
+      document.getElementById("proxOut").style.color = isOn ? "#5ed29c" : "#94a3b8";
+
+      const sensorX = 60, cy = h / 2;
+      // sensor body
+      proxCtx.fillStyle = "#1e293b";
+      proxCtx.fillRect(sensorX - 30, cy - 20, 30, 40);
+      proxCtx.fillStyle = isOn ? "#5ed29c" : "rgba(255,255,255,0.2)";
+      proxCtx.beginPath();
+      proxCtx.arc(sensorX, cy, 8, 0, Math.PI * 2);
+      proxCtx.fill();
+
+      // sensing range zone
+      const maxPx = w - 140;
+      const snPx = (sn / 20) * maxPx;
+      proxCtx.fillStyle = "rgba(94,210,156,0.08)";
+      proxCtx.fillRect(sensorX, cy - 30, snPx, 60);
+      proxCtx.strokeStyle = "rgba(94,210,156,0.4)";
+      proxCtx.setLineDash([4, 4]);
+      proxCtx.strokeRect(sensorX, cy - 30, snPx, 60);
+      proxCtx.setLineDash([]);
+
+      // target
+      const distPx = (dist / 20) * maxPx;
+      const targetX = sensorX + distPx;
+      proxCtx.fillStyle = proxType === "inductive" ? "#94a3b8" : "#60a5fa";
+      proxCtx.fillRect(targetX, cy - 25, 20, 50);
+      proxCtx.fillStyle = "#f1f5f9";
+      proxCtx.font = "10px monospace";
+      proxCtx.textAlign = "center";
+      proxCtx.fillText(proxType === "inductive" ? "METAL" : "TARGET", targetX + 10, cy + 40);
+
+      document.getElementById("wireOut").textContent = isOn ? "PNP → X0 = 1" : "PNP → X0 = 0";
+    }
+
+    document.querySelectorAll("[data-prox]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        proxType = btn.dataset.prox;
+        document.querySelectorAll("[data-prox]").forEach((b) => b.classList.toggle("active", b === btn));
+        drawProx();
+      });
+    });
+
+    [distSlider, snSlider].forEach((s) => s.addEventListener("input", drawProx));
+    window.addEventListener("resize", resizeProx);
+    resizeProx();
+  </script>
 </body>
 </html>

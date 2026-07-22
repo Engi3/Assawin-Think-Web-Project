@@ -41,10 +41,10 @@ export default function KMapSim({ locale }: { locale: string }) {
            <div className="absolute bottom-8 -left-6 font-mono text-sm text-primary">1</div>
 
            <div className="grid grid-cols-2 gap-3">
-             <button onClick={() => toggleCell(0)} className={`w-20 h-20 text-3xl font-black rounded-xl transition-all shadow-md ${cells[0] ? 'bg-primary text-white scale-105' : 'bg-secondary/10 text-secondary hover:bg-secondary/20'}`}>{cells[0]}</button>
-             <button onClick={() => toggleCell(1)} className={`w-20 h-20 text-3xl font-black rounded-xl transition-all shadow-md ${cells[1] ? 'bg-primary text-white scale-105' : 'bg-secondary/10 text-secondary hover:bg-secondary/20'}`}>{cells[1]}</button>
-             <button onClick={() => toggleCell(2)} className={`w-20 h-20 text-3xl font-black rounded-xl transition-all shadow-md ${cells[2] ? 'bg-primary text-white scale-105' : 'bg-secondary/10 text-secondary hover:bg-secondary/20'}`}>{cells[2]}</button>
-             <button onClick={() => toggleCell(3)} className={`w-20 h-20 text-3xl font-black rounded-xl transition-all shadow-md ${cells[3] ? 'bg-primary text-white scale-105' : 'bg-secondary/10 text-secondary hover:bg-secondary/20'}`}>{cells[3]}</button>
+             <button onClick={() => toggleCell(0)} className={`w-20 h-20 text-3xl font-black rounded-xl transition-all shadow-md ${cells[0] ? 'bg-primary text-on-primary scale-105' : 'bg-secondary/10 text-secondary hover:bg-secondary/20'}`}>{cells[0]}</button>
+             <button onClick={() => toggleCell(1)} className={`w-20 h-20 text-3xl font-black rounded-xl transition-all shadow-md ${cells[1] ? 'bg-primary text-on-primary scale-105' : 'bg-secondary/10 text-secondary hover:bg-secondary/20'}`}>{cells[1]}</button>
+             <button onClick={() => toggleCell(2)} className={`w-20 h-20 text-3xl font-black rounded-xl transition-all shadow-md ${cells[2] ? 'bg-primary text-on-primary scale-105' : 'bg-secondary/10 text-secondary hover:bg-secondary/20'}`}>{cells[2]}</button>
+             <button onClick={() => toggleCell(3)} className={`w-20 h-20 text-3xl font-black rounded-xl transition-all shadow-md ${cells[3] ? 'bg-primary text-on-primary scale-105' : 'bg-secondary/10 text-secondary hover:bg-secondary/20'}`}>{cells[3]}</button>
            </div>
          </div>
          

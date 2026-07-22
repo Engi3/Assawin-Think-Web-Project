@@ -7,27 +7,39 @@
   --color-secondary: var(--secondary);
   --color-border: var(--border);
   --color-accent: var(--accent);
+  --color-on-primary: var(--on-primary);
+  --color-on-accent: var(--on-accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+/* CodeNest brand palette — site-wide (see theme.md).
+   Light mode uses a deeper green shade for --primary/--accent so
+   `text-white` on brand-colored surfaces still passes contrast;
+   dark mode uses the literal CodeNest mint (#5ed29c), which is light
+   enough that brand-colored surfaces need dark ink text instead —
+   that's what --on-primary/--on-accent flip between themes. */
 :root {
   --background: #ffffff;
-  --foreground: #020617;
-  --primary: #f97316; /* Orange 500 */
-  --secondary: #64748b;
-  --border: #e2e8f0;
-  --accent: #fb923c; /* Orange 400 */
+  --foreground: #070b0a;
+  --primary: #1f9d68;
+  --secondary: #475569;
+  --border: #d8e6df;
+  --accent: #16a34a;
+  --on-primary: #ffffff;
+  --on-accent: #ffffff;
   --card-bg: rgba(255, 255, 255, 0.7);
 }
 
 [data-theme='dark'] {
-  --background: #020617;
-  --foreground: #f8fafc;
-  --primary: #fb923c; /* Orange 400 */
+  --background: #070b0a;
+  --foreground: #f1f5f9;
+  --primary: #5ed29c;
   --secondary: #94a3b8;
-  --border: rgba(249, 115, 22, 0.1);
-  --accent: #f97316; /* Orange 500 */
+  --border: rgba(94, 210, 156, 0.15);
+  --accent: #47b382;
+  --on-primary: #070b0a;
+  --on-accent: #070b0a;
   --card-bg: rgba(15, 23, 42, 0.6);
 }
 
@@ -51,7 +63,7 @@ body {
 }
 
 .eng-card {
-  @apply relative overflow-hidden rounded-3xl border border-border bg-background/40 backdrop-blur-sm transition-all duration-500 hover:shadow-[0_0_40px_rgba(249,115,22,0.1)];
+  @apply relative overflow-hidden rounded-3xl border border-border bg-background/40 backdrop-blur-sm transition-all duration-500 hover:shadow-[0_0_40px_rgba(94,210,156,0.15)];
 }
 
 .eng-card::before {
@@ -64,7 +76,11 @@ body {
 }
 
 .glow-text {
-  @apply drop-shadow-[0_0_8px_rgba(249,115,22,0.4)];
+  @apply drop-shadow-[0_0_8px_rgba(94,210,156,0.5)];
+}
+
+.glow-primary {
+  @apply shadow-[0_0_30px_rgba(94,210,156,0.6)];
 }
 
 .eng-input {
@@ -72,12 +88,92 @@ body {
 }
 
 .eng-button-primary {
-  @apply bg-primary text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40;
+  @apply bg-primary text-on-primary px-8 py-4 rounded-2xl font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40;
 }
 
 .eng-grid-bg {
   background-image: radial-gradient(var(--primary) 0.5px, transparent 0.5px);
   background-size: 24px 24px;
   @apply opacity-5;
+}
+
+/* ============================================================
+   CodeNest Theme Tokens (additive brand layer, see theme.md)
+   Scoped to `.codenest-*` utilities so existing --primary/
+   --secondary consumers (simulation labs) keep their contrast.
+   ============================================================ */
+:root {
+  --codenest-bg: #070b0a;
+  --codenest-accent: #5ed29c;
+  --codenest-accent-ink: #070b0a;
+  --codenest-eyebrow: #5ed29c;
+}
+
+.codenest-eyebrow {
+  color: var(--primary);
+  font-family: var(--font-plus-jakarta-sans, inherit);
+  @apply font-bold text-[11px] uppercase tracking-[0.2em];
+}
+
+.codenest-headline .accent-dot {
+  color: var(--codenest-accent);
+}
+
+.codenest-cta {
+  background: var(--codenest-accent);
+  color: var(--codenest-accent-ink);
+  @apply rounded-full font-bold uppercase px-8 py-4 inline-flex items-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98];
+}
+
+/* Liquid Glass card: 200x200 badge above hero headline */
+.codenest-glass {
+  position: relative;
+  background: rgba(255, 255, 255, 0.01);
+  background-blend-mode: luminosity;
+  backdrop-filter: blur(4px);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  border-radius: 1.25rem;
+}
+
+.codenest-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1.4px;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Three vertical grid lines at 25/50/75%, desktop only */
+.codenest-grid-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .codenest-grid-lines {
+    display: block;
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+      linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+      linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-position: 25% 0, 50% 0, 75% 0;
+    background-repeat: no-repeat;
+    background-size: 1px 100%;
+  }
+}
+
+/* Center-top ellipse glow behind hero headline */
+.codenest-glow-ellipse {
+  position: absolute;
+  pointer-events: none;
+  filter: blur(25px);
+  background: radial-gradient(ellipse at center, rgba(94, 210, 156, 0.35) 0%, rgba(7, 11, 10, 0) 70%);
 }
 

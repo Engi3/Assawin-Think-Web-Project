@@ -67,7 +67,7 @@ export default function ShortDivisionSim({ locale }: { locale: string }) {
         <div className="flex items-end pt-6">
           <button
             onClick={calculateSteps}
-            className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-all flex items-center gap-2"
+            className="bg-primary text-on-primary px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-all flex items-center gap-2"
           >
             {locale === 'en' ? 'Start' : 'เริ่มคำนวณ'}
           </button>
@@ -138,7 +138,7 @@ export default function ShortDivisionSim({ locale }: { locale: string }) {
             </p>
             {currentStep === steps.length - 1 && (
               <div className="mt-8 animate-bounce">
-                <span className="bg-accent text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                <span className="bg-accent text-on-accent px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
                   Success!
                 </span>
               </div>

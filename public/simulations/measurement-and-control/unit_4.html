@@ -1,87 +1,288 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unit 4: Analog Scaling</title>
-    <style>
-        :root { --primary: #0284c7; --bg: #f0fdfa; --card: #ffffff; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .header { text-align: center; color: var(--primary); padding-bottom: 20px; border-bottom: 2px solid #cbd5e1; margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
-        .card { background: var(--card); padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgb(0 0 0 / 0.1); border-top: 4px solid var(--primary);}
-        .title { font-weight: bold; font-size: 1em; color: #334155; margin-bottom: 10px; }
-        input[type=range] { width: 100%; margin: 10px 0; accent-color: var(--primary); }
-        .math-box { background: #1e293b; color: #10b981; font-family: monospace; padding: 8px; border-radius: 6px; font-size: 0.85em; line-height: 1.4;}
-        
-        .visual-area { height: 100px; background: #e2e8f0; border-radius: 6px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; margin-bottom: 10px;}
-        
-        /* Specific SVGs */
-        .tank { width: 60px; height: 80px; border: 2px solid #64748b; border-top: none; position: relative; background: #fff;}
-        .fill { position: absolute; bottom: 0; width: 100%; transition: height 0.3s; }
-        .gauge { width: 80px; height: 40px; border: 2px solid #64748b; border-bottom: none; border-radius: 40px 40px 0 0; position: relative; background: #fff;}
-        .needle { width: 3px; height: 38px; background: #ef4444; position: absolute; bottom: 0; left: 38px; transform-origin: bottom center; transition: transform 0.3s; }
-        .bar-bg { width: 80%; height: 20px; background: #cbd5e1; border-radius: 10px; overflow: hidden;}
-        .bar-fill { height: 100%; transition: width 0.3s; }
-
-        .pv-text { position: absolute; z-index: 10; font-weight: bold; font-size: 1.1em; color: #0f172a; text-shadow: 1px 1px 0px #fff; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unit 4 - Temperature &amp; Light Sensors</title>
+  <link rel="stylesheet" href="/simulations/_shared/codenest-canvas.css">
+  <style>
+    #tempChart { height: 260px; cursor: default; background-image: none; background-color: rgba(255,255,255,0.02); }
+    #photoScene { height: 200px; cursor: default; background-image: none; background-color: rgba(255,255,255,0.02); }
+    .type-toggle { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <h1>บทที่ 4: การปรับสเกลสัญญาณอนาล็อก (10 เซ็นเซอร์อุตสาหกรรม)</h1>
-        <p>แปลงกระแส 4-20mA -> Raw ADC 0-4000 -> Engineering Value (สมการเส้นตรงเชิงคณิตศาสตร์)</p>
+  <div class="wrap">
+    <span class="eyebrow" data-i18n="eyebrow">Measurement &amp; Control &middot; Unit 4</span>
+    <h1 data-i18n="h1">Temperature &amp; Light Sensors</h1>
+    <p class="intro" data-i18n="intro">
+      Thermocouples, RTDs, and thermistors all turn heat into an electrical
+      signal, but with very different curves. Photoelectric sensors instead
+      detect objects using light in three different geometries.
+    </p>
+
+    <div class="panel">
+      <canvas id="tempChart"></canvas>
+      <div class="slider-row" style="margin-top:16px;">
+        <div class="slider-field">
+          <label><span data-i18n="lblTemp">Temperature</span> <span id="tempVal">25</span> &deg;C</label>
+          <input type="range" id="temp" min="-20" max="300" value="25">
+        </div>
+      </div>
+      <div class="readout-grid">
+        <div class="readout"><div class="label">Thermocouple K (mV)</div><div class="value" id="tcOut">0.00</div></div>
+        <div class="readout"><div class="label">RTD (&Omega;)</div><div class="value" id="rtdOut">100</div></div>
+        <div class="readout"><div class="label">NTC Thermistor (&Omega;)</div><div class="value" id="ntcOut">10k</div></div>
+      </div>
+      <p class="hint" data-i18n="hintTemp">
+        Thermocouple output rises roughly linearly in millivolts (type K &asymp; 41&micro;V/&deg;C). RTD resistance rises
+        gently and very linearly (Pt100 &asymp; 0.385&#8486;/&deg;C). NTC thermistor resistance instead <b>drops</b> sharply
+        and non-linearly as it heats up &mdash; fast response, but only accurate over a narrow range.
+      </p>
     </div>
-    <div class="grid" id="main-grid"></div>
 
-    <script>
-        const sensors = [
-            { id: 1, name: "1. อุณหภูมิ (RTD)", min: -50, max: 150, u: "°C", t: 'bar', col: '#ef4444' },
-            { id: 2, name: "2. ระดับน้ำ (Hydrostatic)", min: 0, max: 10, u: "m", t: 'tank', col: '#3b82f6' },
-            { id: 3, name: "3. ความดัน (Pressure)", min: 0, max: 16, u: "Bar", t: 'gauge', col: '#000' },
-            { id: 4, name: "4. อัตราการไหล (Flow)", min: 0, max: 500, u: "L/m", t: 'gauge', col: '#000' },
-            { id: 5, name: "5. น้ำหนัก (Load Cell)", min: 0, max: 1000, u: "kg", t: 'bar', col: '#f59e0b' },
-            { id: 6, name: "6. ความเป็นกรด (pH)", min: 0, max: 14, u: "pH", t: 'bar', col: '#10b981' },
-            { id: 7, name: "7. ความเร็วรอบ (Tacho)", min: 0, max: 3000, u: "RPM", t: 'gauge', col: '#000' },
-            { id: 8, name: "8. แรงบิด (Torque)", min: 0, max: 50, u: "Nm", t: 'gauge', col: '#000' },
-            { id: 9, name: "9. ก๊าซ CO2 (NDIR)", min: 0, max: 2000, u: "ppm", t: 'bar', col: '#64748b' },
-            { id: 10, name: "10. ความชื้น (Humidity)", min: 0, max: 100, u: "%RH", t: 'tank', col: '#06b6d4' }
-        ];
+    <div class="panel" style="margin-top:20px;">
+      <div class="toolbar">
+        <div class="type-toggle">
+          <button class="tool-btn active" data-mode="through" data-i18n="btnThrough">Through-beam</button>
+          <button class="tool-btn" data-mode="retro" data-i18n="btnRetro">Retroreflective</button>
+          <button class="tool-btn" data-mode="diffuse" data-i18n="btnDiffuse">Diffuse</button>
+        </div>
+      </div>
+      <canvas id="photoScene"></canvas>
+      <div class="slider-row" style="margin-top:16px;">
+        <div class="slider-field">
+          <label><span data-i18n="lblPos">Target Position</span> <span id="posVal">50</span>%</label>
+          <input type="range" id="pos" min="0" max="100" value="50">
+        </div>
+      </div>
+      <div class="readout-grid">
+        <div class="readout"><div class="label" data-i18n="lblOutState">Output State</div><div class="value" id="photoOut">—</div></div>
+      </div>
+      <p class="hint" id="photoHint"></p>
+    </div>
+  </div>
 
-        const grid = document.getElementById('main-grid');
+  <script src="/simulations/_shared/i18n.js"></script>
+  <script>
+    const LANG = getLang();
+    const HINTS = {
+      en: {
+        through: "Emitter and receiver sit on opposite sides of the path. Longest range, most reliable — the beam is simply broken or not.",
+        retro: "Emitter and receiver share one housing; the beam bounces off a reflector on the far side. Breaking the beam anywhere (including the target itself) triggers detection.",
+        diffuse: "Only one unit is needed — it detects light reflecting directly off the target. Simplest to install, but sensitive to the target's color and surface finish.",
+      },
+      th: {
+        through: "ตัวส่งและตัวรับอยู่คนละฝั่งของเส้นทางแสง ระยะไกลที่สุด เชื่อถือได้มากที่สุด — แค่ตรวจว่าลำแสงถูกบังหรือไม่",
+        retro: "ตัวส่งและตัวรับอยู่ในชุดเดียวกัน ลำแสงสะท้อนจากแผ่นสะท้อนแสงฝั่งตรงข้ามกลับมา การบังลำแสงที่จุดใดก็ตาม (รวมถึงตัววัตถุเอง) จะทำให้ตรวจจับได้",
+        diffuse: "ใช้เพียงชุดเดียว ตรวจจับแสงที่สะท้อนจากตัววัตถุโดยตรง ติดตั้งง่ายที่สุด แต่ไวต่อสีและพื้นผิวของวัตถุ",
+      },
+    };
+    applyI18n({
+      eyebrow: "Measurement &amp; Control &middot; Unit 4",
+      h1: LANG === "th" ? "หน่วยที่ 4: เทอร์โมคัปเปิล อาร์ทีดี เทอร์มิสเตอร์ และโฟโต้อิเล็กทริก" : "Temperature &amp; Light Sensors",
+      intro: LANG === "th"
+        ? "เทอร์โมคัปเปิล อาร์ทีดี และเทอร์มิสเตอร์ ล้วนแปลงความร้อนเป็นสัญญาณไฟฟ้า แต่มีกราฟตอบสนองต่างกันมาก ส่วนโฟโต้อิเล็กทริกเซนเซอร์ตรวจจับวัตถุด้วยแสงใน 3 รูปแบบที่ต่างกัน"
+        : "Thermocouples, RTDs, and thermistors all turn heat into an electrical signal, but with very different curves. Photoelectric sensors instead detect objects using light in three different geometries.",
+      lblTemp: LANG === "th" ? "อุณหภูมิ" : "Temperature",
+      hintTemp: LANG === "th"
+        ? "เอาต์พุตเทอร์โมคัปเปิลเพิ่มขึ้นเกือบเป็นเส้นตรงในหน่วยมิลลิโวลต์ (ชนิด K &asymp; 41&micro;V/&deg;C) ความต้านทาน RTD เพิ่มขึ้นแบบเชิงเส้นอย่างนุ่มนวล (Pt100 &asymp; 0.385&#8486;/&deg;C) ส่วนเทอร์มิสเตอร์ NTC ความต้านทานกลับ <b>ลดลง</b> อย่างรวดเร็วแบบไม่เป็นเชิงเส้นเมื่อร้อนขึ้น &mdash; ตอบสนองไวแต่แม่นยำเฉพาะในย่านแคบ"
+        : "Thermocouple output rises roughly linearly in millivolts (type K &asymp; 41&micro;V/&deg;C). RTD resistance rises gently and very linearly (Pt100 &asymp; 0.385&#8486;/&deg;C). NTC thermistor resistance instead <b>drops</b> sharply and non-linearly as it heats up &mdash; fast response, but only accurate over a narrow range.",
+      btnThrough: LANG === "th" ? "ลำแสงตรง (Through-beam)" : "Through-beam",
+      btnRetro: LANG === "th" ? "สะท้อนกลับ (Retroreflective)" : "Retroreflective",
+      btnDiffuse: LANG === "th" ? "กระจายแสง (Diffuse)" : "Diffuse",
+      lblPos: LANG === "th" ? "ตำแหน่งวัตถุเป้าหมาย" : "Target Position",
+      lblOutState: LANG === "th" ? "สถานะเอาต์พุต" : "Output State",
+    });
 
-        sensors.forEach(s => {
-            let vis = '';
-            if(s.t === 'tank') vis = `<div class="tank"><div class="fill" id="v-${s.id}" style="background:${s.col}; height:0%;"></div></div>`;
-            if(s.t === 'gauge') vis = `<div class="gauge"><div class="needle" id="v-${s.id}" style="transform: rotate(-90deg);"></div></div>`;
-            if(s.t === 'bar') vis = `<div class="bar-bg"><div class="bar-fill" id="v-${s.id}" style="background:${s.col}; width:0%;"></div></div>`;
+    // --- Temperature comparison chart ---
+    const canvas = document.getElementById("tempChart");
+    const ctx = canvas.getContext("2d");
+    const tempSlider = document.getElementById("temp");
 
-            grid.innerHTML += `
-                <div class="card">
-                    <div class="title">${s.name}</div>
-                    <div class="visual-area">${vis}<div class="pv-text" id="t-${s.id}">${s.min} ${s.u}</div></div>
-                    <div style="font-size:0.8em; color:#64748b;">4-20mA Input Simulator</div>
-                    <input type="range" id="sl-${s.id}" min="4" max="20" step="0.1" value="4" oninput="c(${s.id},${s.min},${s.max},'${s.t}')">
-                    <div class="math-box" id="m-${s.id}">Raw = 0<br>PV = ${s.min}</div>
-                </div>
-            `;
-        });
+    function tcMv(t) { return (t * 0.041).toFixed(2); }
+    function rtdOhm(t) { return (100 + t * 0.385).toFixed(1); }
+    function ntcOhm(t) {
+      // simplistic exponential decrease
+      const r25 = 10000;
+      const beta = 3950;
+      const tk = t + 273.15, t25 = 25 + 273.15;
+      return r25 * Math.exp(beta * (1 / tk - 1 / t25));
+    }
 
-        function c(id, min, max, t) {
-            const ma = parseFloat(document.getElementById(`sl-${id}`).value);
-            const raw = Math.round(((ma - 4.0) / 16.0) * 4000);
-            const span = max - min;
-            const pv = min + ((raw / 4000) * span);
-            const pct = (raw / 4000) * 100;
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * devicePixelRatio;
+      canvas.height = rect.height * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      draw();
+    }
 
-            document.getElementById(`t-${id}`).innerText = `${pv.toFixed(1)} ${sensors.find(x=>x.id==id).u}`;
-            document.getElementById(`m-${id}`).innerHTML = `Raw ADC = ${raw} Counts<br>PV = ${min} + (${raw}/4000)*${span}<br>PV = ${pv.toFixed(2)}`;
+    function draw() {
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width, h = rect.height;
+      ctx.clearRect(0, 0, w, h);
 
-            const v = document.getElementById(`v-${id}`);
-            if(t === 'tank') v.style.height = `${pct}%`;
-            if(t === 'bar') v.style.width = `${pct}%`;
-            if(t === 'gauge') v.style.transform = `rotate(${-90 + (pct * 1.8)}deg)`; 
+      const t = Number(tempSlider.value);
+      document.getElementById("tempVal").textContent = t;
+      document.getElementById("tcOut").textContent = tcMv(t);
+      document.getElementById("rtdOut").textContent = rtdOhm(t);
+      const ntc = ntcOhm(t);
+      document.getElementById("ntcOut").textContent = ntc > 1000 ? (ntc / 1000).toFixed(1) + "k" : ntc.toFixed(0);
+
+      const padL = 50, padB = 30, padT = 20, padR = 20;
+      const plotW = w - padL - padR, plotH = h - padT - padB;
+      const minT = -20, maxT = 300;
+
+      // axes
+      ctx.strokeStyle = "rgba(255,255,255,0.2)";
+      ctx.beginPath();
+      ctx.moveTo(padL, padT); ctx.lineTo(padL, h - padB); ctx.lineTo(w - padR, h - padB);
+      ctx.stroke();
+
+      function xFor(temp) { return padL + ((temp - minT) / (maxT - minT)) * plotW; }
+
+      function plotCurve(fn, color, normalize) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let temp = minT; temp <= maxT; temp += 4) {
+          const val = normalize(fn(temp));
+          const y = padT + (1 - val) * plotH;
+          const x = xFor(temp);
+          if (temp === minT) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
-    </script>
+        ctx.stroke();
+      }
+
+      plotCurve((tt) => Number(tcMv(tt)), "#5ed29c", (v) => (v - tcMv(minT)) / (tcMv(maxT) - tcMv(minT)));
+      plotCurve((tt) => Number(rtdOhm(tt)), "#60a5fa", (v) => (v - rtdOhm(minT)) / (rtdOhm(maxT) - rtdOhm(minT)));
+      plotCurve((tt) => ntcOhm(tt), "#facc15", (v) => {
+        const maxV = ntcOhm(minT), minV = ntcOhm(maxT);
+        return 1 - (v - minV) / (maxV - minV);
+      });
+
+      // current point marker
+      const markerX = xFor(t);
+      ctx.strokeStyle = "rgba(255,255,255,0.3)";
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(markerX, padT); ctx.lineTo(markerX, h - padB); ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = "rgba(241,245,249,0.5)";
+      ctx.font = "10px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText(minT + "°C", padL, h - padB + 16);
+      ctx.fillText(maxT + "°C", w - padR, h - padB + 16);
+
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#5ed29c"; ctx.fillText("● Thermocouple K", padL, 16);
+      ctx.fillStyle = "#60a5fa"; ctx.fillText("● RTD (Pt100)", padL + 140, 16);
+      ctx.fillStyle = "#facc15"; ctx.fillText("● NTC Thermistor", padL + 250, 16);
+    }
+
+    tempSlider.addEventListener("input", draw);
+    window.addEventListener("resize", resize);
+    resize();
+
+    // --- Photoelectric sensor scene ---
+    const photoCanvas = document.getElementById("photoScene");
+    const photoCtx = photoCanvas.getContext("2d");
+    const posSlider = document.getElementById("pos");
+    let photoMode = "through";
+
+    function resizePhoto() {
+      const rect = photoCanvas.getBoundingClientRect();
+      photoCanvas.width = rect.width * devicePixelRatio;
+      photoCanvas.height = rect.height * devicePixelRatio;
+      photoCtx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      drawPhoto();
+    }
+
+    function drawPhoto() {
+      const rect = photoCanvas.getBoundingClientRect();
+      const w = rect.width, h = rect.height;
+      photoCtx.clearRect(0, 0, w, h);
+      const cy = h / 2;
+      const pos = Number(posSlider.value) / 100;
+      document.getElementById("posVal").textContent = posSlider.value;
+      document.getElementById("photoHint").innerHTML = "<b>" + photoMode + ":</b> " + HINTS[LANG][photoMode];
+
+      const emitterX = 40, receiverX = w - 40;
+      let blocked = false;
+
+      if (photoMode === "through") {
+        const targetX = emitterX + pos * (receiverX - emitterX);
+        blocked = pos > 0.05 && pos < 0.95;
+        photoCtx.fillStyle = "#334155";
+        photoCtx.fillRect(emitterX - 15, cy - 25, 15, 50);
+        photoCtx.fillRect(receiverX, cy - 25, 15, 50);
+        photoCtx.strokeStyle = blocked ? "rgba(255,255,255,0.15)" : "#5ed29c";
+        photoCtx.lineWidth = 2;
+        photoCtx.beginPath();
+        photoCtx.moveTo(emitterX, cy);
+        photoCtx.lineTo(blocked ? targetX : receiverX, cy);
+        photoCtx.stroke();
+        if (blocked) {
+          photoCtx.fillStyle = "#f87171";
+          photoCtx.fillRect(targetX - 10, cy - 30, 20, 60);
+        }
+      } else if (photoMode === "retro") {
+        const reflectorX = w - 40;
+        const targetX = emitterX + pos * (reflectorX - emitterX - 20) + 10;
+        blocked = pos > 0.05 && pos < 0.95;
+        photoCtx.fillStyle = "#334155";
+        photoCtx.fillRect(emitterX - 20, cy - 25, 20, 50);
+        photoCtx.fillStyle = "#60a5fa";
+        photoCtx.fillRect(reflectorX, cy - 20, 8, 40);
+        photoCtx.strokeStyle = blocked ? "rgba(255,255,255,0.15)" : "#5ed29c";
+        photoCtx.lineWidth = 2;
+        photoCtx.beginPath();
+        photoCtx.moveTo(emitterX, cy - 4);
+        photoCtx.lineTo(blocked ? targetX : reflectorX, blocked ? cy - 4 : cy - 4);
+        if (!blocked) { photoCtx.lineTo(emitterX, cy + 4); }
+        photoCtx.stroke();
+        if (blocked) {
+          photoCtx.fillStyle = "#f87171";
+          photoCtx.fillRect(targetX - 10, cy - 30, 20, 60);
+        }
+      } else {
+        // diffuse: single unit on left, target moves toward/away, detects only if within range
+        const maxDist = w - emitterX - 60;
+        const targetX = emitterX + 40 + pos * maxDist;
+        blocked = pos < 0.6; // only detects if close enough
+        photoCtx.fillStyle = "#334155";
+        photoCtx.fillRect(emitterX - 20, cy - 25, 20, 50);
+        if (pos > 0.02) {
+          photoCtx.fillStyle = "#facc15";
+          photoCtx.fillRect(targetX - 10, cy - 30, 20, 60);
+        }
+        photoCtx.strokeStyle = blocked ? "#5ed29c" : "rgba(255,255,255,0.15)";
+        photoCtx.lineWidth = 2;
+        photoCtx.beginPath();
+        photoCtx.moveTo(emitterX, cy);
+        photoCtx.lineTo(targetX, cy);
+        photoCtx.stroke();
+      }
+
+      const isDetected = photoMode === "diffuse" ? blocked : blocked;
+      const out = document.getElementById("photoOut");
+      out.textContent = isDetected
+        ? (LANG === "th" ? "ตรวจพบ" : "DETECTED")
+        : (LANG === "th" ? "ปกติ" : "CLEAR");
+      out.style.color = isDetected ? "#5ed29c" : "#94a3b8";
+    }
+
+    document.querySelectorAll("[data-mode]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        photoMode = btn.dataset.mode;
+        document.querySelectorAll("[data-mode]").forEach((b) => b.classList.toggle("active", b === btn));
+        drawPhoto();
+      });
+    });
+    posSlider.addEventListener("input", drawPhoto);
+    window.addEventListener("resize", resizePhoto);
+    resizePhoto();
+  </script>
 </body>
 </html>

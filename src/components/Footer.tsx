@@ -7,7 +7,8 @@ interface FooterProps {
 
 const Footer = ({ locale, dict }: FooterProps) => {
   return (
-    <footer className="bg-background border-t border-border pt-16 pb-12 transition-colors">
+    <footer className="relative bg-background border-t border-border pt-16 pb-12 transition-colors overflow-hidden">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/40 to-transparent"></div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
           <div>

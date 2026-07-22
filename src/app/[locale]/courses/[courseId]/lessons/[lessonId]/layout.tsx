@@ -38,13 +38,13 @@ export default async function LessonLayout({ children, params }: LessonLayoutPro
                 href={`/${locale}/courses/${course.id}/lessons/${lesson.id}`}
                 className={`block px-5 py-4 rounded-2xl text-sm font-bold transition-all ${
                   lesson.id === lessonId
-                    ? "bg-primary text-white shadow-lg shadow-primary/20"
+                    ? "bg-primary text-on-primary shadow-lg shadow-primary/20"
                     : "text-secondary hover:bg-background hover:text-primary border border-transparent hover:border-border"
                 }`}
               >
                 <div className="flex items-center gap-4">
                   <span className={`flex-shrink-0 font-mono ${
-                    lesson.id === lessonId ? "text-white/70" : "text-secondary/50"
+                    lesson.id === lessonId ? "text-on-primary/70" : "text-secondary/50"
                   }`}>
                     {(index + 1).toString().padStart(2, '0')}
                   </span>

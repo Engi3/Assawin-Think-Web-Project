@@ -73,7 +73,7 @@ export default function MultiBaseArithmetic({ locale }: { locale: string }) {
               onClick={() => { setBase(b as Base); setNum1(""); setNum2(""); }}
               className={`px-5 py-2.5 rounded-xl font-black text-xs transition-all duration-300 ${
                 base === b 
-                  ? 'bg-primary text-white shadow-lg scale-105 shadow-primary/20' 
+                  ? 'bg-primary text-on-primary shadow-lg scale-105 shadow-primary/20' 
                   : 'text-secondary hover:text-foreground'
               }`}
             >

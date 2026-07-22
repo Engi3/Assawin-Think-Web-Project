@@ -1,7 +1,8 @@
 import { getProfile, getPortfolio } from "@/lib/content-api";
-import { Mail, Cpu, Globe, GraduationCap, Award, BookOpen, ArrowRight } from "lucide-react";
+import { Mail, Cpu, Globe, GraduationCap, Award, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { getDictionary } from "@/lib/get-dictionary";
+import HomeHero from "@/components/HomeHero";
 
 export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -9,67 +10,13 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const portfolio = await getPortfolio();
   const dict = await getDictionary(locale as "en" | "th");
 
-  const title = locale === 'en' ? profile.title_en : profile.title_th;
-  const department = locale === 'en' ? profile.department_en : profile.department_th;
   const bio = locale === 'en' ? profile.bio_en : profile.bio_th;
   const philosophy = locale === 'en' ? profile.philosophy_en : profile.philosophy_th;
 
   return (
     <div className="bg-background overflow-hidden">
       {/* Hero Section */}
-      <section className="relative py-24 lg:py-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center lg:text-left">
-          <div className="flex flex-col lg:flex-row items-center gap-16">
-            <div className="flex-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold mb-6 border border-primary/20">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                </span>
-                Available for Collaboration
-              </div>
-              <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight mb-6">
-                {locale === 'en' ? profile.name : profile.name} 
-              </h1>
-              <p className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-6">
-                {title}
-              </p>
-              <p className="text-lg text-secondary mb-10 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                {bio}
-              </p>
-              <div className="flex flex-wrap justify-center lg:justify-start gap-4">
-                <Link
-                  href={`/${locale}/courses`}
-                  className="bg-foreground text-background px-8 py-3 rounded-full font-bold hover:opacity-90 transition-all flex items-center gap-2"
-                >
-                  <BookOpen className="h-5 w-5" /> {dict.home.cta_courses}
-                </Link>
-                <Link
-                  href="#contact"
-                  className="border border-border text-foreground px-8 py-3 rounded-full font-bold hover:bg-secondary/10 transition-all flex items-center gap-2"
-                >
-                  <Mail className="h-5 w-5" /> {dict.home.cta_contact}
-                </Link>
-              </div>
-            </div>
-            
-            <div className="flex-1 relative">
-              <div className="relative w-72 h-72 lg:w-96 lg:h-96 mx-auto group">
-                <div className="absolute inset-0 bg-primary/20 rounded-full blur-[100px] animate-pulse"></div>
-                <div className="absolute -inset-4 bg-gradient-to-tr from-primary/30 to-accent/30 rounded-full blur-2xl opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                
-                <img
-                  src={profile.photoUrl}
-                  alt={profile.name}
-                  className="relative z-10 w-full h-full object-cover rounded-full border border-border shadow-2xl transition-all duration-700"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="absolute inset-0 z-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, var(--foreground) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
-      </section>
+      <HomeHero locale={locale} profile={profile} dict={dict} />
 
       {/* About Section */}
       <section id="about" className="py-24 border-y border-border bg-secondary/5">

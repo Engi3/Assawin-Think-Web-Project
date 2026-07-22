@@ -44,7 +44,7 @@ export default function MemoryVisualizer({ locale }: { locale: string }) {
               onClick={() => setActiveUnit(unit.name)}
               className={`w-full flex items-center justify-between px-6 py-5 rounded-2xl border transition-all duration-300 font-black ${
                 activeUnit === unit.name 
-                  ? 'bg-primary text-white border-primary shadow-xl shadow-primary/20 scale-[1.05] z-10' 
+                  ? 'bg-primary text-on-primary border-primary shadow-xl shadow-primary/20 scale-[1.05] z-10' 
                   : 'bg-background/40 border-border text-secondary hover:border-primary/30'
               }`}
             >
@@ -52,7 +52,7 @@ export default function MemoryVisualizer({ locale }: { locale: string }) {
                 <div className={`w-3 h-3 rounded-full ${activeUnit === unit.name ? 'bg-white animate-pulse' : unit.color}`}></div>
                 <span className="tracking-tight">{unit.name}</span>
               </div>
-              <span className={`font-mono text-xs ${activeUnit === unit.name ? 'text-white/60' : 'opacity-40'}`}>{unit.size} bits</span>
+              <span className={`font-mono text-xs ${activeUnit === unit.name ? 'text-on-primary/60' : 'opacity-40'}`}>{unit.size} bits</span>
             </button>
           ))}
         </div>
@@ -81,7 +81,7 @@ export default function MemoryVisualizer({ locale }: { locale: string }) {
                       damping: 15,
                       delay: i * 0.02 
                     }}
-                    className={`w-10 h-14 md:w-12 md:h-16 rounded-xl border-2 border-white/10 shadow-2xl flex items-center justify-center font-mono font-black text-white text-2xl ${current.color} ring-4 ring-white/5`}
+                    className={`w-10 h-14 md:w-12 md:h-16 rounded-xl border-2 border-white/10 shadow-2xl flex items-center justify-center font-mono font-black text-2xl ${current.color === 'bg-primary' ? 'text-on-primary' : 'text-white'} ${current.color} ring-4 ring-white/5`}
                   >
                     0
                   </motion.div>

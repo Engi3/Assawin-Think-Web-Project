@@ -77,7 +77,7 @@ const Bulb = ({ label, value }: { label: string, value: boolean }) => (
         <span className="text-xs font-bold uppercase tracking-widest text-secondary">{label}</span>
         <div className={`w-14 h-14 rounded-2xl border-2 flex items-center justify-center transition-all duration-300 ${
             value 
-            ? 'border-accent bg-accent/20 text-accent shadow-[0_0_15px_hsl(var(--accent)/0.5)]' 
+            ? 'border-accent bg-accent/20 text-accent shadow-[0_0_15px_rgba(94,210,156,0.5)]'
             : 'border-border bg-background text-secondary'
         }`}>
             <Zap className={`transition-all ${value ? 'text-accent' : 'text-secondary/50'}`} fill={value ? "currentColor" : "none"} />

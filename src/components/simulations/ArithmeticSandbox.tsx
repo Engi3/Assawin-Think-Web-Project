@@ -56,8 +56,8 @@ export default function ArithmeticSandbox({ locale }: { locale: string }) {
           />
         </div>
         <div className="flex flex-col gap-2">
-           <button onClick={() => setOperation("+")} className={`p-4 rounded-xl transition-all ${operation === '+' ? 'bg-primary text-white scale-110 shadow-lg' : 'bg-background border border-border text-secondary'}`}><Plus /></button>
-           <button onClick={() => setOperation("-")} className={`p-4 rounded-xl transition-all ${operation === '-' ? 'bg-primary text-white scale-110 shadow-lg' : 'bg-background border border-border text-secondary'}`}><Minus /></button>
+           <button onClick={() => setOperation("+")} className={`p-4 rounded-xl transition-all ${operation === '+' ? 'bg-primary text-on-primary scale-110 shadow-lg' : 'bg-background border border-border text-secondary'}`}><Plus /></button>
+           <button onClick={() => setOperation("-")} className={`p-4 rounded-xl transition-all ${operation === '-' ? 'bg-primary text-on-primary scale-110 shadow-lg' : 'bg-background border border-border text-secondary'}`}><Minus /></button>
         </div>
         <div className="space-y-2 flex-grow">
           <label className="text-xs font-bold uppercase tracking-widest text-secondary">Binary Number B</label>

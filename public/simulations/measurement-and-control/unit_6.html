@@ -1,19 +1,212 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unit 6 - Awaiting Update</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f1f5f9; color: #334155; }
-        .message-box { text-align: center; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #1e3a8a; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unit 6 - Level Sensors</title>
+  <link rel="stylesheet" href="/simulations/_shared/codenest-canvas.css">
+  <style>
+    #tank { height: 340px; cursor: default; background-image: none; background-color: rgba(255,255,255,0.02); }
+    .type-toggle { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  </style>
 </head>
 <body>
-    <div class="message-box">
-        <h1>บทที่ 6 (Unit 6)</h1>
-        <p>เนื้อหากำลังรอการอัปเดต (Awaiting Update)</p>
+  <div class="wrap">
+    <span class="eyebrow" data-i18n="eyebrow">Measurement &amp; Control &middot; Unit 6</span>
+    <h1 data-i18n="h1">Level Sensors</h1>
+    <p class="intro" data-i18n="intro">
+      Four different technologies can all answer the same question &mdash;
+      "how full is this tank?" Fill the tank below and compare how each
+      sensor type reports the level.
+    </p>
+
+    <div class="panel">
+      <div class="toolbar">
+        <div class="type-toggle">
+          <button class="tool-btn active" data-sensor="float" data-i18n="btnFloat">Float</button>
+          <button class="tool-btn" data-sensor="ultrasonic" data-i18n="btnUltrasonic">Ultrasonic</button>
+          <button class="tool-btn" data-sensor="capacitive" data-i18n="btnCapacitive">Capacitive</button>
+          <button class="tool-btn" data-sensor="hydrostatic" data-i18n="btnHydrostatic">Hydrostatic (pressure)</button>
+        </div>
+      </div>
+      <canvas id="tank"></canvas>
+      <div class="slider-row" style="margin-top:16px;">
+        <div class="slider-field">
+          <label><span data-i18n="lblFill">Tank Fill Level</span> <span id="fillVal">50</span>%</label>
+          <input type="range" id="fill" min="0" max="100" value="50">
+        </div>
+      </div>
+      <div class="readout-grid" id="readouts"></div>
+      <p class="hint" id="sensorHint"></p>
     </div>
+  </div>
+
+  <script src="/simulations/_shared/i18n.js"></script>
+  <script>
+    const LANG = getLang();
+    applyI18n({
+      eyebrow: "Measurement &amp; Control &middot; Unit 6",
+      h1: LANG === "th" ? "หน่วยที่ 6: เลเวลเซนเซอร์" : "Level Sensors",
+      intro: LANG === "th"
+        ? "เทคโนโลยี 4 แบบตอบคำถามเดียวกันได้ทั้งหมด &mdash; “ถังนี้เต็มแค่ไหน?” ลองปรับระดับของเหลวในถังด้านล่าง แล้วเปรียบเทียบว่าเซนเซอร์แต่ละชนิดรายงานระดับอย่างไร"
+        : "Four different technologies can all answer the same question &mdash; \"how full is this tank?\" Fill the tank below and compare how each sensor type reports the level.",
+      btnFloat: LANG === "th" ? "ลูกลอย (Float)" : "Float",
+      btnUltrasonic: LANG === "th" ? "อัลตราโซนิก (Ultrasonic)" : "Ultrasonic",
+      btnCapacitive: LANG === "th" ? "เก็บประจุ (Capacitive)" : "Capacitive",
+      btnHydrostatic: LANG === "th" ? "แรงดันอุทกสถิต (Hydrostatic)" : "Hydrostatic (pressure)",
+      lblFill: LANG === "th" ? "ระดับของเหลวในถัง" : "Tank Fill Level",
+    });
+
+    const canvas = document.getElementById("tank");
+    const ctx = canvas.getContext("2d");
+    const fillSlider = document.getElementById("fill");
+    let sensorType = "float";
+
+    const SENSOR_NAMES = {
+      en: { float: "Float", ultrasonic: "Ultrasonic", capacitive: "Capacitive", hydrostatic: "Hydrostatic" },
+      th: { float: "ลูกลอย", ultrasonic: "อัลตราโซนิก", capacitive: "เก็บประจุ", hydrostatic: "แรงดันอุทกสถิต" },
+    };
+
+    const INFO = {
+      en: {
+        float: {
+          hint: "A float rides on the liquid surface; its vertical position (or a magnet triggering reed switches at set heights) directly indicates level.",
+          readouts: (pct) => [["Float Height", (pct * 2).toFixed(0) + " cm"], ["Switch State", pct > 80 ? "HIGH trip" : pct < 20 ? "LOW trip" : "Normal"]],
+        },
+        ultrasonic: {
+          hint: "Mounted above the tank, it times how long a sound pulse takes to bounce off the liquid surface and return — shorter time means a fuller tank.",
+          readouts: (pct) => {
+            const distCm = (100 - pct) * 2;
+            const timeMs = ((distCm / 100) / 343 * 2 * 1000).toFixed(2);
+            return [["Distance to Surface", distCm.toFixed(0) + " cm"], ["Echo Time", timeMs + " ms"]];
+          },
+        },
+        capacitive: {
+          hint: "A probe running down the tank measures capacitance between itself and the tank wall — capacitance rises as more liquid (a better dielectric than air) surrounds the probe.",
+          readouts: (pct) => [["Probe Capacitance", (20 + pct * 1.8).toFixed(1) + " pF"]],
+        },
+        hydrostatic: {
+          hint: "A pressure transducer at the tank's base reads the weight of liquid above it — pressure is directly proportional to liquid height (P = ρgh), so it converts straight to a level reading.",
+          readouts: (pct) => [["Hydrostatic Pressure", ((pct / 100) * 0.2).toFixed(3) + " bar"], ["Liquid Height", (pct * 2).toFixed(0) + " cm"]],
+        },
+      },
+      th: {
+        float: {
+          hint: "ลูกลอยเคลื่อนที่ไปตามผิวของเหลว ตำแหน่งแนวตั้งของมัน (หรือแม่เหล็กที่ไปกระตุ้นรีดสวิตช์ตามความสูงที่ตั้งไว้) บอกระดับได้โดยตรง",
+          readouts: (pct) => [["ความสูงลูกลอย", (pct * 2).toFixed(0) + " cm"], ["สถานะสวิตช์", pct > 80 ? "ตัด HIGH" : pct < 20 ? "ตัด LOW" : "ปกติ"]],
+        },
+        ultrasonic: {
+          hint: "ติดตั้งเหนือถัง วัดเวลาที่คลื่นเสียงเดินทางไปกระทบผิวของเหลวแล้วสะท้อนกลับ — เวลาสั้นแปลว่าถังเต็มกว่า",
+          readouts: (pct) => {
+            const distCm = (100 - pct) * 2;
+            const timeMs = ((distCm / 100) / 343 * 2 * 1000).toFixed(2);
+            return [["ระยะถึงผิวของเหลว", distCm.toFixed(0) + " cm"], ["เวลาสะท้อนกลับ", timeMs + " ms"]];
+          },
+        },
+        capacitive: {
+          hint: "แท่งโพรบที่ลงไปในถังวัดค่าความจุระหว่างตัวมันกับผนังถัง — ค่าความจุเพิ่มขึ้นเมื่อของเหลว (ไดอิเล็กตริกดีกว่าอากาศ) ล้อมรอบโพรบมากขึ้น",
+          readouts: (pct) => [["ค่าความจุโพรบ", (20 + pct * 1.8).toFixed(1) + " pF"]],
+        },
+        hydrostatic: {
+          hint: "เพรสเชอร์ทรานสดิวเซอร์ที่ก้นถังอ่านค่าน้ำหนักของเหลวด้านบน — ความดันแปรผันตรงกับความสูงของเหลว (P = ρgh) จึงแปลงเป็นค่าระดับได้โดยตรง",
+          readouts: (pct) => [["ความดันอุทกสถิต", ((pct / 100) * 0.2).toFixed(3) + " bar"], ["ความสูงของเหลว", (pct * 2).toFixed(0) + " cm"]],
+        },
+      },
+    };
+
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * devicePixelRatio;
+      canvas.height = rect.height * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      draw();
+    }
+
+    function draw() {
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width, h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const pct = Number(fillSlider.value);
+      document.getElementById("fillVal").textContent = pct;
+
+      const tankX = w / 2 - 90, tankW = 180, tankTop = 30, tankH = h - 90;
+      // tank outline
+      ctx.strokeStyle = "rgba(255,255,255,0.3)";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(tankX, tankTop, tankW, tankH);
+
+      // liquid
+      const liquidH = (pct / 100) * tankH;
+      ctx.fillStyle = "rgba(96,165,250,0.35)";
+      ctx.fillRect(tankX + 3, tankTop + tankH - liquidH, tankW - 6, liquidH - 3);
+
+      const liquidTopY = tankTop + tankH - liquidH;
+
+      if (sensorType === "float") {
+        ctx.fillStyle = "#5ed29c";
+        ctx.beginPath();
+        ctx.arc(tankX + tankW / 2, liquidTopY, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,0.3)";
+        ctx.beginPath();
+        ctx.moveTo(tankX + tankW / 2, tankTop - 10);
+        ctx.lineTo(tankX + tankW / 2, liquidTopY);
+        ctx.stroke();
+      } else if (sensorType === "ultrasonic") {
+        const sx = tankX + tankW / 2, sy = tankTop - 15;
+        ctx.fillStyle = "#334155";
+        ctx.fillRect(sx - 20, sy - 12, 40, 16);
+        ctx.strokeStyle = "#facc15";
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(sx, sy); ctx.lineTo(sx, liquidTopY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      } else if (sensorType === "capacitive") {
+        const px = tankX + tankW - 24;
+        ctx.strokeStyle = "#f472b6";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(px, tankTop - 10);
+        ctx.lineTo(px, tankTop + tankH - 6);
+        ctx.stroke();
+      } else {
+        const px = tankX + tankW / 2, py = tankTop + tankH;
+        ctx.fillStyle = "#f87171";
+        ctx.beginPath();
+        ctx.arc(px, py + 6, 10, Math.PI, 0);
+        ctx.fill();
+      }
+
+      ctx.fillStyle = "rgba(241,245,249,0.5)";
+      ctx.font = "11px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText(pct + "% full", tankX + tankW / 2, tankTop + tankH + 24);
+
+      const info = INFO[LANG][sensorType];
+      document.getElementById("sensorHint").innerHTML = "<b>" + SENSOR_NAMES[LANG][sensorType] + ":</b> " + info.hint;
+      const readouts = document.getElementById("readouts");
+      readouts.innerHTML = "";
+      info.readouts(pct).forEach(([label, value]) => {
+        const div = document.createElement("div");
+        div.className = "readout";
+        div.innerHTML = `<div class="label">${label}</div><div class="value">${value}</div>`;
+        readouts.appendChild(div);
+      });
+    }
+
+    document.querySelectorAll("[data-sensor]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        sensorType = btn.dataset.sensor;
+        document.querySelectorAll("[data-sensor]").forEach((b) => b.classList.toggle("active", b === btn));
+        draw();
+      });
+    });
+
+    fillSlider.addEventListener("input", draw);
+    window.addEventListener("resize", resize);
+    resize();
+  </script>
 </body>
 </html>

@@ -48,7 +48,7 @@ export default function LogicGateBuilder({ locale }: { locale: string }) {
                   key={g}
                   onClick={() => setGate(g)}
                   className={`px-4 py-2 rounded-xl font-bold transition-all ${
-                    gate === g ? "bg-primary text-white" : "bg-background border border-border text-secondary hover:border-primary"
+                    gate === g ? "bg-primary text-on-primary" : "bg-background border border-border text-secondary hover:border-primary"
                   }`}
                 >
                   {g}
@@ -65,14 +65,14 @@ export default function LogicGateBuilder({ locale }: { locale: string }) {
                <div className="flex flex-col gap-8">
                  <button 
                   onClick={() => setInA(inA ? 0 : 1)}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center font-bold transition-all shadow-lg ${inA ? 'bg-primary text-white scale-110' : 'bg-secondary/20 text-secondary'}`}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center font-bold transition-all shadow-lg ${inA ? 'bg-primary text-on-primary scale-110' : 'bg-secondary/20 text-secondary'}`}
                  >
                    {inA}
                  </button>
                  {gate !== "NOT" && (
                    <button 
                     onClick={() => setInB(inB ? 0 : 1)}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center font-bold transition-all shadow-lg ${inB ? 'bg-primary text-white scale-110' : 'bg-secondary/20 text-secondary'}`}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center font-bold transition-all shadow-lg ${inB ? 'bg-primary text-on-primary scale-110' : 'bg-secondary/20 text-secondary'}`}
                    >
                      {inB}
                    </button>
@@ -83,7 +83,7 @@ export default function LogicGateBuilder({ locale }: { locale: string }) {
                  {gate}
                </div>
 
-               <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 shadow-2xl ${output ? 'bg-primary text-white scale-125 glow-primary' : 'bg-secondary/10 text-secondary/40'}`}>
+               <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 shadow-2xl ${output ? 'bg-primary text-on-primary scale-125 glow-primary' : 'bg-secondary/10 text-secondary/40'}`}>
                  <Zap fill={output ? "currentColor" : "none"} size={32} />
                </div>
              </div>

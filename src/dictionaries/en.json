@@ -23,7 +23,9 @@
     "description": "E-Learning resources for students interested in robotics, mechatronics, and automation.",
     "lessons_count": "Lessons",
     "enter_course": "Enter Course",
-    "no_courses": "No courses available at the moment."
+    "no_courses": "No courses available at the moment.",
+    "search_placeholder": "Search courses by name or code...",
+    "no_results": "No courses match your search."
   },
   "footer": {
     "description": "Specializing in Mechatronics and Robotics. Committed to innovative education and modern engineering.",

@@ -1,19 +1,157 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canvas Workspace - ROB201</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f1f5f9; color: #334155; }
-        .message-box { text-align: center; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #1e3a8a; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canvas Workspace - Robotics Design</title>
+  <link rel="stylesheet" href="/simulations/_shared/codenest-canvas.css">
 </head>
 <body>
-    <div class="message-box">
-        <h1>Canvas Workspace - ROB201</h1>
-        <p>Awaiting Update</p>
+  <div class="wrap">
+    <span class="eyebrow">Robotics Design &middot; Canvas Workspace</span>
+    <h1>2-Link Arm Forward Kinematics</h1>
+    <p class="intro">
+      Drag the shoulder (&theta;<sub>1</sub>) and elbow (&theta;<sub>2</sub>)
+      angles below and watch the end-effector position update live. This is
+      the same forward-kinematics math from Chapter 1 (Robot Kinematics):
+      each joint angle is applied in turn to place the next link.
+    </p>
+
+    <div class="panel">
+      <div class="slider-row">
+        <div class="slider-field">
+          <label>Shoulder &theta;<sub>1</sub> <span id="t1Val">45&deg;</span></label>
+          <input type="range" id="t1" min="0" max="180" value="45" step="1">
+        </div>
+        <div class="slider-field">
+          <label>Elbow &theta;<sub>2</sub> <span id="t2Val">-30&deg;</span></label>
+          <input type="range" id="t2" min="-150" max="150" value="-30" step="1">
+        </div>
+      </div>
+
+      <canvas id="canvas" style="background-image:none;"></canvas>
+
+      <div class="readout-grid">
+        <div class="readout">
+          <div class="label">End-Effector X</div>
+          <div class="value" id="exVal">0.0</div>
+        </div>
+        <div class="readout">
+          <div class="label">End-Effector Y</div>
+          <div class="value" id="eyVal">0.0</div>
+        </div>
+        <div class="readout">
+          <div class="label">Reach</div>
+          <div class="value" id="reachVal">0.0</div>
+        </div>
+      </div>
+
+      <p class="hint">
+        Link lengths are fixed at <b>L1 = 120</b> and <b>L2 = 100</b> units.
+        x = L1&middot;cos&theta;<sub>1</sub> + L2&middot;cos(&theta;<sub>1</sub>+&theta;<sub>2</sub>),
+        y = L1&middot;sin&theta;<sub>1</sub> + L2&middot;sin(&theta;<sub>1</sub>+&theta;<sub>2</sub>)
+      </p>
     </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const t1Input = document.getElementById("t1");
+    const t2Input = document.getElementById("t2");
+    const t1Val = document.getElementById("t1Val");
+    const t2Val = document.getElementById("t2Val");
+    const exVal = document.getElementById("exVal");
+    const eyVal = document.getElementById("eyVal");
+    const reachVal = document.getElementById("reachVal");
+
+    const L1 = 120;
+    const L2 = 100;
+
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * devicePixelRatio;
+      canvas.height = rect.height * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      draw();
+    }
+
+    function draw() {
+      const rect = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
+
+      const originX = rect.width * 0.32;
+      const originY = rect.height * 0.55;
+
+      const t1 = (parseFloat(t1Input.value) * Math.PI) / 180;
+      const t2 = (parseFloat(t2Input.value) * Math.PI) / 180;
+
+      const x1 = originX + L1 * Math.cos(t1);
+      const y1 = originY - L1 * Math.sin(t1);
+      const x2 = x1 + L2 * Math.cos(t1 + t2);
+      const y2 = y1 - L2 * Math.sin(t1 + t2);
+
+      // workspace reach circle (dashed)
+      ctx.setLineDash([4, 6]);
+      ctx.strokeStyle = "rgba(255,255,255,0.12)";
+      ctx.beginPath();
+      ctx.arc(originX, originY, L1 + L2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // base
+      ctx.fillStyle = "#f1f5f9";
+      ctx.fillRect(originX - 10, originY - 6, 20, 12);
+
+      // link 1
+      ctx.strokeStyle = "#5ed29c";
+      ctx.lineWidth = 8;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(originX, originY);
+      ctx.lineTo(x1, y1);
+      ctx.stroke();
+
+      // elbow joint
+      ctx.fillStyle = "#f1f5f9";
+      ctx.beginPath();
+      ctx.arc(x1, y1, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      // link 2
+      ctx.strokeStyle = "#60a5fa";
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      // end-effector
+      ctx.fillStyle = "#facc15";
+      ctx.beginPath();
+      ctx.arc(x2, y2, 9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#070b0a";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      const ex = x2 - originX;
+      const ey = -(y2 - originY);
+      exVal.textContent = ex.toFixed(1);
+      eyVal.textContent = ey.toFixed(1);
+      reachVal.textContent = Math.hypot(ex, ey).toFixed(1);
+    }
+
+    t1Input.addEventListener("input", () => {
+      t1Val.textContent = t1Input.value + "°";
+      draw();
+    });
+    t2Input.addEventListener("input", () => {
+      t2Val.textContent = t2Input.value + "°";
+      draw();
+    });
+    window.addEventListener("resize", resize);
+    resize();
+  </script>
 </body>
 </html>

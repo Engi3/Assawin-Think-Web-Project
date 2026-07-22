@@ -26,11 +26,11 @@ export default function CombinationalLogicSim({ locale }: { locale: string }) {
                <div className="flex flex-col gap-12">
                  <div className="flex items-center gap-3">
                    <span className="font-bold text-secondary">A</span>
-                   <button onClick={() => setInA(inA ? 0 : 1)} className={`w-12 h-12 rounded-full flex items-center justify-center font-bold transition-all shadow-lg ${inA ? 'bg-primary text-white scale-110' : 'bg-secondary/20 text-secondary'}`}>{inA}</button>
+                   <button onClick={() => setInA(inA ? 0 : 1)} className={`w-12 h-12 rounded-full flex items-center justify-center font-bold transition-all shadow-lg ${inA ? 'bg-primary text-on-primary scale-110' : 'bg-secondary/20 text-secondary'}`}>{inA}</button>
                  </div>
                  <div className="flex items-center gap-3">
                    <span className="font-bold text-secondary">B</span>
-                   <button onClick={() => setInB(inB ? 0 : 1)} className={`w-12 h-12 rounded-full flex items-center justify-center font-bold transition-all shadow-lg ${inB ? 'bg-primary text-white scale-110' : 'bg-secondary/20 text-secondary'}`}>{inB}</button>
+                   <button onClick={() => setInB(inB ? 0 : 1)} className={`w-12 h-12 rounded-full flex items-center justify-center font-bold transition-all shadow-lg ${inB ? 'bg-primary text-on-primary scale-110' : 'bg-secondary/20 text-secondary'}`}>{inB}</button>
                  </div>
                </div>
 
@@ -56,11 +56,11 @@ export default function CombinationalLogicSim({ locale }: { locale: string }) {
                {/* Outputs */}
                <div className="flex flex-col gap-10">
                  <div className="flex items-center gap-4">
-                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${sum ? 'bg-primary text-white scale-110 shadow-[0_0_15px_rgba(249,115,22,0.5)]' : 'bg-secondary/10 text-secondary'}`}>{sum}</div>
+                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${sum ? 'bg-primary text-on-primary scale-110 shadow-[0_0_15px_rgba(94,210,156,0.5)]' : 'bg-secondary/10 text-secondary'}`}>{sum}</div>
                    <span className="font-bold text-foreground">Sum (S)</span>
                  </div>
                  <div className="flex items-center gap-4">
-                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${carry ? 'bg-primary text-white scale-110 shadow-[0_0_15px_rgba(249,115,22,0.5)]' : 'bg-secondary/10 text-secondary'}`}>{carry}</div>
+                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${carry ? 'bg-primary text-on-primary scale-110 shadow-[0_0_15px_rgba(94,210,156,0.5)]' : 'bg-secondary/10 text-secondary'}`}>{carry}</div>
                    <span className="font-bold text-foreground">Carry (C)</span>
                  </div>
                </div>
