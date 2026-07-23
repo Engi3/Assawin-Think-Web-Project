@@ -64,9 +64,36 @@
         acts on the scaled result). Layout auto-saves in this browser.
       </p>
     </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="knowledgeTitle">Knowledge Notes</h3>
+      <ul class="knowledge-list" data-i18n="knowledgeList">
+        <li>Every PLC brand has its own scaling instruction name for the same underlying formula: Mitsubishi FX uses <b>SCL2</b>, Siemens S7 splits it into <b>NORM_X</b> + <b>SCALE_X</b>, Omron uses <b>SCL</b> — the math in this unit's calculator is universal even though the instruction mnemonic isn't.</li>
+        <li>If Min &gt; Max in the scaling setup, the relationship <b>reverses</b> (a higher raw count gives a lower engineering value) — useful for sensors wired to read "backwards," but easy to get wrong by accident.</li>
+        <li>Always double-check the module's <b>channel addressing</b> — a multi-channel analog module maps each physical input to a different D-register offset (e.g. channel 0 → D0, channel 1 → D1), and mixing them up reads the wrong sensor entirely.</li>
+        <li>Use the PLC's <b>monitor/force mode</b> to watch live raw and scaled values while testing — but always remove forced values before leaving the program, since a forced I/O point ignores real-world signals until cleared.</li>
+        <li><b>Simulate before you connect real actuators</b>: verify a new scaling/logic rung against known reference inputs on the bench, before it's wired to a motor, valve, or heater that can cause real damage if the math is wrong.</li>
+      </ul>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="circuitTitle">A Complete Worked Example</h3>
+      <pre class="ladder-diagram"><span class="rail">|</span>--<span class="contact">[ Always ON ]</span>----------------------<span class="coil">( MOV D0 D10 )</span>--<span class="rail">|</span>  <span class="comment" data-i18n="ladderComment1">// read raw ADC from analog ch0 into D10</span>
+<span class="rail">|</span>--<span class="contact">[ Always ON ]</span>------<span class="coil">( SCL D10 K0 K4000 K-50 K1500 D20 )</span>--<span class="rail">|</span>  <span class="comment" data-i18n="ladderComment2">// scale D10 (0-4000) to D20 (-50.0 to 150.0 x10)</span>
+<span class="rail">|</span>--<span class="contact">[ D20 &gt;= K1000 ]</span>--------------------------------<span class="coil">( Y5 )</span>--<span class="rail">|</span>  <span class="comment" data-i18n="ladderComment3">// D20 >= 100.0 -> high-temperature alarm Y5</span></pre>
+      <div class="app-note" data-i18n="appNote1">
+        <b>Applied example:</b> this three-rung program reads a temperature transmitter's raw ADC value every scan (rung 1), scales it into a real, human-meaningful &deg;C x10 value stored in D20 (rung 2, using the same formula as the calculator above), then compares that scaled value against a 100.0&deg;C alarm threshold (rung 3). This exact read &rarr; scale &rarr; compare &rarr; act pattern is how every sensor from Units 2-6 gets wired into a real running control program.
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="quizTitle">Knowledge Check (10 Questions)</h3>
+      <div id="quizRoot"></div>
+    </div>
   </div>
 
   <script src="/simulations/_shared/i18n.js"></script>
+  <script src="/simulations/_shared/quiz-engine.js"></script>
   <script>
     const LANG = getLang();
     applyI18n({
@@ -95,6 +122,22 @@
       hintLadder: LANG === "th"
         ? "เลือกเครื่องมือ แล้วคลิกช่องเพื่อวาง (จะถามหาแท็กแอดเดรส — ลอง <b>D0</b> สำหรับค่าดิบของโมดูล, แท็กสไตล์ <b>MOV</b>/<b>SCL</b> สำหรับคำสั่งปรับสเกล และ <b>Y0</b> สำหรับคอยล์เอาต์พุตที่สั่งงานตามผลลัพธ์) เลย์เอาต์บันทึกอัตโนมัติในเบราว์เซอร์นี้"
         : "Pick a tool, click a slot to place it (you'll be asked for an address tag — try <b>D0</b> for the module's raw value, <b>MOV</b>/<b>SCL</b> style tags for the scaling instruction, and <b>Y0</b> for the output coil that acts on the scaled result). Layout auto-saves in this browser.",
+      knowledgeTitle: LANG === "th" ? "เกร็ดความรู้" : "Knowledge Notes",
+      knowledgeList: LANG === "th" ? `
+        <li>PLC แต่ละยี่ห้อมีชื่อคำสั่งปรับสเกลต่างกันแม้สูตรพื้นฐานเหมือนกัน: Mitsubishi FX ใช้ <b>SCL2</b>, Siemens S7 แยกเป็น <b>NORM_X</b> + <b>SCALE_X</b>, Omron ใช้ <b>SCL</b> — คณิตศาสตร์ในเครื่องคำนวณของหน่วยนี้ใช้ได้กับทุกยี่ห้อ แม้ชื่อคำสั่งจะต่างกัน</li>
+        <li>ถ้าตั้งค่า Min &gt; Max ในการปรับสเกล ความสัมพันธ์จะ <b>กลับด้าน</b> (ค่าดิบสูงขึ้นแต่ค่าทางวิศวกรรมลดลง) — มีประโยชน์กับเซนเซอร์ที่ต่อแบบ "กลับด้าน" แต่ก็ผิดพลาดโดยไม่ตั้งใจได้ง่ายเช่นกัน</li>
+        <li>ตรวจสอบ <b>การกำหนดแอดเดรสช่องสัญญาณ</b> ให้ดีเสมอ — โมดูลอนาล็อกหลายช่องจะแมปแต่ละอินพุตจริงไปยัง D-register คนละตัว (เช่น ช่อง 0 → D0, ช่อง 1 → D1) สลับกันจะอ่านผิดเซนเซอร์ไปเลย</li>
+        <li>ใช้โหมด <b>Monitor/Force</b> ของ PLC เพื่อดูค่าดิบและค่าที่ปรับสเกลแล้วขณะทดสอบ — แต่ต้องลบค่า Force ออกก่อนออกจากโปรแกรมเสมอ เพราะจุด I/O ที่ถูก Force จะไม่รับสัญญาณจริงจนกว่าจะถูกล้าง</li>
+        <li><b>จำลองก่อนต่อกับอุปกรณ์ขับเคลื่อนจริง</b>: ตรวจสอบรังปรับสเกล/ตรรกะใหม่กับค่าอ้างอิงที่ทราบบนโต๊ะทดสอบก่อน ก่อนที่จะต่อเข้ากับมอเตอร์ วาล์ว หรือฮีตเตอร์จริงที่อาจเสียหายได้หากคณิตศาสตร์ผิดพลาด</li>
+      ` : undefined,
+      circuitTitle: LANG === "th" ? "ตัวอย่างที่สมบูรณ์" : "A Complete Worked Example",
+      ladderComment1: LANG === "th" ? "// อ่านค่า Raw ADC จากช่องอนาล็อก 0 เข้า D10" : "// read raw ADC from analog ch0 into D10",
+      ladderComment2: LANG === "th" ? "// ปรับสเกล D10 (0-4000) เป็น D20 (-50.0 ถึง 150.0 x10)" : "// scale D10 (0-4000) to D20 (-50.0 to 150.0 x10)",
+      ladderComment3: LANG === "th" ? "// D20 >= 100.0 -> แจ้งเตือนอุณหภูมิสูง Y5" : "// D20 >= 100.0 -> high-temperature alarm Y5",
+      appNote1: LANG === "th"
+        ? "<b>ตัวอย่างการใช้งาน:</b> โปรแกรม 3 รังนี้อ่านค่า Raw ADC ของทรานสมิตเตอร์วัดอุณหภูมิทุกรอบสแกน (รังที่ 1) ปรับสเกลเป็นค่า &deg;C x10 ที่มีความหมายจริงเก็บไว้ที่ D20 (รังที่ 2 ใช้สูตรเดียวกับเครื่องคำนวณด้านบน) แล้วเทียบค่าที่ปรับสเกลแล้วกับเกณฑ์แจ้งเตือน 100.0&deg;C (รังที่ 3) รูปแบบ อ่าน &rarr; ปรับสเกล &rarr; เปรียบเทียบ &rarr; สั่งงาน นี้คือวิธีที่เซนเซอร์ทุกตัวจากหน่วยที่ 2-6 ถูกเชื่อมเข้ากับโปรแกรมควบคุมที่ทำงานจริง"
+        : "<b>Applied example:</b> this three-rung program reads a temperature transmitter's raw ADC value every scan (rung 1), scales it into a real, human-meaningful &deg;C x10 value stored in D20 (rung 2, using the same formula as the calculator above), then compares that scaled value against a 100.0&deg;C alarm threshold (rung 3). This exact read &rarr; scale &rarr; compare &rarr; act pattern is how every sensor from Units 2-6 gets wired into a real running control program.",
+      quizTitle: LANG === "th" ? "แบบทดสอบท้ายหน่วย (10 ข้อ)" : "Knowledge Check (10 Questions)",
     });
 
     // --- Scaling calculator ---
@@ -314,6 +357,42 @@
     load();
     window.addEventListener("resize", resize);
     resize();
+
+    // --- Knowledge-check quiz ---
+    const QUIZ = {
+      en: [
+        { q: "The scaling formula's purpose is to convert:", choices: ["A raw ADC count into a real engineering value", "AC voltage into DC", "A ladder rung into a function block", "One PLC brand into another"], answer: 0 },
+        { q: "If Min > Max is entered into the scaling setup, the result is:", choices: ["A reversed (inverse) relationship between raw and scaled value", "An immediate program crash", "No change at all", "A syntax error only"], answer: 0 },
+        { q: "Siemens S7 typically splits scaling into which two instructions?", choices: ["NORM_X and SCALE_X", "SCL2 only", "MOV and RST", "SET and RST"], answer: 0 },
+        { q: "Why does channel addressing on a multi-channel analog module matter?", choices: ["Mixing up channels reads the wrong physical sensor entirely", "It only affects the module's color", "Channels are interchangeable, it never matters", "It changes the PLC's supply voltage"], answer: 0 },
+        { q: "A forced I/O point in monitor mode will:", choices: ["Ignore real-world signals until the force is cleared", "Automatically clear itself after one scan", "Only affect analog outputs, never digital", "Improve scan time"], answer: 0 },
+        { q: "Why simulate a new rung on the bench before wiring it to a real actuator?", choices: ["To verify correctness before it can cause real damage", "Simulation is required by law in all cases", "It makes the PLC run faster permanently", "It's not necessary if the code compiles"], answer: 0 },
+        { q: "In the worked ladder example, rung 1 (MOV D0 D10) does what?", choices: ["Copies the raw ADC value into a working register", "Scales the value to engineering units", "Triggers the alarm output", "Resets the whole program"], answer: 0 },
+        { q: "In the worked ladder example, what does rung 3 check?", choices: ["Whether the scaled value has crossed an alarm threshold", "Whether the PLC has power", "Whether D10 equals zero", "Whether the ladder has any typos"], answer: 0 },
+        { q: "4-20mA and 0-10V signals typically arrive at the PLC as:", choices: ["A raw ADC count from an analog input module", "A pre-scaled engineering value automatically", "A digital on/off signal", "An HMI screen update"], answer: 0 },
+        { q: "The read → scale → compare → act pattern shown in this unit applies to:", choices: ["Every sensor type covered in Units 2-6", "Only pressure sensors", "Only digital limit switches", "Nothing outside this specific example"], answer: 0 },
+      ],
+      th: [
+        { q: "จุดประสงค์ของสูตรปรับสเกลคือแปลงอะไร?", choices: ["ค่า Raw ADC ดิบให้เป็นค่าทางวิศวกรรมจริง", "แรงดัน AC เป็น DC", "รังแลดเดอร์ให้เป็นฟังก์ชันบล็อก", "PLC ยี่ห้อหนึ่งให้เป็นอีกยี่ห้อ"], answer: 0 },
+        { q: "ถ้าตั้งค่า Min > Max ในการปรับสเกล ผลลัพธ์จะเป็นอย่างไร?", choices: ["ความสัมพันธ์กลับด้าน (ผกผัน) ระหว่างค่าดิบกับค่าที่ปรับสเกล", "โปรแกรมพังทันที", "ไม่มีอะไรเปลี่ยนแปลง", "เป็นแค่ข้อผิดพลาดทางไวยากรณ์"], answer: 0 },
+        { q: "Siemens S7 มักแยกการปรับสเกลเป็นสองคำสั่งใด?", choices: ["NORM_X และ SCALE_X", "SCL2 เท่านั้น", "MOV และ RST", "SET และ RST"], answer: 0 },
+        { q: "ทำไมการกำหนดแอดเดรสช่องสัญญาณของโมดูลอนาล็อกหลายช่องจึงสำคัญ?", choices: ["การสลับช่องจะทำให้อ่านผิดเซนเซอร์จริงไปเลย", "มีผลแค่กับสีของโมดูล", "ช่องสลับกันได้เสมอ ไม่มีผลอะไร", "เปลี่ยนแรงดันไฟเลี้ยงของ PLC"], answer: 0 },
+        { q: "จุด I/O ที่ถูก Force ไว้ในโหมด Monitor จะเป็นอย่างไร?", choices: ["ไม่รับสัญญาณจริงจนกว่าจะล้างค่า Force", "ล้างตัวเองอัตโนมัติหลัง 1 สแกน", "มีผลแค่กับเอาต์พุตอนาล็อกเท่านั้น", "ทำให้เวลาสแกนเร็วขึ้น"], answer: 0 },
+        { q: "ทำไมต้องจำลองรังใหม่บนโต๊ะทดสอบก่อนต่อกับอุปกรณ์ขับเคลื่อนจริง?", choices: ["เพื่อตรวจสอบความถูกต้องก่อนที่จะสร้างความเสียหายจริง", "กฎหมายบังคับทุกกรณี", "ทำให้ PLC ทำงานเร็วขึ้นถาวร", "ไม่จำเป็นถ้าโค้ดคอมไพล์ผ่าน"], answer: 0 },
+        { q: "ในตัวอย่างแลดเดอร์ รังที่ 1 (MOV D0 D10) ทำอะไร?", choices: ["คัดลอกค่า Raw ADC ไปยังรีจิสเตอร์ทำงาน", "ปรับสเกลค่าเป็นหน่วยวิศวกรรม", "สั่งเอาต์พุตแจ้งเตือน", "รีเซ็ตทั้งโปรแกรม"], answer: 0 },
+        { q: "ในตัวอย่างแลดเดอร์ รังที่ 3 ตรวจสอบอะไร?", choices: ["ค่าที่ปรับสเกลแล้วข้ามเกณฑ์แจ้งเตือนหรือไม่", "PLC มีไฟเลี้ยงหรือไม่", "D10 เท่ากับศูนย์หรือไม่", "แลดเดอร์มีจุดพิมพ์ผิดหรือไม่"], answer: 0 },
+        { q: "สัญญาณ 4-20mA และ 0-10V มักมาถึง PLC ในรูปแบบใด?", choices: ["ค่า Raw ADC ดิบจากโมดูลอนาล็อกอินพุต", "ค่าทางวิศวกรรมที่ปรับสเกลอัตโนมัติแล้ว", "สัญญาณดิจิทัล on/off", "การอัปเดตหน้าจอ HMI"], answer: 0 },
+        { q: "รูปแบบ อ่าน → ปรับสเกล → เปรียบเทียบ → สั่งงาน ในหน่วยนี้ใช้ได้กับอะไร?", choices: ["เซนเซอร์ทุกชนิดที่กล่าวถึงในหน่วยที่ 2-6", "เพรสเชอร์เซนเซอร์เท่านั้น", "ลิมิตสวิตช์ดิจิทัลเท่านั้น", "ใช้ไม่ได้นอกจากตัวอย่างนี้"], answer: 0 },
+      ],
+    };
+    renderQuiz("quizRoot", QUIZ[LANG], {
+      submitLabel: LANG === "th" ? "ตรวจคำตอบ" : "Check Answers",
+      resetLabel: LANG === "th" ? "ทำใหม่" : "Try Again",
+      correctText: LANG === "th" ? "ถูกต้อง" : "Correct",
+      incorrectText: LANG === "th" ? "ผิด — คำตอบที่ถูกคือ:" : "Incorrect — correct answer:",
+      scorePrefix: LANG === "th" ? "คะแนน:" : "Score:",
+      storageKey: "mct-unit7-quiz",
+    });
   </script>
 </body>
 </html>

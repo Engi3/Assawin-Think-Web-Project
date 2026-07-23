@@ -39,9 +39,47 @@
       <div class="readout-grid" id="readouts"></div>
       <p class="hint" id="sensorHint"></p>
     </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="knowledgeTitle">Knowledge Notes</h3>
+      <ul class="knowledge-list" data-i18n="knowledgeList">
+        <li>Float switches in turbulent or wavy liquid can chatter falsely — many installations mount the float inside a <b>stilling well</b> (a perforated tube) to calm the liquid around it.</li>
+        <li>Ultrasonic level sensors have a <b>dead zone/blanking distance</b> near the sensor face where they cannot reliably measure — never mount them so the maximum expected level enters that zone.</li>
+        <li>Capacitive probes must be calibrated for the specific liquid's <b>dielectric constant</b> — the same probe reads differently in water vs. oil vs. a granular solid, so a probe re-used across tanks needs re-calibration.</li>
+        <li>Hydrostatic (pressure-based) level measurement needs the fluid's <b>density/specific gravity</b> to convert pressure correctly to height — the same pressure reading means a different level in water vs. a denser chemical solution.</li>
+        <li>High/low level switches are almost always wired directly into a <b>pump interlock</b>, not just an alarm — this unit's ladder example shows the classic set/reset auto-fill pattern.</li>
+      </ul>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="circuitTitle">High/Low Switch Wiring &amp; an Auto-Fill Ladder</h3>
+      <div class="circuit-svg-wrap">
+        <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" width="400" height="200">
+          <g font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#f1f5f9">
+            <rect x="120" y="20" width="160" height="160" rx="6" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="3"/>
+            <rect x="126" y="110" width="148" height="66" fill="rgba(96,165,250,0.3)"/>
+            <circle cx="200" cy="60" r="7" fill="#f472b6"/>
+            <text x="215" y="63" font-size="9">X1 High-level switch</text>
+            <circle cx="200" cy="150" r="7" fill="#5ed29c"/>
+            <text x="215" y="153" font-size="9">X0 Low-level switch</text>
+          </g>
+        </svg>
+      </div>
+      <pre class="ladder-diagram" style="margin-top:14px;"><span class="rail">|</span>--<span class="contact">[ X0 ]</span>-----------------------------------<span class="coil">( SET Y0 )</span>--<span class="rail">|</span>  <span class="comment" data-i18n="ladderComment1">// X0: low-level switch -> start fill pump (latch ON)</span>
+<span class="rail">|</span>--<span class="contact">[ X1 ]</span>-----------------------------------<span class="coil">( RST Y0 )</span>--<span class="rail">|</span>  <span class="comment" data-i18n="ladderComment2">// X1: high-level switch -> stop fill pump (latch OFF)</span></pre>
+      <div class="app-note" data-i18n="appNote1">
+        <b>Applied example:</b> a reservoir auto-fill system latches the fill pump ON (SET Y0) the moment the low-level switch X0 activates, and only unlatches it (RST Y0) once the high-level switch X1 is reached — the tank cycles between the two switch heights automatically, forever, with no operator intervention. The same latch pattern controls chemical dosing tanks and cooling tower makeup water.
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="quizTitle">Knowledge Check (10 Questions)</h3>
+      <div id="quizRoot"></div>
+    </div>
   </div>
 
   <script src="/simulations/_shared/i18n.js"></script>
+  <script src="/simulations/_shared/quiz-engine.js"></script>
   <script>
     const LANG = getLang();
     applyI18n({
@@ -55,6 +93,21 @@
       btnCapacitive: LANG === "th" ? "เก็บประจุ (Capacitive)" : "Capacitive",
       btnHydrostatic: LANG === "th" ? "แรงดันอุทกสถิต (Hydrostatic)" : "Hydrostatic (pressure)",
       lblFill: LANG === "th" ? "ระดับของเหลวในถัง" : "Tank Fill Level",
+      knowledgeTitle: LANG === "th" ? "เกร็ดความรู้" : "Knowledge Notes",
+      knowledgeList: LANG === "th" ? `
+        <li>ลูกลอยในของเหลวที่ปั่นป่วนหรือมีคลื่นอาจกระตุกผิดพลาดได้ — หลายการติดตั้งจึงใส่ลูกลอยไว้ใน <b>Stilling Well</b> (ท่อเจาะรู) เพื่อลดความปั่นป่วนรอบตัวมัน</li>
+        <li>เลเวลเซนเซอร์อัลตราโซนิกมี <b>Dead Zone/Blanking Distance</b> ใกล้หน้าเซนเซอร์ที่วัดค่าไม่ได้แน่นอน — ห้ามติดตั้งจนระดับสูงสุดที่คาดไว้เข้าไปในโซนนี้</li>
+        <li>โพรบแบบคาปาซิทีฟต้องคาลิเบรตตาม <b>ค่าไดอิเล็กตริก</b> ของของเหลวแต่ละชนิด — โพรบตัวเดียวกันอ่านค่าต่างกันในน้ำ น้ำมัน หรือของแข็งเป็นเม็ด ถ้านำไปใช้ข้ามถังต้องคาลิเบรตใหม่</li>
+        <li>การวัดระดับด้วยแรงดันอุทกสถิตต้องทราบ <b>ความหนาแน่น/ความถ่วงจำเพาะ</b> ของของไหล เพื่อแปลงความดันเป็นความสูงให้ถูกต้อง — ความดันเท่ากันให้ระดับต่างกันในน้ำเทียบกับสารเคมีที่หนาแน่นกว่า</li>
+        <li>สวิตช์ระดับสูง/ต่ำมักต่อเข้ากับ <b>ระบบ Interlock ของปั๊ม</b> โดยตรง ไม่ใช่แค่แจ้งเตือน — ตัวอย่างแลดเดอร์ของหน่วยนี้แสดงรูปแบบ Set/Reset สำหรับเติมอัตโนมัติแบบคลาสสิก</li>
+      ` : undefined,
+      circuitTitle: LANG === "th" ? "การต่อสวิตช์ระดับสูง/ต่ำ และแลดเดอร์เติมอัตโนมัติ" : "High/Low Switch Wiring &amp; an Auto-Fill Ladder",
+      ladderComment1: LANG === "th" ? "// X0: สวิตช์ระดับต่ำ -> สั่งเดินปั๊มเติม (Latch ON)" : "// X0: low-level switch -> start fill pump (latch ON)",
+      ladderComment2: LANG === "th" ? "// X1: สวิตช์ระดับสูง -> หยุดปั๊มเติม (Latch OFF)" : "// X1: high-level switch -> stop fill pump (latch OFF)",
+      appNote1: LANG === "th"
+        ? "<b>ตัวอย่างการใช้งาน:</b> ระบบเติมน้ำอัตโนมัติของถังพักจะ Latch เปิดปั๊มเติม (SET Y0) ทันทีที่สวิตช์ระดับต่ำ X0 ทำงาน และจะปลด Latch (RST Y0) ก็ต่อเมื่อถึงสวิตช์ระดับสูง X1 เท่านั้น — ถังจะวนรอบระหว่างสวิตช์สองระดับนี้โดยอัตโนมัติตลอดไปโดยไม่ต้องมีคนควบคุม รูปแบบ Latch แบบเดียวกันนี้ใช้ควบคุมถังผสมสารเคมีและระบบเติมน้ำหอหล่อเย็นได้เช่นกัน"
+        : "<b>Applied example:</b> a reservoir auto-fill system latches the fill pump ON (SET Y0) the moment the low-level switch X0 activates, and only unlatches it (RST Y0) once the high-level switch X1 is reached — the tank cycles between the two switch heights automatically, forever, with no operator intervention. The same latch pattern controls chemical dosing tanks and cooling tower makeup water.",
+      quizTitle: LANG === "th" ? "แบบทดสอบท้ายหน่วย (10 ข้อ)" : "Knowledge Check (10 Questions)",
     });
 
     const canvas = document.getElementById("tank");
@@ -207,6 +260,42 @@
     fillSlider.addEventListener("input", draw);
     window.addEventListener("resize", resize);
     resize();
+
+    // --- Knowledge-check quiz ---
+    const QUIZ = {
+      en: [
+        { q: "A \"stilling well\" around a float switch is used to:", choices: ["Calm turbulence/waves so the float doesn't chatter", "Increase the tank's capacity", "Heat the liquid", "Replace the need for calibration"], answer: 0 },
+        { q: "An ultrasonic level sensor's \"dead zone\" is:", choices: ["A region near the sensor where it cannot reliably measure", "The maximum tank height it supports", "A backup power mode", "A type of calibration weight"], answer: 0 },
+        { q: "Capacitive level probes must be calibrated for the liquid's:", choices: ["Dielectric constant", "Color", "Boiling point", "Viscosity only"], answer: 0 },
+        { q: "Hydrostatic (pressure-based) level measurement requires knowing the fluid's:", choices: ["Density / specific gravity", "Electrical conductivity", "Dielectric constant", "Color"], answer: 0 },
+        { q: "In this unit's ladder example, SET Y0 is triggered by:", choices: ["The low-level switch X0", "The high-level switch X1", "A pressure switch", "An encoder pulse count"], answer: 0 },
+        { q: "In this unit's ladder example, RST Y0 is triggered by:", choices: ["The high-level switch X1", "The low-level switch X0", "A photoelectric sensor", "A thermocouple reading"], answer: 0 },
+        { q: "A float-type level sensor indicates level through:", choices: ["Its vertical position on the liquid surface", "Sound pulse timing", "Capacitance change", "Induced voltage"], answer: 0 },
+        { q: "An ultrasonic level sensor calculates distance from:", choices: ["The time for a sound pulse to bounce back", "The tank's color", "The liquid's density", "The float's weight"], answer: 0 },
+        { q: "Why can't a capacitive probe be swapped between tanks with different liquids without recalibration?", choices: ["Different liquids have different dielectric constants, changing the reading", "Capacitive probes only work with water", "The probe wears out after one tank", "Tanks must be the same size"], answer: 0 },
+        { q: "The classic SET/RESET auto-fill pattern in this unit's ladder is best described as:", choices: ["A latch that cycles the pump between two level switch points automatically", "A one-time manual trigger only", "A pattern only usable for photoelectric sensors", "A method with no real industrial use"], answer: 0 },
+      ],
+      th: [
+        { q: "\"Stilling Well\" รอบลูกลอยมีไว้เพื่ออะไร?", choices: ["ลดความปั่นป่วน/คลื่น ไม่ให้ลูกลอยกระตุก", "เพิ่มความจุของถัง", "ให้ความร้อนแก่ของเหลว", "ทดแทนการคาลิเบรต"], answer: 0 },
+        { q: "\"Dead Zone\" ของเลเวลเซนเซอร์อัลตราโซนิกคืออะไร?", choices: ["บริเวณใกล้เซนเซอร์ที่วัดค่าไม่ได้แน่นอน", "ความสูงสูงสุดของถังที่รองรับได้", "โหมดสำรองไฟ", "ตุ้มน้ำหนักสำหรับคาลิเบรต"], answer: 0 },
+        { q: "โพรบเลเวลแบบคาปาซิทีฟต้องคาลิเบรตตามอะไรของของเหลว?", choices: ["ค่าไดอิเล็กตริก", "สี", "จุดเดือด", "ความหนืดเท่านั้น"], answer: 0 },
+        { q: "การวัดระดับด้วยแรงดันอุทกสถิตต้องทราบอะไรของของไหล?", choices: ["ความหนาแน่น/ความถ่วงจำเพาะ", "ค่าการนำไฟฟ้า", "ค่าไดอิเล็กตริก", "สี"], answer: 0 },
+        { q: "ในตัวอย่างแลดเดอร์ของหน่วยนี้ SET Y0 ถูกกระตุ้นด้วยอะไร?", choices: ["สวิตช์ระดับต่ำ X0", "สวิตช์ระดับสูง X1", "เพรสเชอร์สวิตช์", "จำนวนพัลส์เอนโค้ดเดอร์"], answer: 0 },
+        { q: "ในตัวอย่างแลดเดอร์ของหน่วยนี้ RST Y0 ถูกกระตุ้นด้วยอะไร?", choices: ["สวิตช์ระดับสูง X1", "สวิตช์ระดับต่ำ X0", "โฟโต้อิเล็กทริกเซนเซอร์", "ค่าที่อ่านจากเทอร์โมคัปเปิล"], answer: 0 },
+        { q: "เลเวลเซนเซอร์แบบลูกลอยบอกระดับได้อย่างไร?", choices: ["จากตำแหน่งแนวตั้งบนผิวของเหลว", "จากเวลาของพัลส์เสียง", "จากการเปลี่ยนแปลงค่าความจุ", "จากแรงดันเหนี่ยวนำ"], answer: 0 },
+        { q: "เลเวลเซนเซอร์อัลตราโซนิกคำนวณระยะทางจากอะไร?", choices: ["เวลาที่พัลส์เสียงสะท้อนกลับ", "สีของถัง", "ความหนาแน่นของของเหลว", "น้ำหนักของลูกลอย"], answer: 0 },
+        { q: "ทำไมโพรบคาปาซิทีฟจึงย้ายไปใช้ข้ามถังที่มีของเหลวต่างชนิดโดยไม่คาลิเบรตใหม่ไม่ได้?", choices: ["ของเหลวต่างชนิดมีค่าไดอิเล็กตริกต่างกัน ทำให้ค่าที่อ่านเปลี่ยน", "โพรบคาปาซิทีฟใช้ได้กับน้ำเท่านั้น", "โพรบเสื่อมหลังใช้กับถังเดียว", "ถังต้องมีขนาดเท่ากันเท่านั้น"], answer: 0 },
+        { q: "รูปแบบ SET/RESET แบบคลาสสิกสำหรับเติมอัตโนมัติในหน่วยนี้อธิบายได้ดีที่สุดว่าอย่างไร?", choices: ["การ Latch ที่วนปั๊มระหว่างจุดสวิตช์สองระดับโดยอัตโนมัติ", "การกระตุ้นด้วยมือครั้งเดียวเท่านั้น", "รูปแบบที่ใช้ได้แค่กับโฟโต้อิเล็กทริกเซนเซอร์", "วิธีที่ไม่มีการใช้งานจริงในอุตสาหกรรม"], answer: 0 },
+      ],
+    };
+    renderQuiz("quizRoot", QUIZ[LANG], {
+      submitLabel: LANG === "th" ? "ตรวจคำตอบ" : "Check Answers",
+      resetLabel: LANG === "th" ? "ทำใหม่" : "Try Again",
+      correctText: LANG === "th" ? "ถูกต้อง" : "Correct",
+      incorrectText: LANG === "th" ? "ผิด — คำตอบที่ถูกคือ:" : "Incorrect — correct answer:",
+      scorePrefix: LANG === "th" ? "คะแนน:" : "Score:",
+      storageKey: "mct-unit6-quiz",
+    });
   </script>
 </body>
 </html>

@@ -62,9 +62,51 @@
         <div class="readout"><div class="label" data-i18n="lblPrinciple">Sensing Principle</div><div class="value" id="flowPrinciple" style="font-size:13px;">Rotor speed</div></div>
       </div>
     </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="knowledgeTitle">Knowledge Notes</h3>
+      <ul class="knowledge-list" data-i18n="knowledgeList">
+        <li>Pressure switches have a <b>differential (hysteresis)</b> setting, not just one trip point — without a gap between the "trip" and "reset" pressure, the switch would chatter rapidly right at the setpoint.</li>
+        <li><b>Gauge vs. absolute vs. vacuum pressure</b>: gauge pressure is relative to atmosphere (most common industrially), absolute pressure is relative to a perfect vacuum, and vacuum gauges read negative gauge pressure below atmosphere.</li>
+        <li>Flow meters need a <b>straight, undisturbed pipe run</b> before and after the sensor (often 10x pipe diameter upstream, 5x downstream) — elbows and valves too close by cause turbulence that skews the reading.</li>
+        <li><b>Electromagnetic flow meters require a conductive fluid</b> (like water with dissolved minerals) to work at all — they cannot measure oil, pure deionized water, or air/gas flow.</li>
+        <li>Sudden valve closures in liquid-filled pipes cause <b>water hammer</b> — pressure transducers near pumps/valves should be rated well above normal operating pressure to survive these transient spikes.</li>
+      </ul>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="circuitTitle">2-Wire Loop Wiring &amp; a Pump Protection Ladder</h3>
+      <div class="circuit-svg-wrap">
+        <svg viewBox="0 0 640 130" xmlns="http://www.w3.org/2000/svg" width="640" height="130">
+          <g font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#f1f5f9">
+            <rect x="20" y="45" width="110" height="40" rx="8" fill="none" stroke="#facc15" stroke-width="2"/>
+            <text x="75" y="69" text-anchor="middle" font-size="10">24V DC Supply</text>
+            <rect x="260" y="45" width="130" height="40" rx="8" fill="none" stroke="#5ed29c" stroke-width="2"/>
+            <text x="325" y="69" text-anchor="middle" font-size="10">Pressure Transducer</text>
+            <rect x="510" y="45" width="110" height="40" rx="8" fill="none" stroke="#60a5fa" stroke-width="2"/>
+            <text x="565" y="69" text-anchor="middle" font-size="10">PLC Analog In</text>
+            <g stroke="#f1f5f9" stroke-width="2" fill="none">
+              <path d="M130,55 L620,55" />
+              <path d="M620,75 L130,75" />
+            </g>
+            <text x="375" y="42" text-anchor="middle" font-size="9" fill="rgba(241,245,249,0.6)">2-wire current loop, 4-20mA in series</text>
+          </g>
+        </svg>
+      </div>
+      <pre class="ladder-diagram" style="margin-top:14px;"><span class="rail">|</span>--<span class="contact">[ X1 ]</span>--<span class="contact">[ X2 ]</span>-------------------------------<span class="coil">( Y3 )</span>--<span class="rail">|</span>  <span class="comment" data-i18n="ladderComment">// X1: start PB  X2: low-pressure switch (NC)  Y3: pump run</span></pre>
+      <div class="app-note" data-i18n="appNote1">
+        <b>Applied example:</b> a pump start rung includes a normally-closed low-pressure switch (X2) in series with the start pushbutton (X1). If suction-side pressure drops too low (a sign the pump is about to run dry and self-destruct), X2 opens and immediately drops output Y3, stopping the pump — the same pattern protects compressed air systems from running a compressor against a closed valve.
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="quizTitle">Knowledge Check (10 Questions)</h3>
+      <div id="quizRoot"></div>
+    </div>
   </div>
 
   <script src="/simulations/_shared/i18n.js"></script>
+  <script src="/simulations/_shared/quiz-engine.js"></script>
   <script>
     const LANG = getLang();
     const PRINCIPLE_LABELS = {
@@ -89,6 +131,20 @@
       btnElectromagnetic: LANG === "th" ? "แม่เหล็กไฟฟ้า (Electromagnetic)" : "Electromagnetic",
       lblFlowRate: LANG === "th" ? "อัตราการไหล" : "Flow Rate",
       lblPrinciple: LANG === "th" ? "หลักการตรวจจับ" : "Sensing Principle",
+      knowledgeTitle: LANG === "th" ? "เกร็ดความรู้" : "Knowledge Notes",
+      knowledgeList: LANG === "th" ? `
+        <li>เพรสเชอร์สวิตช์มีค่าตั้ง <b>Differential (Hysteresis)</b> ไม่ใช่แค่จุดตัดจุดเดียว — ถ้าไม่มีช่วงห่างระหว่างความดัน "ตัด" กับ "รีเซ็ต" สวิตช์จะกระตุกถี่ๆ ที่จุดตั้งค่านั้นพอดี</li>
+        <li><b>ความดันเกจ vs สัมบูรณ์ vs สุญญากาศ</b>: ความดันเกจอ้างอิงจากบรรยากาศ (พบบ่อยสุดในอุตสาหกรรม), ความดันสัมบูรณ์อ้างอิงจากสุญญากาศสมบูรณ์, ส่วนเกจวัดสุญญากาศอ่านค่าความดันเกจติดลบต่ำกว่าบรรยากาศ</li>
+        <li>โฟลว์มิเตอร์ต้องการ <b>ท่อตรงปราศจากสิ่งรบกวน</b> ก่อนและหลังตัวเซนเซอร์ (มักต้อง 10 เท่าเส้นผ่านศูนย์กลางท่อด้านต้นน้ำ, 5 เท่าด้านปลายน้ำ) — ข้องอหรือวาล์วที่ใกล้เกินไปทำให้เกิดความปั่นป่วนซึ่งบิดเบือนค่าที่อ่านได้</li>
+        <li><b>โฟลว์มิเตอร์แม่เหล็กไฟฟ้าต้องการของไหลที่นำไฟฟ้าได้</b> (เช่นน้ำที่มีแร่ธาตุละลายอยู่) จึงจะทำงานได้ — ไม่สามารถวัดน้ำมัน น้ำปราศจากไอออนบริสุทธิ์ หรือการไหลของแก๊ส/อากาศได้</li>
+        <li>การปิดวาล์วทันทีในท่อที่เต็มไปด้วยของเหลวทำให้เกิด <b>Water Hammer</b> — เพรสเชอร์ทรานสดิวเซอร์ใกล้ปั๊ม/วาล์วควรเลือกพิกัดสูงกว่าความดันใช้งานปกติมากพอ เพื่อทนต่อแรงดันพุ่งชั่วขณะเหล่านี้ได้</li>
+      ` : undefined,
+      circuitTitle: LANG === "th" ? "การต่อสายลูป 2-Wire และแลดเดอร์ป้องกันปั๊ม" : "2-Wire Loop Wiring &amp; a Pump Protection Ladder",
+      ladderComment: LANG === "th" ? "// X1: ปุ่มสตาร์ท  X2: สวิตช์ความดันต่ำ (NC)  Y3: สั่งเดินปั๊ม" : "// X1: start PB  X2: low-pressure switch (NC)  Y3: pump run",
+      appNote1: LANG === "th"
+        ? "<b>ตัวอย่างการใช้งาน:</b> รังสตาร์ทปั๊มมีสวิตช์ความดันต่ำแบบ NC (X2) ต่ออนุกรมกับปุ่มสตาร์ท (X1) หากความดันด้านดูดต่ำเกินไป (สัญญาณว่าปั๊มกำลังจะเดินแบบไม่มีของเหลว/Dry-run และอาจพังได้) X2 จะเปิดวงจรทันทีและตัดเอาต์พุต Y3 หยุดปั๊ม — รูปแบบเดียวกันนี้ใช้ป้องกันคอมเพรสเซอร์ลมไม่ให้เดินเครื่องขณะวาล์วปิดอยู่"
+        : "<b>Applied example:</b> a pump start rung includes a normally-closed low-pressure switch (X2) in series with the start pushbutton (X1). If suction-side pressure drops too low (a sign the pump is about to run dry and self-destruct), X2 opens and immediately drops output Y3, stopping the pump — the same pattern protects compressed air systems from running a compressor against a closed valve.",
+      quizTitle: LANG === "th" ? "แบบทดสอบท้ายหน่วย (10 ข้อ)" : "Knowledge Check (10 Questions)",
     });
 
     const pressSlider = document.getElementById("press");
@@ -208,6 +264,42 @@
     window.addEventListener("resize", resize);
     resize();
     requestAnimationFrame(loop);
+
+    // --- Knowledge-check quiz ---
+    const QUIZ = {
+      en: [
+        { q: "A pressure switch's \"differential\" or \"hysteresis\" setting exists to:", choices: ["Prevent rapid on/off chatter right at the setpoint", "Increase the sensor's range", "Change the output signal type", "Reduce the cable length needed"], answer: 0 },
+        { q: "\"Gauge pressure\" is measured relative to:", choices: ["Atmospheric pressure", "A perfect vacuum", "The pipe's diameter", "The fluid's temperature"], answer: 0 },
+        { q: "Flow meters typically need which installation condition for accuracy?", choices: ["A straight, undisturbed pipe run before/after the sensor", "Direct sunlight exposure", "A vertical pipe only", "No power supply at all"], answer: 0 },
+        { q: "Electromagnetic flow meters require the fluid to be:", choices: ["Electrically conductive", "Transparent", "Compressed gas only", "Below freezing"], answer: 0 },
+        { q: "\"Water hammer\" is caused by:", choices: ["Sudden valve closure in a liquid-filled pipe", "Slow, gradual pressure changes", "Low ambient temperature", "Using the wrong sensor color"], answer: 0 },
+        { q: "A turbine flow meter measures flow rate from:", choices: ["Rotor spin speed", "Sound transit time", "Induced voltage", "Capacitance change"], answer: 0 },
+        { q: "An ultrasonic flow meter's key advantage is:", choices: ["No moving parts touching the fluid", "It only works on conductive fluids", "It's the cheapest option always", "It requires no pipe at all"], answer: 0 },
+        { q: "In this unit's ladder example, X2 (a normally-closed low-pressure switch) protects against:", choices: ["The pump running dry", "Overheating a thermocouple", "Encoder pulse loss", "Photoelectric beam blockage"], answer: 0 },
+        { q: "4-20mA pressure transducers are wired in a:", choices: ["2-wire series current loop", "Parallel voltage divider only", "Wireless mesh network", "Direct AC line connection"], answer: 0 },
+        { q: "A vacuum gauge reads pressure that is:", choices: ["Below atmospheric (negative gauge pressure)", "Above atmospheric only", "Always exactly zero", "Measured in RPM"], answer: 0 },
+      ],
+      th: [
+        { q: "ค่าตั้ง \"Differential\" หรือ \"Hysteresis\" ของเพรสเชอร์สวิตช์มีไว้เพื่อ?", choices: ["ป้องกันการกระตุกเปิด-ปิดถี่ๆ ที่จุดตั้งค่า", "เพิ่มย่านการวัดของเซนเซอร์", "เปลี่ยนชนิดสัญญาณเอาต์พุต", "ลดความยาวสายที่ต้องใช้"], answer: 0 },
+        { q: "\"ความดันเกจ (Gauge Pressure)\" วัดโดยอ้างอิงจากอะไร?", choices: ["ความดันบรรยากาศ", "สุญญากาศสมบูรณ์", "เส้นผ่านศูนย์กลางท่อ", "อุณหภูมิของไหล"], answer: 0 },
+        { q: "โฟลว์มิเตอร์โดยทั่วไปต้องการเงื่อนไขการติดตั้งใดเพื่อความแม่นยำ?", choices: ["ท่อตรงปราศจากสิ่งรบกวนก่อน/หลังเซนเซอร์", "โดนแสงแดดโดยตรง", "ท่อแนวตั้งเท่านั้น", "ไม่ต้องมีไฟเลี้ยงเลย"], answer: 0 },
+        { q: "โฟลว์มิเตอร์แม่เหล็กไฟฟ้าต้องการของไหลแบบใด?", choices: ["นำไฟฟ้าได้", "โปร่งใส", "เป็นแก๊สอัดเท่านั้น", "อุณหภูมิต่ำกว่าจุดเยือกแข็ง"], answer: 0 },
+        { q: "\"Water Hammer\" เกิดจากอะไร?", choices: ["การปิดวาล์วทันทีในท่อที่เต็มด้วยของเหลว", "การเปลี่ยนแปลงความดันอย่างช้าๆ", "อุณหภูมิแวดล้อมต่ำ", "ใช้เซนเซอร์สีผิด"], answer: 0 },
+        { q: "โฟลว์มิเตอร์แบบกังหัน (Turbine) วัดอัตราการไหลจากอะไร?", choices: ["ความเร็วรอบใบพัด", "เวลาเดินทางของเสียง", "แรงดันเหนี่ยวนำ", "การเปลี่ยนแปลงค่าความจุ"], answer: 0 },
+        { q: "ข้อได้เปรียบหลักของโฟลว์มิเตอร์อัลตราโซนิกคือ?", choices: ["ไม่มีชิ้นส่วนเคลื่อนที่สัมผัสของไหล", "ใช้ได้แค่กับของไหลนำไฟฟ้าเท่านั้น", "ราคาถูกที่สุดเสมอ", "ไม่ต้องใช้ท่อเลย"], answer: 0 },
+        { q: "ในตัวอย่างแลดเดอร์ของหน่วยนี้ X2 (สวิตช์ความดันต่ำแบบ NC) ป้องกันอะไร?", choices: ["ปั๊มเดินแบบไม่มีของเหลว (Dry-run)", "เทอร์โมคัปเปิลร้อนเกิน", "การสูญเสียพัลส์เอนโค้ดเดอร์", "ลำแสงโฟโต้อิเล็กทริกถูกบัง"], answer: 0 },
+        { q: "เพรสเชอร์ทรานสดิวเซอร์แบบ 4-20mA ต่อวงจรแบบใด?", choices: ["ลูปกระแสอนุกรมแบบ 2-wire", "วงจรแบ่งแรงดันแบบขนานเท่านั้น", "เครือข่ายไร้สายแบบ Mesh", "ต่อสาย AC โดยตรง"], answer: 0 },
+        { q: "เกจวัดสุญญากาศอ่านค่าความดันแบบใด?", choices: ["ต่ำกว่าบรรยากาศ (ความดันเกจติดลบ)", "สูงกว่าบรรยากาศเท่านั้น", "เป็นศูนย์เสมอ", "วัดเป็นหน่วย RPM"], answer: 0 },
+      ],
+    };
+    renderQuiz("quizRoot", QUIZ[LANG], {
+      submitLabel: LANG === "th" ? "ตรวจคำตอบ" : "Check Answers",
+      resetLabel: LANG === "th" ? "ทำใหม่" : "Try Again",
+      correctText: LANG === "th" ? "ถูกต้อง" : "Correct",
+      incorrectText: LANG === "th" ? "ผิด — คำตอบที่ถูกคือ:" : "Incorrect — correct answer:",
+      scorePrefix: LANG === "th" ? "คะแนน:" : "Score:",
+      storageKey: "mct-unit5-quiz",
+    });
   </script>
 </body>
 </html>

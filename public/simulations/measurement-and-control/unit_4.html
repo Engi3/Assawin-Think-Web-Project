@@ -61,9 +61,50 @@
       </div>
       <p class="hint" id="photoHint"></p>
     </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="knowledgeTitle">Knowledge Notes</h3>
+      <ul class="knowledge-list" data-i18n="knowledgeList">
+        <li>Thermocouples need <b>cold junction compensation (CJC)</b>: since the meter/module's own terminals form a second junction, the module measures its own terminal temperature (usually via a small built-in sensor) and adds it back to get the true reading.</li>
+        <li><b>RTD wiring</b>: 2-wire is cheapest but lead resistance adds directly to the reading; 3-wire (the industrial standard) cancels lead resistance by measuring it on a matched extra wire; 4-wire is lab-grade, eliminating lead resistance entirely.</li>
+        <li>Thermocouple types trade off range and cost: <b>K</b> (general purpose, -200 to 1260&deg;C), <b>J</b> (cheaper, narrower range, degrades in oxidizing atmospheres above 550&deg;C), <b>T</b> (accurate at cryogenic/sub-zero temperatures).</li>
+        <li>Photoelectric sensors have a <b>"light-on" or "dark-on"</b> output mode setting — choose based on whether the output should activate when the beam is received or when it's blocked.</li>
+        <li>"Excess gain" is a photoelectric spec describing margin against dust, fog, or a dirty lens — higher excess gain means more reliable operation in harsh environments.</li>
+      </ul>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="circuitTitle">3-Wire RTD Wiring &amp; a Bang-Bang Heater Ladder</h3>
+      <div class="circuit-svg-wrap">
+        <svg viewBox="0 0 620 150" xmlns="http://www.w3.org/2000/svg" width="620" height="150">
+          <g font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#f1f5f9">
+            <rect x="30" y="55" width="130" height="40" rx="8" fill="none" stroke="#facc15" stroke-width="2"/>
+            <text x="95" y="79" text-anchor="middle" font-size="11">Analog Input</text>
+            <rect x="440" y="55" width="120" height="40" rx="8" fill="none" stroke="#5ed29c" stroke-width="2"/>
+            <text x="500" y="79" text-anchor="middle" font-size="11">RTD Pt100</text>
+            <g stroke="#f1f5f9" stroke-width="1.5" fill="none">
+              <line x1="160" y1="62" x2="440" y2="62"/><text x="300" y="58" text-anchor="middle" fill="#f472b6">Lead A</text>
+              <line x1="160" y1="75" x2="440" y2="75"/><text x="300" y="90" text-anchor="middle" fill="#60a5fa">Lead B (compensation)</text>
+              <line x1="160" y1="88" x2="440" y2="88"/><text x="300" y="104" text-anchor="middle" fill="#f472b6">Lead C</text>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <pre class="ladder-diagram" style="margin-top:14px;"><span class="rail">|</span>--<span class="contact">[ D10 &lt; K1800 ]</span>------------------------------<span class="coil">( Y2 )</span>--<span class="rail">|</span>  <span class="comment" data-i18n="ladderComment1">// D10: scaled temp x10 (180.0C) -> heater ON</span>
+<span class="rail">|</span>--<span class="contact">[ D10 &gt;= K2000 ]</span>-----------------------<span class="coil">(RST Y2 )</span>--<span class="rail">|</span>  <span class="comment" data-i18n="ladderComment2">// above 200.0C -> heater OFF (hysteresis band)</span></pre>
+      <div class="app-note" data-i18n="appNote1">
+        <b>Applied example:</b> a simple "bang-bang" oven controller turns the heater relay Y2 ON below 180.0&deg;C and OFF at or above 200.0&deg;C — the 20&deg;C gap (hysteresis) stops the relay from chattering on/off right at one exact setpoint. The same photoelectric through-beam logic from this unit is also used to count objects passing on a conveyor, incrementing a counter each time the beam breaks.
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="quizTitle">Knowledge Check (10 Questions)</h3>
+      <div id="quizRoot"></div>
+    </div>
   </div>
 
   <script src="/simulations/_shared/i18n.js"></script>
+  <script src="/simulations/_shared/quiz-engine.js"></script>
   <script>
     const LANG = getLang();
     const HINTS = {
@@ -93,6 +134,21 @@
       btnDiffuse: LANG === "th" ? "กระจายแสง (Diffuse)" : "Diffuse",
       lblPos: LANG === "th" ? "ตำแหน่งวัตถุเป้าหมาย" : "Target Position",
       lblOutState: LANG === "th" ? "สถานะเอาต์พุต" : "Output State",
+      knowledgeTitle: LANG === "th" ? "เกร็ดความรู้" : "Knowledge Notes",
+      knowledgeList: LANG === "th" ? `
+        <li>เทอร์โมคัปเปิลต้องมี <b>การชดเชยจุดต่อเย็น (Cold Junction Compensation, CJC)</b>: เนื่องจากขั้วต่อของโมดูล/มิเตอร์เองก็เกิดเป็นจุดต่อที่สอง โมดูลจึงวัดอุณหภูมิที่ขั้วต่อของตัวเอง (มักผ่านเซนเซอร์เล็กๆ ในตัว) แล้วบวกกลับเข้าไปเพื่อให้ได้ค่าอ่านที่แท้จริง</li>
+        <li><b>การเดินสาย RTD</b>: แบบ 2-wire ถูกที่สุดแต่ความต้านทานสายจะรวมเข้ากับค่าที่อ่านโดยตรง แบบ 3-wire (มาตรฐานอุตสาหกรรม) หักล้างความต้านทานสายด้วยสายเส้นที่ 3 ที่จับคู่กัน ส่วนแบบ 4-wire คือระดับห้องแล็บที่ตัดความต้านทานสายออกไปทั้งหมด</li>
+        <li>ชนิดเทอร์โมคัปเปิลแลกกันระหว่างย่านวัดกับราคา: <b>K</b> (ใช้งานทั่วไป -200 ถึง 1260&deg;C), <b>J</b> (ถูกกว่า ย่านแคบกว่า เสื่อมสภาพในบรรยากาศออกซิไดซ์เกิน 550&deg;C), <b>T</b> (แม่นยำที่อุณหภูมิต่ำมาก/ติดลบ)</li>
+        <li>โฟโต้อิเล็กทริกเซนเซอร์มีโหมดเอาต์พุต <b>"Light-on" หรือ "Dark-on"</b> ให้เลือก — ขึ้นกับว่าต้องการให้เอาต์พุตทำงานตอนรับแสงได้ หรือตอนลำแสงถูกบัง</li>
+        <li>"Excess gain" คือค่าสเปกที่บอกส่วนเผื่อสำหรับฝุ่น หมอก หรือเลนส์สกปรก — ค่ายิ่งสูง ยิ่งทำงานได้เชื่อถือได้ในสภาพแวดล้อมที่โหดร้าย</li>
+      ` : undefined,
+      circuitTitle: LANG === "th" ? "การต่อสาย RTD แบบ 3-Wire และแลดเดอร์ควบคุมฮีตเตอร์" : "3-Wire RTD Wiring &amp; a Bang-Bang Heater Ladder",
+      ladderComment1: LANG === "th" ? "// D10: อุณหภูมิสเกลแล้ว x10 (180.0C) -> เปิดฮีตเตอร์" : "// D10: scaled temp x10 (180.0C) -> heater ON",
+      ladderComment2: LANG === "th" ? "// เกิน 200.0C -> ปิดฮีตเตอร์ (ช่วง Hysteresis)" : "// above 200.0C -> heater OFF (hysteresis band)",
+      appNote1: LANG === "th"
+        ? "<b>ตัวอย่างการใช้งาน:</b> ตัวควบคุมเตาอบแบบ Bang-Bang อย่างง่ายจะเปิดรีเลย์ฮีตเตอร์ Y2 เมื่ออุณหภูมิต่ำกว่า 180.0&deg;C และปิดเมื่อถึงหรือเกิน 200.0&deg;C — ช่วงห่าง 20&deg;C (Hysteresis) ป้องกันไม่ให้รีเลย์กระตุกเปิด-ปิดถี่ๆ ที่จุดตั้งค่าเดียว ตรรกะโฟโต้อิเล็กทริกแบบลำแสงตรงในหน่วยนี้ก็ใช้นับจำนวนวัตถุที่ผ่านสายพานได้เช่นกัน โดยเพิ่มค่าตัวนับทุกครั้งที่ลำแสงถูกบัง"
+        : "<b>Applied example:</b> a simple \"bang-bang\" oven controller turns the heater relay Y2 ON below 180.0&deg;C and OFF at or above 200.0&deg;C — the 20&deg;C gap (hysteresis) stops the relay from chattering on/off right at one exact setpoint. The same photoelectric through-beam logic from this unit is also used to count objects passing on a conveyor, incrementing a counter each time the beam breaks.",
+      quizTitle: LANG === "th" ? "แบบทดสอบท้ายหน่วย (10 ข้อ)" : "Knowledge Check (10 Questions)",
     });
 
     // --- Temperature comparison chart ---
@@ -283,6 +339,42 @@
     posSlider.addEventListener("input", drawPhoto);
     window.addEventListener("resize", resizePhoto);
     resizePhoto();
+
+    // --- Knowledge-check quiz ---
+    const QUIZ = {
+      en: [
+        { q: "Cold junction compensation (CJC) exists because:", choices: ["The module's own terminals form a second junction that must be accounted for", "Thermocouples need cooling fans", "RTDs require a cold start", "PLCs can't read millivolts"], answer: 0 },
+        { q: "Which RTD wiring is the industrial standard, canceling lead resistance?", choices: ["2-wire", "3-wire", "1-wire", "Wireless only"], answer: 1 },
+        { q: "Type K thermocouples are popular mainly because:", choices: ["Wide general-purpose range and low cost", "They only work below 0°C", "They require no cold junction compensation", "They output digital signals"], answer: 0 },
+        { q: "An NTC thermistor's resistance as temperature rises:", choices: ["Decreases", "Increases", "Stays constant", "Becomes negative"], answer: 0 },
+        { q: "\"Light-on\" vs. \"dark-on\" describes:", choices: ["When a photoelectric sensor's output activates (beam present vs. blocked)", "The sensor's supply voltage", "Whether the sensor needs a reflector", "The wire gauge used"], answer: 0 },
+        { q: "\"Excess gain\" in a photoelectric sensor spec indicates:", choices: ["Margin against dust, fog, or a dirty lens", "The sensor's maximum speed", "Its accuracy class", "Its output current"], answer: 0 },
+        { q: "Through-beam photoelectric sensors are preferred when you need:", choices: ["Longest range and highest reliability", "The cheapest single-unit install", "No wiring at all", "Only capacitive sensing"], answer: 0 },
+        { q: "In the bang-bang heater ladder example, the 20°C gap between ON and OFF setpoints is called:", choices: ["Hysteresis", "Resolution", "Excess gain", "Tare"], answer: 0 },
+        { q: "A 4-wire RTD configuration compared to 3-wire:", choices: ["Fully eliminates lead resistance error", "Is cheaper", "Cannot be used with PLCs", "Only works with thermocouples"], answer: 0 },
+        { q: "Diffuse-mode photoelectric sensors are most sensitive to:", choices: ["The target's color and surface finish", "The PLC's scan time", "The sensor's excitation voltage", "The cable's wire gauge"], answer: 0 },
+      ],
+      th: [
+        { q: "ทำไมต้องมีการชดเชยจุดต่อเย็น (CJC)?", choices: ["เพราะขั้วต่อของโมดูลเองก็เกิดเป็นจุดต่อที่สองที่ต้องชดเชย", "เทอร์โมคัปเปิลต้องการพัดลมระบายความร้อน", "RTD ต้องการการสตาร์ทเย็น", "PLC อ่านมิลลิโวลต์ไม่ได้"], answer: 0 },
+        { q: "การเดินสาย RTD แบบใดเป็นมาตรฐานอุตสาหกรรมที่หักล้างความต้านทานสาย?", choices: ["2-wire", "3-wire", "1-wire", "ไร้สายเท่านั้น"], answer: 1 },
+        { q: "เทอร์โมคัปเปิลชนิด K เป็นที่นิยมเพราะเหตุใดเป็นหลัก?", choices: ["ย่านใช้งานกว้างทั่วไปและราคาถูก", "ทำงานได้แค่ต่ำกว่า 0°C", "ไม่ต้องชดเชยจุดต่อเย็นเลย", "ให้สัญญาณเอาต์พุตดิจิทัล"], answer: 0 },
+        { q: "ความต้านทานของเทอร์มิสเตอร์ NTC เมื่ออุณหภูมิสูงขึ้นจะเป็นอย่างไร?", choices: ["ลดลง", "เพิ่มขึ้น", "คงที่", "กลายเป็นค่าลบ"], answer: 0 },
+        { q: "\"Light-on\" กับ \"Dark-on\" อธิบายเรื่องอะไร?", choices: ["ช่วงที่เอาต์พุตของโฟโต้อิเล็กทริกเซนเซอร์ทำงาน (มีลำแสง vs ถูกบัง)", "แรงดันไฟเลี้ยงของเซนเซอร์", "เซนเซอร์ต้องใช้แผ่นสะท้อนแสงหรือไม่", "ขนาดสายที่ใช้"], answer: 0 },
+        { q: "\"Excess gain\" ในสเปกโฟโต้อิเล็กทริกเซนเซอร์บ่งบอกอะไร?", choices: ["ส่วนเผื่อสำหรับฝุ่น หมอก หรือเลนส์สกปรก", "ความเร็วสูงสุดของเซนเซอร์", "Accuracy class", "กระแสเอาต์พุต"], answer: 0 },
+        { q: "เลือกใช้โฟโต้อิเล็กทริกแบบลำแสงตรง (Through-beam) เมื่อต้องการอะไร?", choices: ["ระยะไกลที่สุดและความเชื่อถือได้สูงสุด", "ติดตั้งง่ายที่สุดด้วยชุดเดียว", "ไม่ต้องเดินสายเลย", "ใช้การตรวจจับแบบ Capacitive เท่านั้น"], answer: 0 },
+        { q: "ในตัวอย่างแลดเดอร์ควบคุมฮีตเตอร์แบบ Bang-Bang ช่วงห่าง 20°C ระหว่างจุดตั้งค่า ON/OFF เรียกว่าอะไร?", choices: ["Hysteresis", "Resolution", "Excess gain", "Tare"], answer: 0 },
+        { q: "RTD แบบ 4-wire เทียบกับ 3-wire ต่างกันอย่างไร?", choices: ["ตัด error จากความต้านทานสายออกไปทั้งหมด", "ราคาถูกกว่า", "ใช้กับ PLC ไม่ได้", "ใช้ได้แค่กับเทอร์โมคัปเปิล"], answer: 0 },
+        { q: "โฟโต้อิเล็กทริกโหมด Diffuse ไวต่อสิ่งใดมากที่สุด?", choices: ["สีและพื้นผิวของวัตถุเป้าหมาย", "เวลาสแกนของ PLC", "แรงดัน Excitation ของเซนเซอร์", "ขนาดสายเคเบิล"], answer: 0 },
+      ],
+    };
+    renderQuiz("quizRoot", QUIZ[LANG], {
+      submitLabel: LANG === "th" ? "ตรวจคำตอบ" : "Check Answers",
+      resetLabel: LANG === "th" ? "ทำใหม่" : "Try Again",
+      correctText: LANG === "th" ? "ถูกต้อง" : "Correct",
+      incorrectText: LANG === "th" ? "ผิด — คำตอบที่ถูกคือ:" : "Incorrect — correct answer:",
+      scorePrefix: LANG === "th" ? "คะแนน:" : "Score:",
+      storageKey: "mct-unit4-quiz",
+    });
   </script>
 </body>
 </html>

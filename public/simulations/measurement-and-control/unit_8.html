@@ -63,9 +63,35 @@
         <button class="tool-btn danger" id="lotoReset" data-i18n="btnLotoReset">Restart Walkthrough</button>
       </div>
     </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="knowledgeTitle">Knowledge Notes</h3>
+      <ul class="knowledge-list" data-i18n="knowledgeList">
+        <li><b>MTBF (Mean Time Between Failures)</b> measures reliability between breakdowns; <b>MTTR (Mean Time To Repair)</b> measures how fast a failure gets fixed — both feed into overall equipment availability calculations.</li>
+        <li><b>5S</b> (Sort, Set in order, Shine, Standardize, Sustain) is a workplace-organization discipline that directly supports maintenance: a clean, organized panel makes wiring faults and loose connections visible at a glance.</li>
+        <li>A strong safety culture treats <b>near-miss reports</b> (an incident that almost happened) as seriously as actual accidents — near-misses are free lessons that prevent the real thing.</li>
+        <li>Safety-critical circuits (like emergency stops) commonly use <b>dual-channel monitoring</b> with a certified safety relay — two independent contacts must both open, so a single wire or contact failure can't silently disable the E-stop.</li>
+        <li><b>Predictive maintenance</b> (vibration analysis, thermal imaging, oil analysis) goes a step beyond scheduled preventive maintenance — it catches developing faults based on real condition data, not just a fixed calendar interval.</li>
+      </ul>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="circuitTitle">A Dual-Channel E-Stop Safety Interlock</h3>
+      <pre class="ladder-diagram"><span class="rail">|</span>--<span class="contact">[ X10 ]</span>--<span class="contact">[ X11 ]</span>---------------------------------<span class="coil">( Y10 )</span>--<span class="rail">|</span>  <span class="comment" data-i18n="ladderComment1">// X10/X11: dual-channel E-stop (NC) -> safety relay OK</span>
+<span class="rail">|</span>--<span class="contact">[ Y10 ]</span>------------------------------------------<span class="coil">( Y0 )</span>--<span class="rail">|</span>  <span class="comment" data-i18n="ladderComment2">// Y10 permits main motor/actuator output Y0</span></pre>
+      <div class="app-note" data-i18n="appNote1">
+        <b>Applied example:</b> both channels of a dual-contact emergency stop button (X10, X11) must be closed (button not pressed) for the safety-OK bit Y10 to energize; only then can the main drive output Y0 ever turn on. Before opening the panel to check any sensor from Units 1-7, this is exactly the circuit a technician verifies is de-energized as part of the Lockout&ndash;Tagout walkthrough above.
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="quizTitle">Knowledge Check (10 Questions)</h3>
+      <div id="quizRoot"></div>
+    </div>
   </div>
 
   <script src="/simulations/_shared/i18n.js"></script>
+  <script src="/simulations/_shared/quiz-engine.js"></script>
   <script>
     const LANG = getLang();
     applyI18n({
@@ -83,6 +109,21 @@
       panelLoto: LANG === "th" ? "ขั้นตอน Lockout&ndash;Tagout (LOTO)" : "Lockout&ndash;Tagout (LOTO) Walkthrough",
       btnLotoNext: LANG === "th" ? "ทำขั้นตอนนี้เสร็จแล้ว →" : "Complete This Step →",
       btnLotoReset: LANG === "th" ? "เริ่มขั้นตอนใหม่" : "Restart Walkthrough",
+      knowledgeTitle: LANG === "th" ? "เกร็ดความรู้" : "Knowledge Notes",
+      knowledgeList: LANG === "th" ? `
+        <li><b>MTBF (Mean Time Between Failures)</b> วัดความน่าเชื่อถือระหว่างการเสียแต่ละครั้ง ส่วน <b>MTTR (Mean Time To Repair)</b> วัดความเร็วในการซ่อมกลับมาใช้งานได้ — ทั้งสองค่านำไปคำนวณความพร้อมใช้งานโดยรวมของเครื่องจักร</li>
+        <li><b>5S</b> (สะสาง ตั้งเป็นระเบียบ สะอาด สร้างมาตรฐาน สร้างวินัย) เป็นวินัยการจัดระเบียบพื้นที่ทำงานที่สนับสนุนงานบำรุงรักษาโดยตรง — แผงควบคุมที่สะอาดเป็นระเบียบทำให้เห็นสายไฟหลวมหรือจุดต่อผิดปกติได้ในทันที</li>
+        <li>วัฒนธรรมความปลอดภัยที่ดีให้ความสำคัญกับ <b>การรายงาน Near-miss</b> (เหตุการณ์ที่เกือบเกิดอุบัติเหตุ) เท่ากับอุบัติเหตุจริง — Near-miss คือบทเรียนฟรีที่ช่วยป้องกันเหตุการณ์จริงได้</li>
+        <li>วงจรที่เกี่ยวกับความปลอดภัย (เช่นปุ่ม Emergency Stop) มักใช้ <b>การเฝ้าระวังแบบ Dual-channel</b> ร่วมกับเซฟตี้รีเลย์ที่ได้รับการรับรอง — ต้องมีหน้าสัมผัสอิสระสองชุดเปิดพร้อมกัน เพื่อไม่ให้สายหรือหน้าสัมผัสเสียเพียงจุดเดียวปิดการทำงานของ E-stop ไปแบบเงียบๆ</li>
+        <li><b>การบำรุงรักษาเชิงพยากรณ์ (Predictive Maintenance)</b> (วิเคราะห์การสั่นสะเทือน ถ่ายภาพความร้อน วิเคราะห์น้ำมัน) ก้าวไปไกลกว่าการบำรุงรักษาเชิงป้องกันตามตารางเวลา — ตรวจจับปัญหาที่กำลังก่อตัวจากข้อมูลสภาพจริง ไม่ใช่แค่ตามรอบปฏิทินคงที่</li>
+      ` : undefined,
+      circuitTitle: LANG === "th" ? "วงจร Interlock ความปลอดภัยแบบ Dual-Channel E-Stop" : "A Dual-Channel E-Stop Safety Interlock",
+      ladderComment1: LANG === "th" ? "// X10/X11: ปุ่ม E-stop สองช่องสัญญาณ (NC) -> เซฟตี้รีเลย์ OK" : "// X10/X11: dual-channel E-stop (NC) -> safety relay OK",
+      ladderComment2: LANG === "th" ? "// Y10 อนุญาตให้เอาต์พุตมอเตอร์/อุปกรณ์ขับเคลื่อนหลัก Y0 ทำงาน" : "// Y10 permits main motor/actuator output Y0",
+      appNote1: LANG === "th"
+        ? "<b>ตัวอย่างการใช้งาน:</b> ทั้งสองช่องสัญญาณของปุ่ม Emergency Stop แบบ Dual-contact (X10, X11) ต้องปิดวงจร (ปุ่มไม่ถูกกด) ทั้งคู่ บิต Safety-OK (Y10) จึงจะทำงานได้ และเอาต์พุตขับเคลื่อนหลัก Y0 จะทำงานได้ก็ต่อเมื่อ Y10 ทำงานเท่านั้น ก่อนเปิดแผงเพื่อตรวจสอบเซนเซอร์ใดๆ จากหน่วยที่ 1-7 นี่คือวงจรที่ช่างต้องตรวจสอบว่าตัดไฟแล้วจริง ตามขั้นตอน Lockout-Tagout ด้านบน"
+        : "<b>Applied example:</b> both channels of a dual-contact emergency stop button (X10, X11) must be closed (button not pressed) for the safety-OK bit Y10 to energize; only then can the main drive output Y0 ever turn on. Before opening the panel to check any sensor from Units 1-7, this is exactly the circuit a technician verifies is de-energized as part of the Lockout&ndash;Tagout walkthrough above.",
+      quizTitle: LANG === "th" ? "แบบทดสอบท้ายหน่วย (10 ข้อ)" : "Knowledge Check (10 Questions)",
     });
 
     const CHECKLISTS = {
@@ -205,6 +246,42 @@
     });
 
     renderLoto();
+
+    // --- Knowledge-check quiz ---
+    const QUIZ = {
+      en: [
+        { q: "Preventive maintenance is best described as:", choices: ["Scheduled maintenance performed before failure occurs", "Repairs done only after a breakdown", "A one-time inspection at installation", "Something only needed for new equipment"], answer: 0 },
+        { q: "\"MTTR\" stands for and measures:", choices: ["Mean Time To Repair — how fast a failure gets fixed", "Mean Time Total Runtime", "Maximum Torque To Rotate", "Mean Temperature To Reset"], answer: 0 },
+        { q: "The correct first step of a Lockout-Tagout procedure is to:", choices: ["Notify affected personnel before shutting down", "Immediately cut all power without warning anyone", "Start maintenance work right away", "Remove the safety guard first"], answer: 0 },
+        { q: "Why must stored/residual energy be released or restrained during LOTO?", choices: ["Because de-energizing alone doesn't remove energy already stored (e.g. compressed air, raised loads)", "It's an optional step that can be skipped", "It only applies to electrical systems", "It has no safety relevance"], answer: 0 },
+        { q: "Dual-channel monitoring on a safety circuit exists to:", choices: ["Prevent a single wire/contact failure from silently disabling safety", "Make the circuit cheaper", "Double the output power", "Simplify wiring"], answer: 0 },
+        { q: "A \"near-miss\" report describes:", choices: ["An incident that almost caused harm but didn't", "An accident that already happened with injury", "A scheduled maintenance task", "A sensor calibration record"], answer: 0 },
+        { q: "In the E-stop ladder example, Y10 represents:", choices: ["The safety-OK bit that permits the main output to run", "The main motor output itself", "A pressure switch reading", "An encoder pulse count"], answer: 0 },
+        { q: "5S in a maintenance context primarily helps by:", choices: ["Making faults and loose connections visible through organization", "Replacing the need for calibration", "Eliminating the need for PPE", "Automating PLC programming"], answer: 0 },
+        { q: "Predictive maintenance differs from preventive maintenance because it:", choices: ["Uses real condition data (vibration, thermal, etc.) instead of a fixed schedule", "Never requires any data at all", "Is performed only after a failure", "Applies exclusively to safety relays"], answer: 0 },
+        { q: "Before restarting equipment after LOTO work, you should:", choices: ["Verify the area is clear and restore energy only after checks", "Immediately restart without checking anything", "Skip verification if time is short", "Leave the locks on permanently"], answer: 0 },
+      ],
+      th: [
+        { q: "การบำรุงรักษาเชิงป้องกัน (Preventive Maintenance) อธิบายได้ดีที่สุดว่าอย่างไร?", choices: ["การบำรุงรักษาตามตารางเวลาก่อนที่จะเกิดความเสียหาย", "การซ่อมหลังจากเครื่องเสียแล้วเท่านั้น", "การตรวจครั้งเดียวตอนติดตั้ง", "จำเป็นแค่กับเครื่องจักรใหม่เท่านั้น"], answer: 0 },
+        { q: "\"MTTR\" ย่อมาจากอะไรและวัดอะไร?", choices: ["Mean Time To Repair — ความเร็วในการซ่อมกลับมาใช้งานได้", "Mean Time Total Runtime", "Maximum Torque To Rotate", "Mean Temperature To Reset"], answer: 0 },
+        { q: "ขั้นตอนแรกที่ถูกต้องของ Lockout-Tagout คืออะไร?", choices: ["แจ้งผู้เกี่ยวข้องก่อนหยุดเครื่อง", "ตัดไฟทั้งหมดทันทีโดยไม่แจ้งใคร", "เริ่มงานบำรุงรักษาทันที", "ถอดการ์ดป้องกันออกก่อน"], answer: 0 },
+        { q: "ทำไมต้องปลดปล่อยหรือกักพลังงานคงค้างระหว่างทำ LOTO?", choices: ["เพราะการตัดไฟอย่างเดียวไม่ได้เอาพลังงานที่สะสมไว้ออก (เช่น ลมอัด ชิ้นส่วนที่แขวนอยู่)", "เป็นขั้นตอนเสริมที่ข้ามได้", "ใช้กับระบบไฟฟ้าเท่านั้น", "ไม่เกี่ยวกับความปลอดภัย"], answer: 0 },
+        { q: "การเฝ้าระวังแบบ Dual-channel ในวงจรความปลอดภัยมีไว้เพื่ออะไร?", choices: ["ป้องกันไม่ให้สายหรือหน้าสัมผัสเสียเพียงจุดเดียวปิดระบบความปลอดภัยแบบเงียบๆ", "ทำให้วงจรราคาถูกลง", "เพิ่มกำลังเอาต์พุตเป็นสองเท่า", "ทำให้เดินสายง่ายขึ้น"], answer: 0 },
+        { q: "รายงาน \"Near-miss\" อธิบายถึงอะไร?", choices: ["เหตุการณ์ที่เกือบก่อให้เกิดอันตรายแต่ไม่เกิดขึ้นจริง", "อุบัติเหตุที่เกิดขึ้นแล้วมีผู้บาดเจ็บ", "งานบำรุงรักษาตามตารางเวลา", "บันทึกการคาลิเบรตเซนเซอร์"], answer: 0 },
+        { q: "ในตัวอย่างแลดเดอร์วงจร E-stop, Y10 หมายถึงอะไร?", choices: ["บิต Safety-OK ที่อนุญาตให้เอาต์พุตหลักทำงาน", "เอาต์พุตมอเตอร์หลักโดยตรง", "ค่าที่อ่านจากเพรสเชอร์สวิตช์", "จำนวนพัลส์เอนโค้ดเดอร์"], answer: 0 },
+        { q: "5S ในบริบทงานบำรุงรักษาช่วยอะไรเป็นหลัก?", choices: ["ทำให้เห็นความผิดปกติของสายไฟ/จุดต่อได้ง่ายผ่านความเป็นระเบียบ", "ทดแทนการคาลิเบรต", "ทำให้ไม่ต้องใช้ PPE", "ทำให้เขียนโปรแกรม PLC อัตโนมัติ"], answer: 0 },
+        { q: "การบำรุงรักษาเชิงพยากรณ์ต่างจากเชิงป้องกันอย่างไร?", choices: ["ใช้ข้อมูลสภาพจริง (การสั่นสะเทือน ความร้อน ฯลฯ) แทนตารางเวลาคงที่", "ไม่ต้องใช้ข้อมูลใดๆ เลย", "ทำหลังจากเครื่องเสียแล้วเท่านั้น", "ใช้ได้เฉพาะกับเซฟตี้รีเลย์เท่านั้น"], answer: 0 },
+        { q: "ก่อนสตาร์ทเครื่องจักรกลับหลังทำงาน LOTO ควรทำอย่างไร?", choices: ["ตรวจสอบพื้นที่ว่างและคืนพลังงานหลังตรวจสอบแล้วเท่านั้น", "สตาร์ทเครื่องทันทีโดยไม่ตรวจสอบ", "ข้ามการตรวจสอบถ้าเวลาน้อย", "ปล่อยล็อกไว้ถาวร"], answer: 0 },
+      ],
+    };
+    renderQuiz("quizRoot", QUIZ[LANG], {
+      submitLabel: LANG === "th" ? "ตรวจคำตอบ" : "Check Answers",
+      resetLabel: LANG === "th" ? "ทำใหม่" : "Try Again",
+      correctText: LANG === "th" ? "ถูกต้อง" : "Correct",
+      incorrectText: LANG === "th" ? "ผิด — คำตอบที่ถูกคือ:" : "Incorrect — correct answer:",
+      scorePrefix: LANG === "th" ? "คะแนน:" : "Score:",
+      storageKey: "mct-unit8-quiz",
+    });
   </script>
 </body>
 </html>

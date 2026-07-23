@@ -77,9 +77,59 @@
         trigger on metal targets; capacitive sensors trigger on almost any material (including liquids and plastics).
       </p>
     </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="knowledgeTitle">Knowledge Notes</h3>
+      <ul class="knowledge-list" data-i18n="knowledgeList">
+        <li><b>NPN vs. PNP</b> is a regional convention as much as a technical one — many older/legacy Asian control panels standardize on NPN (sinking), European/newer panels favor PNP (sourcing). Always match the sensor to the PLC input card's wiring type before installing.</li>
+        <li><b>Higher PPR = finer resolution but a steeper frequency demand</b>: a 1000 PPR encoder at 3000 RPM outputs 50,000 pulses/sec — check your High-Speed Counter module can actually count that fast.</li>
+        <li><b>Absolute encoders</b> cost more but eliminate the "homing" routine most incremental setups need after every power loss — worth it on safety-critical or hard-to-access axes.</li>
+        <li>Inductive sensor sensing distance is derated for non-ferrous metals — a sensor rated for 8mm on steel may only reliably detect aluminum at ~3-4mm.</li>
+        <li>Mechanical limit switches need <b>debounce</b> handling in the PLC program (a short timer) to avoid false multiple triggers from contact bounce.</li>
+      </ul>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="circuitTitle">NPN/PNP Wiring &amp; a Position-Stop Ladder</h3>
+      <div class="circuit-svg-wrap">
+        <svg viewBox="0 0 700 170" xmlns="http://www.w3.org/2000/svg" width="700" height="170">
+          <g font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#f1f5f9">
+            <text x="150" y="20" text-anchor="middle" fill="#5ed29c">PNP (sourcing)</text>
+            <rect x="60" y="35" width="60" height="30" rx="6" fill="none" stroke="#5ed29c" stroke-width="2"/>
+            <text x="90" y="55" text-anchor="middle">+24V</text>
+            <line x1="90" y1="65" x2="90" y2="90" stroke="#f1f5f9" stroke-width="2"/>
+            <rect x="60" y="90" width="60" height="30" rx="6" fill="none" stroke="#60a5fa" stroke-width="2"/>
+            <text x="90" y="110" text-anchor="middle">Sensor</text>
+            <line x1="90" y1="120" x2="90" y2="145" stroke="#f1f5f9" stroke-width="2"/>
+            <rect x="60" y="145" width="60" height="20" rx="4" fill="none" stroke="#facc15" stroke-width="2"/>
+            <text x="90" y="159" text-anchor="middle" font-size="10">PLC Xn</text>
+
+            <text x="500" y="20" text-anchor="middle" fill="#60a5fa">NPN (sinking)</text>
+            <rect x="440" y="35" width="60" height="20" rx="4" fill="none" stroke="#facc15" stroke-width="2"/>
+            <text x="470" y="49" text-anchor="middle" font-size="10">PLC Xn</text>
+            <line x1="470" y1="55" x2="470" y2="80" stroke="#f1f5f9" stroke-width="2"/>
+            <rect x="440" y="80" width="60" height="30" rx="6" fill="none" stroke="#60a5fa" stroke-width="2"/>
+            <text x="470" y="100" text-anchor="middle">Sensor</text>
+            <line x1="470" y1="110" x2="470" y2="135" stroke="#f1f5f9" stroke-width="2"/>
+            <rect x="440" y="135" width="60" height="30" rx="6" fill="none" stroke="#5ed29c" stroke-width="2"/>
+            <text x="470" y="155" text-anchor="middle">0V (COM)</text>
+          </g>
+        </svg>
+      </div>
+      <pre class="ladder-diagram" style="margin-top:14px;"><span class="rail">|</span>--<span class="contact">[ HSC1 &gt;= K1000 ]</span>-----------------------------<span class="coil">( Y0 )</span>--<span class="rail">|</span>  <span class="comment" data-i18n="ladderComment">// HSC1: encoder pulse count   Y0: stop conveyor motor</span></pre>
+      <div class="app-note" data-i18n="appNote1">
+        <b>Applied example:</b> a High-Speed Counter (HSC) instruction accumulates encoder pulses from a conveyor's drive roller. When the count reaches a preset (K1000 = the pulse count for one exact travel distance), the rung de-energizes the drive motor output Y0 — indexing the conveyor to a precise stop position every cycle, the same principle used to home a robotic arm axis.
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="quizTitle">Knowledge Check (10 Questions)</h3>
+      <div id="quizRoot"></div>
+    </div>
   </div>
 
   <script src="/simulations/_shared/i18n.js"></script>
+  <script src="/simulations/_shared/quiz-engine.js"></script>
   <script>
     const LANG = getLang();
     const T = {
@@ -115,6 +165,20 @@
       hintProx: LANG === "th"
         ? "เซนเซอร์จะสวิตช์ ON เมื่อเป้าหมายเข้าใกล้กว่าระยะตรวจจับที่กำหนด <b>Sn</b> ชนิดเหนี่ยวนำ (Inductive) ตรวจจับได้เฉพาะโลหะ ส่วนชนิดเก็บประจุ (Capacitive) ตรวจจับได้แทบทุกวัสดุ (รวมถึงของเหลวและพลาสติก)"
         : "The sensor switches ON once the target is closer than its rated sensing distance <b>Sn</b>. Inductive sensors only trigger on metal targets; capacitive sensors trigger on almost any material (including liquids and plastics).",
+      knowledgeTitle: LANG === "th" ? "เกร็ดความรู้" : "Knowledge Notes",
+      knowledgeList: LANG === "th" ? `
+        <li><b>NPN กับ PNP</b> เป็นธรรมเนียมตามภูมิภาคพอๆ กับเรื่องเทคนิค — แผงควบคุมเก่าในเอเชียมักใช้ NPN (sinking) ส่วนแผงยุโรป/รุ่นใหม่มักใช้ PNP (sourcing) ต้องตรวจสอบให้ตรงกับชนิดอินพุตการ์ดของ PLC ก่อนติดตั้งเสมอ</li>
+        <li><b>PPR สูง = ความละเอียดดีขึ้น แต่ต้องการความถี่สูงขึ้น</b>: เอนโค้ดเดอร์ 1000 PPR ที่ 3000 RPM ให้พัลส์ถึง 50,000 พัลส์/วินาที ต้องตรวจสอบว่าโมดูล High-Speed Counter นับได้ทันจริงหรือไม่</li>
+        <li><b>เอนโค้ดเดอร์แบบสัมบูรณ์ (Absolute)</b> ราคาสูงกว่าแต่ไม่ต้องทำ "Homing" หลังไฟดับเหมือนแบบสัมพัทธ์ คุ้มค่าสำหรับแกนที่เกี่ยวกับความปลอดภัยหรือเข้าถึงยาก</li>
+        <li>ระยะตรวจจับของเซนเซอร์เหนี่ยวนำ (Inductive) จะลดลงกับโลหะที่ไม่ใช่เหล็ก — เซนเซอร์ที่ระบุ 8mm บนเหล็ก อาจตรวจจับอะลูมิเนียมได้แค่ ~3-4mm</li>
+        <li>ลิมิตสวิตช์เชิงกลต้องมีการ <b>ตัดสัญญาณกระเด้ง (Debounce)</b> ในโปรแกรม PLC (ใช้ไทเมอร์สั้นๆ) เพื่อป้องกันการทริกซ้ำจากการกระเด้งของหน้าสัมผัส</li>
+      ` : undefined,
+      circuitTitle: LANG === "th" ? "การต่อวงจร NPN/PNP และแลดเดอร์หยุดตำแหน่ง" : "NPN/PNP Wiring &amp; a Position-Stop Ladder",
+      ladderComment: LANG === "th" ? "// HSC1: จำนวนพัลส์เอนโค้ดเดอร์   Y0: หยุดมอเตอร์สายพาน" : "// HSC1: encoder pulse count   Y0: stop conveyor motor",
+      appNote1: LANG === "th"
+        ? "<b>ตัวอย่างการใช้งาน:</b> คำสั่ง High-Speed Counter (HSC) สะสมจำนวนพัลส์จากเอนโค้ดเดอร์ที่ลูกกลิ้งขับสายพาน เมื่อค่านับถึงพรีเซ็ต (K1000 = จำนวนพัลส์ของระยะที่ต้องการพอดี) รังจะตัดเอาต์พุตมอเตอร์ขับ Y0 — ทำให้สายพานหยุดที่ตำแหน่งแม่นยำทุกรอบการทำงาน หลักการเดียวกับที่ใช้ Homing แกนแขนกลหุ่นยนต์"
+        : "<b>Applied example:</b> a High-Speed Counter (HSC) instruction accumulates encoder pulses from a conveyor's drive roller. When the count reaches a preset (K1000 = the pulse count for one exact travel distance), the rung de-energizes the drive motor output Y0 — indexing the conveyor to a precise stop position every cycle, the same principle used to home a robotic arm axis.",
+      quizTitle: LANG === "th" ? "แบบทดสอบท้ายหน่วย (10 ข้อ)" : "Knowledge Check (10 Questions)",
     });
 
     // --- Encoder pulse visualizer ---
@@ -289,6 +353,42 @@
     [distSlider, snSlider].forEach((s) => s.addEventListener("input", drawProx));
     window.addEventListener("resize", resizeProx);
     resizeProx();
+
+    // --- Knowledge-check quiz ---
+    const QUIZ = {
+      en: [
+        { q: "An incremental encoder's A/B pulse phase relationship tells you:", choices: ["Direction of rotation", "Absolute position", "Supply voltage", "Sensing distance"], answer: 0 },
+        { q: "An absolute encoder's main advantage over incremental is:", choices: ["It's always cheaper", "Position is known immediately after power-up, no homing needed", "It needs no wiring", "It only works at low speed"], answer: 1 },
+        { q: "Inductive proximity sensors reliably detect:", choices: ["Metal targets", "Any material including liquids", "Only plastic", "Only light sources"], answer: 0 },
+        { q: "Capacitive proximity sensors are chosen over inductive when the target is:", choices: ["Steel", "A non-metal (plastic, liquid, wood)", "Aluminum only", "Nothing — they're identical"], answer: 1 },
+        { q: "\"Sensing distance (Sn)\" refers to:", choices: ["The maximum reliable detection range for the rated target", "The sensor's price", "The PLC scan time", "The cable length"], answer: 0 },
+        { q: "A High-Speed Counter (HSC) module is used to:", choices: ["Count fast pulse trains like encoder output", "Read 4-20mA signals", "Switch AC power", "Display HMI screens"], answer: 0 },
+        { q: "PNP sensor wiring is often called:", choices: ["Sinking", "Sourcing", "Floating", "Grounding"], answer: 1 },
+        { q: "Why does mechanical contact bounce matter for limit switches?", choices: ["It can cause false multiple triggers without debounce logic", "It makes the switch louder", "It increases sensing distance", "It has no effect at all"], answer: 0 },
+        { q: "Increasing PPR (pulses per revolution) on an encoder mainly improves:", choices: ["Resolution of speed/position measurement", "Sensing distance", "Output voltage", "Wire color coding"], answer: 0 },
+        { q: "A conveyor stopping at an exact position using pulse counting is an example of:", choices: ["HSC-based position indexing", "Pressure switch control", "Thermocouple compensation", "Load cell calibration"], answer: 0 },
+      ],
+      th: [
+        { q: "ความสัมพันธ์เฟสพัลส์ A/B ของเอนโค้ดเดอร์แบบสัมพัทธ์บอกอะไร?", choices: ["ทิศทางการหมุน", "ตำแหน่งสัมบูรณ์", "แรงดันไฟเลี้ยง", "ระยะตรวจจับ"], answer: 0 },
+        { q: "ข้อดีหลักของเอนโค้ดเดอร์แบบสัมบูรณ์เทียบกับสัมพัทธ์คือ?", choices: ["ราคาถูกกว่าเสมอ", "รู้ตำแหน่งได้ทันทีหลังเปิดเครื่อง ไม่ต้อง Homing", "ไม่ต้องเดินสายเลย", "ทำงานได้แค่ความเร็วต่ำ"], answer: 1 },
+        { q: "พร็อกซิมิตี้เซนเซอร์ชนิดเหนี่ยวนำ (Inductive) ตรวจจับอะไรได้แน่นอน?", choices: ["เป้าหมายที่เป็นโลหะ", "วัสดุใดก็ได้รวมถึงของเหลว", "พลาสติกเท่านั้น", "แหล่งกำเนิดแสงเท่านั้น"], answer: 0 },
+        { q: "เลือกใช้เซนเซอร์เก็บประจุ (Capacitive) แทนเหนี่ยวนำเมื่อเป้าหมายเป็น?", choices: ["เหล็ก", "วัสดุที่ไม่ใช่โลหะ (พลาสติก ของเหลว ไม้)", "อะลูมิเนียมเท่านั้น", "เหมือนกันทุกกรณี"], answer: 1 },
+        { q: "\"ระยะตรวจจับ (Sn)\" หมายถึงอะไร?", choices: ["ระยะตรวจจับสูงสุดที่เชื่อถือได้สำหรับเป้าหมายมาตรฐาน", "ราคาของเซนเซอร์", "เวลาสแกนของ PLC", "ความยาวสายเคเบิล"], answer: 0 },
+        { q: "โมดูล High-Speed Counter (HSC) ใช้ทำอะไร?", choices: ["นับพัลส์ความถี่สูงเช่นสัญญาณเอนโค้ดเดอร์", "อ่านสัญญาณ 4-20mA", "สวิตช์ไฟ AC", "แสดงผลหน้าจอ HMI"], answer: 0 },
+        { q: "การต่อวงจรเซนเซอร์แบบ PNP มักเรียกว่าอะไร?", choices: ["Sinking", "Sourcing", "Floating", "Grounding"], answer: 1 },
+        { q: "ทำไมการกระเด้งของหน้าสัมผัสเชิงกลจึงสำคัญสำหรับลิมิตสวิตช์?", choices: ["อาจทำให้ทริกซ้ำผิดพลาดถ้าไม่มีวงจร Debounce", "ทำให้สวิตช์เสียงดังขึ้น", "เพิ่มระยะตรวจจับ", "ไม่มีผลใดๆ เลย"], answer: 0 },
+        { q: "การเพิ่ม PPR (พัลส์ต่อรอบ) ของเอนโค้ดเดอร์ช่วยเรื่องใดเป็นหลัก?", choices: ["ความละเอียดของการวัดความเร็ว/ตำแหน่ง", "ระยะตรวจจับ", "แรงดันเอาต์พุต", "รหัสสีสาย"], answer: 0 },
+        { q: "สายพานที่หยุดตรงตำแหน่งแม่นยำด้วยการนับพัลส์เป็นตัวอย่างของ?", choices: ["การอินเด็กซ์ตำแหน่งด้วย HSC", "การควบคุมด้วยเพรสเชอร์สวิตช์", "การชดเชยเทอร์โมคัปเปิล", "การคาลิเบรตโหลดเซลล์"], answer: 0 },
+      ],
+    };
+    renderQuiz("quizRoot", QUIZ[LANG], {
+      submitLabel: LANG === "th" ? "ตรวจคำตอบ" : "Check Answers",
+      resetLabel: LANG === "th" ? "ทำใหม่" : "Try Again",
+      correctText: LANG === "th" ? "ถูกต้อง" : "Correct",
+      incorrectText: LANG === "th" ? "ผิด — คำตอบที่ถูกคือ:" : "Incorrect — correct answer:",
+      scorePrefix: LANG === "th" ? "คะแนน:" : "Score:",
+      storageKey: "mct-unit2-quiz",
+    });
   </script>
 </body>
 </html>

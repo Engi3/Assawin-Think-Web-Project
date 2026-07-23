@@ -43,9 +43,54 @@
         Every load cell needs this two-point calibration before its reading means anything.
       </p>
     </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="knowledgeTitle">Knowledge Notes</h3>
+      <ul class="knowledge-list" data-i18n="knowledgeList">
+        <li><b>Accuracy class</b> (OIML R60: C2, C3, C6...) governs legal-for-trade weighing — a higher class number means more verification intervals, i.e. finer usable resolution for the same capacity.</li>
+        <li><b>4-wire vs. 6-wire load cells</b>: 6-wire adds two "sense" wires that measure the actual excitation voltage at the cell (not just what the amplifier sends), compensating for voltage drop in long/temperature-affected cables.</li>
+        <li>Load cell body shapes are chosen by application: <b>shear beam</b> (platform scales), <b>single-point</b> (small retail/bench scales), <b>canister/compression</b> (tank/hopper weighing, high capacity).</li>
+        <li>Torque transducers on a <b>rotating shaft</b> need a slip ring or wireless telemetry to get the strain-gauge signal off the spinning shaft; <b>reaction</b> torque transducers avoid this by measuring a stationary reaction arm instead.</li>
+        <li>Always check the <b>safe overload rating</b> (often 150% of rated capacity) — momentary overloads from impact loading are a leading cause of load cell failure.</li>
+      </ul>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="circuitTitle">6-Wire Load Cell Wiring &amp; an Overload-Alarm Ladder</h3>
+      <div class="circuit-svg-wrap">
+        <svg viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg" width="700" height="160">
+          <g font-family="Inter, sans-serif" font-size="10" font-weight="700" fill="#f1f5f9">
+            <rect x="30" y="60" width="120" height="40" rx="8" fill="none" stroke="#facc15" stroke-width="2"/>
+            <text x="90" y="84" text-anchor="middle" font-size="11">Amplifier</text>
+            <rect x="480" y="60" width="120" height="40" rx="8" fill="none" stroke="#5ed29c" stroke-width="2"/>
+            <text x="540" y="84" text-anchor="middle" font-size="11">Load Cell</text>
+            <g stroke="#f1f5f9" stroke-width="1.5" fill="none">
+              <line x1="150" y1="66" x2="480" y2="66"/><text x="315" y="62" text-anchor="middle" fill="#f472b6">EXC+</text>
+              <line x1="150" y1="76" x2="480" y2="76"/><text x="315" y="94" text-anchor="middle" fill="#f472b6">SENSE+</text>
+              <line x1="150" y1="86" x2="480" y2="86"/><text x="315" y="106" text-anchor="middle" fill="#60a5fa">SENSE-</text>
+              <line x1="150" y1="96" x2="480" y2="96"/><text x="315" y="118" text-anchor="middle" fill="#60a5fa">EXC-</text>
+            </g>
+            <line x1="90" y1="60" x2="90" y2="30" stroke="#f1f5f9" stroke-width="1.5"/>
+            <line x1="540" y1="60" x2="540" y2="30" stroke="#f1f5f9" stroke-width="1.5"/>
+            <text x="90" y="20" text-anchor="middle" font-size="10">SIG OUT (mV)</text>
+            <text x="540" y="20" text-anchor="middle" font-size="10">4 gauges (bridge)</text>
+          </g>
+        </svg>
+      </div>
+      <pre class="ladder-diagram" style="margin-top:14px;"><span class="rail">|</span>--<span class="contact">[ D0 &gt;= K9500 ]</span>------------------------------<span class="coil">( Y1 )</span>--<span class="rail">|</span>  <span class="comment" data-i18n="ladderComment">// D0: scaled weight in kg x10   Y1: overload alarm</span></pre>
+      <div class="app-note" data-i18n="appNote1">
+        <b>Applied example:</b> a batching hopper's scaled weight (D0, already converted from mV to kg via Unit 7's scaling method) is compared against 95.0 kg (K9500 with one decimal place implied). Crossing that value energizes an overload alarm output Y1 before the hopper reaches its rated capacity — the same comparison-rung pattern protects conveyor scales and monitors motor torque limits.
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="quizTitle">Knowledge Check (10 Questions)</h3>
+      <div id="quizRoot"></div>
+    </div>
   </div>
 
   <script src="/simulations/_shared/i18n.js"></script>
+  <script src="/simulations/_shared/quiz-engine.js"></script>
   <script>
     const LANG = getLang();
     const T = {
@@ -74,6 +119,20 @@
       btnSpan: LANG === "th" ? "2. Set Span (ที่น้ำหนักอ้างอิง)" : "2. Set Span (at reference weight)",
       btnReset: LANG === "th" ? "รีเซ็ตการคาลิเบรต" : "Reset Calibration",
       hintUncal: T[LANG].hintUncal,
+      knowledgeTitle: LANG === "th" ? "เกร็ดความรู้" : "Knowledge Notes",
+      knowledgeList: LANG === "th" ? `
+        <li><b>Accuracy class</b> (OIML R60: C2, C3, C6...) ควบคุมการชั่งน้ำหนักที่ใช้ในเชิงพาณิชย์/กฎหมาย — คลาสตัวเลขยิ่งสูง ยิ่งมีช่วงการตรวจสอบ (verification interval) ละเอียดขึ้นในพิกัดเดียวกัน</li>
+        <li><b>โหลดเซลล์ 4-wire กับ 6-wire</b>: แบบ 6-wire เพิ่มสาย "Sense" 2 เส้นเพื่อวัดแรงดัน Excitation จริงที่ตัวเซลล์ (ไม่ใช่แค่ที่แอมป์ลิไฟเออร์ส่งออกไป) ช่วยชดเชยแรงดันตกในสายยาวหรือที่ได้รับผลจากอุณหภูมิ</li>
+        <li>รูปทรงโหลดเซลล์เลือกตามการใช้งาน: <b>Shear beam</b> (ตาชั่งแพลตฟอร์ม), <b>Single-point</b> (ตาชั่งขนาดเล็ก), <b>Canister/Compression</b> (ชั่งถัง/โฮปเปอร์ พิกัดสูง)</li>
+        <li>ทอร์กทรานสดิวเซอร์บน<b>เพลาหมุน</b>ต้องใช้สลิปริงหรือระบบสื่อสารไร้สายเพื่อดึงสัญญาณสเตรนเกจออกจากเพลาที่หมุนอยู่ ส่วนแบบ <b>Reaction</b> วัดจากแขนปฏิกิริยาที่อยู่นิ่งแทน จึงไม่ต้องใช้สลิปริง</li>
+        <li>ตรวจสอบ <b>พิกัดโอเวอร์โหลดปลอดภัย</b> เสมอ (มักอยู่ที่ 150% ของพิกัดใช้งาน) — แรงกระแทกเกินพิกัดชั่วขณะเป็นสาเหตุหลักของโหลดเซลล์เสียหาย</li>
+      ` : undefined,
+      circuitTitle: LANG === "th" ? "การต่อสาย 6-Wire และแลดเดอร์แจ้งเตือนโอเวอร์โหลด" : "6-Wire Load Cell Wiring &amp; an Overload-Alarm Ladder",
+      ladderComment: LANG === "th" ? "// D0: น้ำหนักที่สเกลแล้ว หน่วย kg x10   Y1: แจ้งเตือนโอเวอร์โหลด" : "// D0: scaled weight in kg x10   Y1: overload alarm",
+      appNote1: LANG === "th"
+        ? "<b>ตัวอย่างการใช้งาน:</b> น้ำหนักที่ปรับสเกลแล้วของโฮปเปอร์บรรจุ (D0 แปลงจาก mV เป็น kg ด้วยวิธีปรับสเกลจากหน่วยที่ 7) ถูกเทียบกับ 95.0 kg (K9500 มีทศนิยม 1 ตำแหน่งโดยนัย) เมื่อค่าข้ามเกณฑ์นี้จะสั่งเอาต์พุตแจ้งเตือนโอเวอร์โหลด Y1 ก่อนโฮปเปอร์จะถึงพิกัดใช้งานจริง — รูปแบบรังเปรียบเทียบแบบเดียวกันนี้ใช้ป้องกันตาชั่งสายพานและเฝ้าระวังแรงบิดมอเตอร์ได้เช่นกัน"
+        : "<b>Applied example:</b> a batching hopper's scaled weight (D0, already converted from mV to kg via Unit 7's scaling method) is compared against 95.0 kg (K9500 with one decimal place implied). Crossing that value energizes an overload alarm output Y1 before the hopper reaches its rated capacity — the same comparison-rung pattern protects conveyor scales and monitors motor torque limits.",
+      quizTitle: LANG === "th" ? "แบบทดสอบท้ายหน่วย (10 ข้อ)" : "Knowledge Check (10 Questions)",
     });
 
     const canvas = document.getElementById("bridge");
@@ -197,6 +256,42 @@
     loadSlider.addEventListener("input", draw);
     window.addEventListener("resize", resize);
     resize();
+
+    // --- Knowledge-check quiz ---
+    const QUIZ = {
+      en: [
+        { q: "A strain gauge's resistance changes in response to:", choices: ["Mechanical strain (deformation)", "Light intensity", "Temperature only", "Magnetic fields"], answer: 0 },
+        { q: "Why are 4 strain gauges wired into a Wheatstone bridge instead of using 1?", choices: ["To convert a tiny resistance change into a measurable voltage and cancel temperature effects", "It's cheaper to buy 4", "PLCs require exactly 4 inputs", "It increases the sensor's color options"], answer: 0 },
+        { q: "\"Tare\" in load cell calibration means:", choices: ["Setting the zero-load reference point", "Setting the maximum reference point", "Replacing the amplifier", "Disconnecting the sensor"], answer: 0 },
+        { q: "\"Span\" in load cell calibration means:", choices: ["Setting a known reference weight point", "Setting the zero point", "The cable length", "The overload rating"], answer: 0 },
+        { q: "A 6-wire load cell adds which extra wires over a 4-wire design?", choices: ["Sense wires that measure actual excitation at the cell", "Extra ground wires only", "A second signal output", "Nothing — 6-wire and 4-wire are identical"], answer: 0 },
+        { q: "A torque transducer on a rotating shaft typically needs:", choices: ["A slip ring or wireless telemetry to get the signal off the shaft", "No special wiring at all", "A photoelectric sensor", "A pressure switch"], answer: 0 },
+        { q: "\"Safe overload rating\" of a load cell is typically about:", choices: ["150% of rated capacity", "10% of rated capacity", "Exactly 100%, never more", "It doesn't apply to load cells"], answer: 0 },
+        { q: "A shear-beam load cell is most commonly used in:", choices: ["Platform/floor scales", "Torque wrenches only", "Photoelectric sensors", "Ultrasonic level sensors"], answer: 0 },
+        { q: "In this unit's ladder example, D0 represents:", choices: ["The scaled weight value from the load cell", "The PLC's scan time", "A digital limit switch input", "A pressure switch setpoint"], answer: 0 },
+        { q: "Calibration in this simulator uses how many reference points?", choices: ["Two — tare and span", "Only one", "Four", "None, it's automatic"], answer: 0 },
+      ],
+      th: [
+        { q: "ความต้านทานของสเตรนเกจเปลี่ยนแปลงตามอะไร?", choices: ["แรงเครียดทางกล (การเสียรูป)", "ความเข้มแสง", "อุณหภูมิเท่านั้น", "สนามแม่เหล็ก"], answer: 0 },
+        { q: "ทำไมต้องต่อสเตรนเกจ 4 ตัวเป็นวงจรบริดจ์วีทสโตน แทนที่จะใช้แค่ 1 ตัว?", choices: ["เพื่อแปลงการเปลี่ยนแปลงความต้านทานเล็กน้อยให้เป็นแรงดันที่วัดได้ และหักล้างผลกระทบจากอุณหภูมิ", "ราคาถูกกว่าเมื่อซื้อ 4 ตัว", "PLC ต้องการอินพุตพอดี 4 ช่อง", "เพิ่มตัวเลือกสีของเซนเซอร์"], answer: 0 },
+        { q: "\"Tare\" ในการคาลิเบรตโหลดเซลล์หมายถึงอะไร?", choices: ["ตั้งจุดอ้างอิงศูนย์ (ไม่มีน้ำหนัก)", "ตั้งจุดอ้างอิงสูงสุด", "เปลี่ยนแอมป์ลิไฟเออร์", "ถอดเซนเซอร์ออก"], answer: 0 },
+        { q: "\"Span\" ในการคาลิเบรตโหลดเซลล์หมายถึงอะไร?", choices: ["ตั้งจุดน้ำหนักมาตรฐานอ้างอิงที่ทราบค่า", "ตั้งจุดศูนย์", "ความยาวสายเคเบิล", "พิกัดโอเวอร์โหลด"], answer: 0 },
+        { q: "โหลดเซลล์แบบ 6-wire เพิ่มสายอะไรจากแบบ 4-wire?", choices: ["สาย Sense ที่วัดค่า Excitation จริงที่ตัวเซลล์", "สายกราวด์เพิ่มเท่านั้น", "เอาต์พุตสัญญาณตัวที่สอง", "ไม่มีอะไรต่าง — เหมือนกันทุกประการ"], answer: 0 },
+        { q: "ทอร์กทรานสดิวเซอร์บนเพลาหมุนโดยทั่วไปต้องการอะไร?", choices: ["สลิปริงหรือระบบสื่อสารไร้สายเพื่อดึงสัญญาณออกจากเพลา", "ไม่ต้องเดินสายพิเศษเลย", "โฟโต้อิเล็กทริกเซนเซอร์", "เพรสเชอร์สวิตช์"], answer: 0 },
+        { q: "พิกัดโอเวอร์โหลดปลอดภัยของโหลดเซลล์โดยทั่วไปอยู่ที่ประมาณ?", choices: ["150% ของพิกัดใช้งาน", "10% ของพิกัดใช้งาน", "100% พอดี ห้ามเกิน", "ไม่มีข้อกำหนดนี้สำหรับโหลดเซลล์"], answer: 0 },
+        { q: "โหลดเซลล์แบบ Shear beam มักใช้ในงานใด?", choices: ["ตาชั่งแพลตฟอร์ม/พื้น", "ประแจวัดแรงบิดเท่านั้น", "โฟโต้อิเล็กทริกเซนเซอร์", "เลเวลเซนเซอร์อัลตราโซนิก"], answer: 0 },
+        { q: "ในตัวอย่างแลดเดอร์ของหน่วยนี้ D0 หมายถึงอะไร?", choices: ["ค่าน้ำหนักที่ปรับสเกลแล้วจากโหลดเซลล์", "เวลาสแกนของ PLC", "อินพุตลิมิตสวิตช์ดิจิทัล", "จุดตั้งค่าเพรสเชอร์สวิตช์"], answer: 0 },
+        { q: "การคาลิเบรตในซิมูเลเตอร์นี้ใช้จุดอ้างอิงกี่จุด?", choices: ["สองจุด — tare และ span", "จุดเดียว", "สี่จุด", "ไม่ต้องใช้เลย เป็นอัตโนมัติ"], answer: 0 },
+      ],
+    };
+    renderQuiz("quizRoot", QUIZ[LANG], {
+      submitLabel: LANG === "th" ? "ตรวจคำตอบ" : "Check Answers",
+      resetLabel: LANG === "th" ? "ทำใหม่" : "Try Again",
+      correctText: LANG === "th" ? "ถูกต้อง" : "Correct",
+      incorrectText: LANG === "th" ? "ผิด — คำตอบที่ถูกคือ:" : "Incorrect — correct answer:",
+      scorePrefix: LANG === "th" ? "คะแนน:" : "Score:",
+      storageKey: "mct-unit3-quiz",
+    });
   </script>
 </body>
 </html>

@@ -80,9 +80,64 @@
       <div id="planRows"></div>
       <button class="tool-btn" id="addRow" style="margin-top:10px;" data-i18n="addRowBtn">+ Add Inspection Point</button>
     </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="knowledgeTitle">Knowledge Notes</h3>
+      <ul class="knowledge-list" data-i18n="knowledgeList">
+        <li><b>Accuracy class</b> on a datasheet is usually stated as ± % of full scale (FS), not ± % of the actual reading — a 0.5% FS error on a 0-100 bar transducer is always ±0.5 bar, even at a reading of 5 bar.</li>
+        <li><b>Repeatability vs. reproducibility</b>: repeatability is the same operator/equipment/conditions repeated; reproducibility allows different operators, equipment, or labs.</li>
+        <li>Industrial sensors are typically re-calibrated on a <b>6-12 month cycle</b>, traceable to a reference standard per ISO/IEC 17025-accredited labs.</li>
+        <li><b>4-20mA current loops</b> are preferred over 0-10V for long cable runs because current doesn't degrade from cable resistance/noise the way voltage does — 0mA also unambiguously means "broken wire" (0V could just mean "zero value").</li>
+        <li><b>Resolution is not accuracy</b>: a display showing 4 decimal places can still be wildly wrong if the sensor itself is poorly calibrated.</li>
+      </ul>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="circuitTitle">Measurement Chain &amp; a First Ladder Rung</h3>
+      <div class="circuit-svg-wrap">
+        <svg viewBox="0 0 760 120" xmlns="http://www.w3.org/2000/svg" width="760" height="120">
+          <g font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#f1f5f9">
+            <rect x="10" y="35" width="130" height="50" rx="10" fill="none" stroke="#5ed29c" stroke-width="2"/>
+            <text x="75" y="65" text-anchor="middle" data-i18n="svgSensor">Sensor</text>
+            <rect x="170" y="35" width="150" height="50" rx="10" fill="none" stroke="#60a5fa" stroke-width="2"/>
+            <text x="245" y="60" text-anchor="middle" data-i18n="svgConditioning">Signal</text>
+            <text x="245" y="75" text-anchor="middle" data-i18n="svgConditioning2">Conditioning</text>
+            <rect x="350" y="35" width="150" height="50" rx="10" fill="none" stroke="#facc15" stroke-width="2"/>
+            <text x="425" y="60" text-anchor="middle" data-i18n="svgModule">Control</text>
+            <text x="425" y="75" text-anchor="middle" data-i18n="svgModule2">Module</text>
+            <rect x="530" y="35" width="100" height="50" rx="10" fill="none" stroke="#f472b6" stroke-width="2"/>
+            <text x="580" y="65" text-anchor="middle">PLC</text>
+            <rect x="660" y="35" width="90" height="50" rx="10" fill="none" stroke="#5ed29c" stroke-width="2"/>
+            <text x="705" y="60" text-anchor="middle" data-i18n="svgActuator">Actuator /</text>
+            <text x="705" y="75" text-anchor="middle" data-i18n="svgActuator2">Display</text>
+            <g stroke="rgba(241,245,249,0.5)" stroke-width="2" fill="none" marker-end="url(#arrow1)">
+              <line x1="140" y1="60" x2="168" y2="60"/>
+              <line x1="320" y1="60" x2="348" y2="60"/>
+              <line x1="500" y1="60" x2="528" y2="60"/>
+              <line x1="630" y1="60" x2="658" y2="60"/>
+            </g>
+          </g>
+          <defs>
+            <marker id="arrow1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="rgba(241,245,249,0.5)"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+      <pre class="ladder-diagram" style="margin-top:14px;"><span class="rail">|</span>--<span class="contact">[ X0 ]</span>--------------------------------<span class="coil">( Y0 )</span>--<span class="rail">|</span>  <span class="comment" data-i18n="ladderComment">// X0: guard-door limit switch    Y0: indicator lamp</span></pre>
+      <div class="app-note" data-i18n="appNote1">
+        <b>Applied example:</b> a maintenance technician wires a simple digital sensor (a limit switch on a machine guard door) straight into PLC input X0. As soon as the door opens, X0 turns ON and the ladder rung energizes output Y0, lighting a warning lamp. Every sensor in Units 2-6 plugs into this same input &rarr; PLC &rarr; output pattern — only the sensor technology and the math in between get more advanced.
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 class="section-title" data-i18n="quizTitle">Knowledge Check (10 Questions)</h3>
+      <div id="quizRoot"></div>
+    </div>
   </div>
 
   <script src="/simulations/_shared/i18n.js"></script>
+  <script src="/simulations/_shared/quiz-engine.js"></script>
   <script>
     const LANG = getLang();
     const T = {
@@ -124,6 +179,27 @@
         ? "กรอกแผนตรวจสอบเครื่องจักรเหมือนตารางบำรุงรักษาจริง: จุดตรวจสอบ ความถี่ ค่ามาตรฐาน และวิธีการ"
         : "Fill in an inspection plan the way a real maintenance schedule would: point, frequency, standard value, and method.",
       addRowBtn: LANG === "th" ? "+ เพิ่มจุดตรวจสอบ" : "+ Add Inspection Point",
+      knowledgeTitle: LANG === "th" ? "เกร็ดความรู้" : "Knowledge Notes",
+      knowledgeList: LANG === "th" ? `
+        <li><b>Accuracy class</b> บนดาต้าชีตมักระบุเป็น ± % ของ Full Scale (FS) ไม่ใช่ ± % ของค่าที่อ่านได้ — ทรานสดิวเซอร์ 0-100 bar ที่มีค่าคลาดเคลื่อน 0.5% FS จะคลาดเคลื่อน ±0.5 bar เสมอ แม้อ่านค่าได้แค่ 5 bar</li>
+        <li><b>Repeatability กับ Reproducibility</b> ต่างกัน: Repeatability คือทำซ้ำโดยผู้ปฏิบัติงาน/อุปกรณ์/เงื่อนไขเดิม ส่วน Reproducibility คือทำซ้ำได้แม้เปลี่ยนคน อุปกรณ์ หรือห้องแล็บ</li>
+        <li>เซนเซอร์อุตสาหกรรมมักคาลิเบรตซ้ำทุก <b>6-12 เดือน</b> โดยสอบย้อนกลับได้ถึงมาตรฐานอ้างอิงตามห้องแล็บที่ได้รับการรับรอง ISO/IEC 17025</li>
+        <li><b>สัญญาณกระแส 4-20mA</b> นิยมกว่าสัญญาณแรงดัน 0-10V สำหรับสายไฟระยะไกล เพราะกระแสไม่เสื่อมจากความต้านทาน/สัญญาณรบกวนในสายเหมือนแรงดัน และ 0mA ยังบอกได้ชัดเจนว่า "สายขาด" (ต่างจาก 0V ที่อาจแปลว่า "ค่าเป็นศูนย์" เฉยๆ)</li>
+        <li><b>ความละเอียดไม่ใช่ความถูกต้อง</b>: จอแสดงผลที่มีทศนิยม 4 ตำแหน่งก็ยังผิดพลาดได้มาก ถ้าตัวเซนเซอร์เองคาลิเบรตไม่ดี</li>
+      ` : undefined,
+      circuitTitle: LANG === "th" ? "สายโซ่การวัด และแลดเดอร์รังแรก" : "Measurement Chain &amp; a First Ladder Rung",
+      svgSensor: LANG === "th" ? "เซนเซอร์" : "Sensor",
+      svgConditioning: LANG === "th" ? "ปรับแต่ง" : "Signal",
+      svgConditioning2: LANG === "th" ? "สัญญาณ" : "Conditioning",
+      svgModule: LANG === "th" ? "โมดูล" : "Control",
+      svgModule2: LANG === "th" ? "ควบคุม" : "Module",
+      svgActuator: LANG === "th" ? "แสดงผล /" : "Actuator /",
+      svgActuator2: LANG === "th" ? "ขับเคลื่อน" : "Display",
+      ladderComment: LANG === "th" ? "// X0: ลิมิตสวิตช์ประตูการ์ด    Y0: หลอดไฟแสดงสถานะ" : "// X0: guard-door limit switch    Y0: indicator lamp",
+      appNote1: LANG === "th"
+        ? "<b>ตัวอย่างการใช้งาน:</b> ช่างซ่อมบำรุงต่อเซนเซอร์ดิจิทัลอย่างง่าย (ลิมิตสวิตช์ที่ประตูการ์ดเครื่องจักร) เข้ากับอินพุต X0 ของ PLC โดยตรง ทันทีที่ประตูเปิด X0 จะ ON และแลดเดอร์รังนี้จะสั่งเอาต์พุต Y0 ให้หลอดไฟเตือนติด เซนเซอร์ทุกตัวในหน่วยที่ 2-6 ก็เสียบเข้ารูปแบบ อินพุต &rarr; PLC &rarr; เอาต์พุต แบบเดียวกันนี้ — เปลี่ยนแค่เทคโนโลยีเซนเซอร์และคณิตศาสตร์ระหว่างทางที่ซับซ้อนขึ้น"
+        : "<b>Applied example:</b> a maintenance technician wires a simple digital sensor (a limit switch on a machine guard door) straight into PLC input X0. As soon as the door opens, X0 turns ON and the ladder rung energizes output Y0, lighting a warning lamp. Every sensor in Units 2-6 plugs into this same input &rarr; PLC &rarr; output pattern — only the sensor technology and the math in between get more advanced.",
+      quizTitle: LANG === "th" ? "แบบทดสอบท้ายหน่วย (10 ข้อ)" : "Knowledge Check (10 Questions)",
     });
 
     // --- Accuracy / Precision target ---
@@ -277,6 +353,42 @@
     }
     document.getElementById("addRow").addEventListener("click", addPlanRow);
     addPlanRow();
+
+    // --- Knowledge-check quiz ---
+    const QUIZ = {
+      en: [
+        { q: "What does \"accuracy\" measure?", choices: ["Closeness to the true value", "Closeness of repeated readings to each other", "The smallest detectable change", "Output signal type"], answer: 0 },
+        { q: "What does \"precision\" measure?", choices: ["Closeness to the true value", "Closeness of repeated readings to each other", "Full-scale range", "Sensitivity"], answer: 1 },
+        { q: "A sensor that gives an On/Off output is classified as:", choices: ["Analog", "Digital", "Both", "Neither"], answer: 1 },
+        { q: "4-20mA and 0-10V are examples of:", choices: ["Digital signals", "Analog signals", "Power signals only", "None of these"], answer: 1 },
+        { q: "\"Resolution\" is best defined as:", choices: ["The smallest change a device can detect", "Closeness to the true value", "Repeatability", "Accuracy class"], answer: 0 },
+        { q: "Which is NOT a standard measurement characteristic?", choices: ["Linearity", "Range", "Color", "Repeatability"], answer: 2 },
+        { q: "In a measurement & control system, what typically comes right after the sensor?", choices: ["Actuator", "Industrial control module", "HMI screen", "Ladder logic program"], answer: 1 },
+        { q: "An Inspection Plan should define:", choices: ["Point, frequency, standard value, and method", "Only the frequency", "Only the inspection point", "Only the sensor's price"], answer: 0 },
+        { q: "An incremental encoder is an example of which sensor output type?", choices: ["Digital (pulse)", "Analog", "Neither", "Both simultaneously, always"], answer: 0 },
+        { q: "\"Repeatability\" is best described as:", choices: ["Getting the same result under the same repeated conditions", "Getting a different result each time", "Closeness to the true value", "The sensor's purchase price"], answer: 0 },
+      ],
+      th: [
+        { q: "\"ความถูกต้อง (Accuracy)\" วัดอะไร?", choices: ["ความใกล้เคียงกับค่าจริง", "ความใกล้เคียงกันของค่าที่วัดซ้ำ", "การเปลี่ยนแปลงค่าที่น้อยที่สุดที่ตรวจจับได้", "ชนิดสัญญาณเอาต์พุต"], answer: 0 },
+        { q: "\"ความแม่นยำ (Precision)\" วัดอะไร?", choices: ["ความใกล้เคียงกับค่าจริง", "ความใกล้เคียงกันของค่าที่วัดซ้ำ", "ย่านการวัดเต็มสเกล", "ความไว"], answer: 1 },
+        { q: "เซนเซอร์ที่ให้เอาต์พุตแบบ On/Off จัดเป็นชนิดใด?", choices: ["แอนะล็อก", "ดิจิทัล", "ทั้งสองอย่าง", "ไม่ใช่ทั้งคู่"], answer: 1 },
+        { q: "4-20mA และ 0-10V เป็นตัวอย่างของสัญญาณชนิดใด?", choices: ["ดิจิทัล", "แอนะล็อก", "สัญญาณกำลังไฟเท่านั้น", "ไม่ใช่ข้อใดเลย"], answer: 1 },
+        { q: "\"ความละเอียด (Resolution)\" หมายถึงอะไร?", choices: ["การเปลี่ยนแปลงค่าที่น้อยที่สุดที่ตรวจจับได้", "ความใกล้เคียงกับค่าจริง", "ความสามารถทำซ้ำ", "Accuracy class"], answer: 0 },
+        { q: "ข้อใดไม่ใช่คุณลักษณะมาตรฐานของการวัด?", choices: ["Linearity", "Range", "สี (Color)", "Repeatability"], answer: 2 },
+        { q: "ในระบบวัดและควบคุม ส่วนใดมักอยู่ถัดจากเซนเซอร์?", choices: ["อุปกรณ์ขับเคลื่อน (Actuator)", "โมดูลควบคุมในอุตสาหกรรม", "จอ HMI", "โปรแกรมแลดเดอร์"], answer: 1 },
+        { q: "แผนตรวจสอบเครื่องจักร (Inspection Plan) ควรระบุอะไรบ้าง?", choices: ["จุดตรวจสอบ ความถี่ ค่ามาตรฐาน และวิธีการ", "ความถี่อย่างเดียว", "จุดตรวจสอบอย่างเดียว", "ราคาของเซนเซอร์อย่างเดียว"], answer: 0 },
+        { q: "เอนโค้ดเดอร์แบบสัมพัทธ์ (Incremental) เป็นตัวอย่างของสัญญาณเอาต์พุตชนิดใด?", choices: ["ดิจิทัล (พัลส์)", "แอนะล็อก", "ไม่ใช่ทั้งคู่", "เป็นทั้งสองอย่างพร้อมกันเสมอ"], answer: 0 },
+        { q: "\"ความสามารถทำซ้ำ (Repeatability)\" อธิบายได้ดีที่สุดว่าอย่างไร?", choices: ["ได้ผลลัพธ์เดิมเมื่อวัดซ้ำภายใต้เงื่อนไขเดียวกัน", "ได้ผลลัพธ์ต่างกันทุกครั้ง", "ความใกล้เคียงกับค่าจริง", "ราคาของเซนเซอร์"], answer: 0 },
+      ],
+    };
+    renderQuiz("quizRoot", QUIZ[LANG], {
+      submitLabel: LANG === "th" ? "ตรวจคำตอบ" : "Check Answers",
+      resetLabel: LANG === "th" ? "ทำใหม่" : "Try Again",
+      correctText: LANG === "th" ? "ถูกต้อง" : "Correct",
+      incorrectText: LANG === "th" ? "ผิด — คำตอบที่ถูกคือ:" : "Incorrect — correct answer:",
+      scorePrefix: LANG === "th" ? "คะแนน:" : "Score:",
+      storageKey: "mct-unit1-quiz",
+    });
   </script>
 </body>
 </html>
